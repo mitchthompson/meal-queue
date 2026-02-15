@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
@@ -41,6 +41,7 @@ export default function RecipeDetailPage() {
 
 function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const recipeId = params.id;
 
   const [recipe, setRecipe] = useState<RecipeRecord | null>(null);
@@ -50,14 +51,11 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
   const [unitLabelByCode, setUnitLabelByCode] = useState<Record<string, string>>({});
   const [servings, setServings] = useState("2");
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const regularIngredients = useMemo(
-    () => ingredients.filter((ingredient) => !ingredient.is_pantry_staple),
-    [ingredients],
-  );
-  const pantryIngredients = useMemo(
-    () => ingredients.filter((ingredient) => ingredient.is_pantry_staple),
+  const pantryCount = useMemo(
+    () => ingredients.filter((ingredient) => ingredient.is_pantry_staple).length,
     [ingredients],
   );
 
@@ -122,6 +120,22 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
     setLoading(false);
   }
 
+  async function deleteRecipe() {
+    if (!recipe) return;
+    if (!window.confirm(`Delete "${recipe.name}"?`)) return;
+    setDeleting(true);
+    setError(null);
+
+    const { error: deleteError } = await supabase.from("recipes").delete().eq("id", recipe.id);
+    if (deleteError) {
+      setError(deleteError.message);
+      setDeleting(false);
+      return;
+    }
+
+    router.push("/recipes");
+  }
+
   return (
     <AppShell userEmail={userEmail}>
       <section className="hero">
@@ -134,6 +148,9 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
               <Link className="secondary-btn" href={`/recipes?edit=${recipe.id}`}>
                 Edit recipe
               </Link>
+              <button className="danger-btn" disabled={deleting} onClick={deleteRecipe} type="button">
+                {deleting ? "Deleting..." : "Delete recipe"}
+              </button>
               <Link className="secondary-btn" href="/recipes">
                 Back to recipes
               </Link>
@@ -178,13 +195,19 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
 
           <div className="stack">
             <article className="panel recipe-view-section">
-              <h2>Ingredients</h2>
+              <div className="section-head">
+                <h2>Ingredients</h2>
+                {pantryCount > 0 ? <span className="muted">{pantryCount} pantry staple{pantryCount === 1 ? "" : "s"}</span> : null}
+              </div>
               {ingredients.length === 0 ? <p className="muted">No ingredients.</p> : null}
-              {regularIngredients.length > 0 ? (
+              {ingredients.length > 0 ? (
                 <ul className="recipe-ingredient-list">
-                  {regularIngredients.map((ingredient) => (
+                  {ingredients.map((ingredient) => (
                     <li className="recipe-meta" key={ingredient.id}>
-                      <strong>{ingredient.name}</strong>
+                      <div className="recipe-meta-left">
+                        <strong>{ingredient.name}</strong>
+                        {ingredient.is_pantry_staple ? <span className="pantry-badge">Pantry staple</span> : null}
+                      </div>
                       <span>
                         {formatAmount(Number(ingredient.amount) * scaleFactor)}{" "}
                         {unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code}
@@ -193,32 +216,17 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
                   ))}
                 </ul>
               ) : null}
-              <details className="recipe-details">
-                <summary>Pantry staples ({pantryIngredients.length})</summary>
-                {pantryIngredients.length === 0 ? (
-                  <p className="muted">No pantry staples flagged.</p>
-                ) : (
-                  <ul className="recipe-ingredient-list">
-                    {pantryIngredients.map((ingredient) => (
-                      <li className="recipe-meta" key={ingredient.id}>
-                        <strong>{ingredient.name}</strong>
-                        <span>
-                          {formatAmount(Number(ingredient.amount) * scaleFactor)}{" "}
-                          {unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </details>
             </article>
 
             <article className="panel recipe-view-section">
               <h2>Steps</h2>
               {steps.length === 0 ? <p className="muted">No steps.</p> : null}
-              <ol className="step-list">
+              <ol className="recipe-step-list">
                 {steps.map((step) => (
-                  <li key={step.step_number}>{step.body}</li>
+                  <li className="recipe-step-item" key={step.step_number}>
+                    <span className="recipe-step-index">{step.step_number}</span>
+                    <p>{step.body}</p>
+                  </li>
                 ))}
               </ol>
             </article>

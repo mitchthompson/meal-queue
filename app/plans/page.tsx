@@ -21,10 +21,15 @@ type RecipeOption = {
   base_servings: number;
 };
 
+type MealSlotType = "cook" | "leftover" | "eat_out";
+
 type MealPlanItem = {
   id: string;
   plan_date: string;
   meal_type: "lunch" | "dinner";
+  slot_type: MealSlotType;
+  leftover_from_item_id: string | null;
+  note: string | null;
   serving_multiplier: number;
   recipe: RecipeOption | null;
 };
@@ -46,6 +51,16 @@ type SettingsDefaults = {
 type SlotTarget = {
   day: string;
   meal_type: "lunch" | "dinner";
+};
+
+type PlanListFilter = "current" | "upcoming" | "past" | "all";
+
+type LeftoverOption = {
+  id: string;
+  plan_date: string;
+  meal_type: "lunch" | "dinner";
+  recipe_id: string;
+  recipe_name: string;
 };
 
 function toYmd(date: Date) {
@@ -117,6 +132,14 @@ function nextDayInRange(day: string, endDate: string) {
   return next <= endDate ? next : null;
 }
 
+function formatWeekday(ymd: string) {
+  return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date(`${ymd}T00:00:00`));
+}
+
+function formatShortDate(ymd: string) {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(`${ymd}T00:00:00`));
+}
+
 export default function PlansPage() {
   return (
     <AuthGate>
@@ -150,13 +173,38 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
   });
   const [activeSlot, setActiveSlot] = useState<SlotTarget | null>(null);
   const [quickQuery, setQuickQuery] = useState("");
+  const [quickMode, setQuickMode] = useState<MealSlotType>("cook");
+  const [quickLeftoverId, setQuickLeftoverId] = useState("");
+  const [quickNote, setQuickNote] = useState("");
+  const [planFilter, setPlanFilter] = useState<PlanListFilter>("current");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const quickInputRef = useRef<HTMLInputElement | null>(null);
+  const previousPlanFilterRef = useRef<PlanListFilter>(planFilter);
 
   const selectedPlan = useMemo(() => plans.find((plan) => plan.id === selectedPlanId) ?? null, [plans, selectedPlanId]);
+  const todayYmd = useMemo(() => toYmd(new Date()), []);
+  const visiblePlans = useMemo(() => {
+    const filtered = plans.filter((plan) => {
+      if (planFilter === "all") return true;
+      if (planFilter === "current") return plan.start_date <= todayYmd && plan.end_date >= todayYmd;
+      if (planFilter === "upcoming") return plan.start_date > todayYmd;
+      return plan.end_date < todayYmd;
+    });
+
+    if (planFilter === "upcoming") {
+      return [...filtered].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    }
+    if (planFilter === "past") {
+      return [...filtered].sort((a, b) => b.start_date.localeCompare(a.start_date));
+    }
+    if (planFilter === "current") {
+      return [...filtered].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    }
+    return filtered;
+  }, [planFilter, plans, todayYmd]);
 
   const itemMap = useMemo(() => {
     const map = new Map<string, MealPlanItem[]>();
@@ -169,11 +217,27 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
     return map;
   }, [items]);
 
+  const itemById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
+
   const quickMatches = useMemo(() => {
     const query = quickQuery.trim().toLowerCase();
     if (!query) return recipes.slice(0, 8);
     return recipes.filter((recipe) => recipe.name.toLowerCase().includes(query)).slice(0, 8);
   }, [recipes, quickQuery]);
+
+  const quickLeftoverOptions = useMemo(() => {
+    if (!activeSlot) return [] as LeftoverOption[];
+    return items
+      .filter((item) => item.slot_type === "cook" && item.plan_date < activeSlot.day && item.recipe?.id && item.recipe?.name)
+      .map((item) => ({
+        id: item.id,
+        plan_date: item.plan_date,
+        meal_type: item.meal_type,
+        recipe_id: item.recipe!.id,
+        recipe_name: item.recipe!.name,
+      }))
+      .sort((a, b) => b.plan_date.localeCompare(a.plan_date));
+  }, [activeSlot, items]);
 
   useEffect(() => {
     loadInitialData();
@@ -193,8 +257,24 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
   }, [selectedPlanId]);
 
   useEffect(() => {
+    const filterChanged = previousPlanFilterRef.current !== planFilter;
+    previousPlanFilterRef.current = planFilter;
+    if (visiblePlans.length === 0) return;
+    if (filterChanged || !selectedPlanId || !visiblePlans.some((plan) => plan.id === selectedPlanId)) {
+      setSelectedPlanId(visiblePlans[0].id);
+    }
+  }, [planFilter, selectedPlanId, visiblePlans]);
+
+  useEffect(() => {
     if (activeSlot) quickInputRef.current?.focus();
   }, [activeSlot]);
+
+  useEffect(() => {
+    if (quickMode !== "leftover") return;
+    if (!quickLeftoverId && quickLeftoverOptions.length > 0) {
+      setQuickLeftoverId(quickLeftoverOptions[0].id);
+    }
+  }, [quickMode, quickLeftoverId, quickLeftoverOptions]);
 
   async function loadInitialData() {
     setLoading(true);
@@ -242,7 +322,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
   async function loadPlanItems(planId: string) {
     const { data, error: planItemsError } = await supabase
       .from("meal_plan_items")
-      .select("id, plan_date, meal_type, serving_multiplier, recipe:recipes(id, name, base_servings)")
+      .select("id, plan_date, meal_type, slot_type, leftover_from_item_id, note, serving_multiplier, recipe:recipes(id, name, base_servings)")
       .eq("meal_plan_id", planId)
       .order("plan_date", { ascending: true });
 
@@ -256,12 +336,18 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
         id: string;
         plan_date: string;
         meal_type: "lunch" | "dinner";
+        slot_type: MealSlotType;
+        leftover_from_item_id: string | null;
+        note: string | null;
         serving_multiplier: number;
         recipe: RecipeOption[] | RecipeOption | null;
       }>).map((row) => ({
         id: row.id,
         plan_date: row.plan_date,
         meal_type: row.meal_type,
+        slot_type: row.slot_type,
+        leftover_from_item_id: row.leftover_from_item_id,
+        note: row.note,
         serving_multiplier: row.serving_multiplier,
         recipe: Array.isArray(row.recipe) ? row.recipe[0] ?? null : row.recipe,
       })),
@@ -354,8 +440,13 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
   async function upsertPlanSlot(
     day: string,
     mealType: "lunch" | "dinner",
-    recipeId: string,
-    servingMultiplier: number,
+    options: {
+      slotType: MealSlotType;
+      recipeId?: string | null;
+      servingMultiplier?: number;
+      leftoverFromItemId?: string | null;
+      note?: string | null;
+    },
     moveToNextDay = false,
   ) {
     if (!selectedPlan) return;
@@ -364,11 +455,20 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
     setMessage(null);
 
     try {
+      const slotType = options.slotType;
+      const servingMultiplier = options.servingMultiplier ?? 1;
+      const recipeId = options.recipeId ?? null;
+      const leftoverFromItemId = options.leftoverFromItemId ?? null;
+      const note = options.note?.trim() ? options.note.trim() : null;
+
       const { error: insertError } = await supabase.from("meal_plan_items").insert({
         meal_plan_id: selectedPlan.id,
         plan_date: day,
         meal_type: mealType,
+        slot_type: slotType,
         recipe_id: recipeId,
+        leftover_from_item_id: leftoverFromItemId,
+        note,
         serving_multiplier: servingMultiplier,
       });
       if (insertError) throw insertError;
@@ -376,7 +476,13 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       await bumpPlanVersion(selectedPlan.id);
       await loadPlanItems(selectedPlan.id);
       await refreshPlansAndKeepSelection(selectedPlan.id);
-      setMessage("Recipe added to plan.");
+      if (slotType === "leftover") {
+        setMessage("Leftover added to plan.");
+      } else if (slotType === "eat_out") {
+        setMessage("Eating out added to plan.");
+      } else {
+        setMessage("Recipe added to plan.");
+      }
       if (moveToNextDay) {
         const nextDay = nextDayInRange(day, selectedForm.end_date);
         if (nextDay) {
@@ -463,6 +569,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
 
   async function adjustServing(item: MealPlanItem, delta: number) {
     if (!selectedPlan) return;
+    if (item.slot_type !== "cook") return;
     const nextValue = Math.max(0.25, Number((item.serving_multiplier + delta).toFixed(2)));
     setSaving(true);
     setError(null);
@@ -487,6 +594,9 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
 
   function openQuickAdd(day: string, mealType: "lunch" | "dinner") {
     setActiveSlot({ day, meal_type: mealType });
+    setQuickMode("cook");
+    setQuickLeftoverId("");
+    setQuickNote("");
     setQuickQuery("");
   }
 
@@ -496,16 +606,46 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       setActiveSlot(null);
       return;
     }
-    if ((event.key === "Backspace" || event.key === "Delete") && quickQuery.trim() === "") {
+    if (quickMode === "cook" && (event.key === "Backspace" || event.key === "Delete") && quickQuery.trim() === "") {
       event.preventDefault();
       await clearSlot(activeSlot.day, activeSlot.meal_type);
       return;
     }
     if (event.key === "Enter") {
       event.preventDefault();
-      const top = quickMatches[0];
-      if (!top) return;
-      await upsertPlanSlot(activeSlot.day, activeSlot.meal_type, top.id, 1, event.shiftKey);
+      if (quickMode === "cook") {
+        const top = quickMatches[0];
+        if (!top) return;
+        await upsertPlanSlot(
+          activeSlot.day,
+          activeSlot.meal_type,
+          { slotType: "cook", recipeId: top.id, servingMultiplier: 1 },
+          event.shiftKey,
+        );
+        return;
+      }
+      if (quickMode === "leftover") {
+        const choice = quickLeftoverOptions.find((option) => option.id === quickLeftoverId) ?? quickLeftoverOptions[0];
+        if (!choice) return;
+        await upsertPlanSlot(
+          activeSlot.day,
+          activeSlot.meal_type,
+          {
+            slotType: "leftover",
+            recipeId: choice.recipe_id,
+            leftoverFromItemId: choice.id,
+            servingMultiplier: 1,
+          },
+          event.shiftKey,
+        );
+        return;
+      }
+      await upsertPlanSlot(
+        activeSlot.day,
+        activeSlot.meal_type,
+        { slotType: "eat_out", note: quickNote || "Eating out", servingMultiplier: 1 },
+        event.shiftKey,
+      );
     }
   }
 
@@ -517,8 +657,8 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
         <p>Create custom date-range plans and assign optional lunch/dinner recipes by day.</p>
       </section>
 
-      <section className="split-layout">
-        <aside className="panel">
+      <section className="plans-page-stack">
+        <section className="panel">
           <h2>Create plan</h2>
           <form className="stack" onSubmit={createPlan}>
             <label>
@@ -562,11 +702,37 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
               {saving ? "Saving..." : "Create meal plan"}
             </button>
           </form>
+        </section>
 
-          <h3>Plans</h3>
+        <section className="panel">
+          <div className="section-head">
+            <h3>Plans</h3>
+            <div className="section-actions">
+              <button
+                className={planFilter === "current" ? "pill active" : "pill"}
+                onClick={() => setPlanFilter("current")}
+                type="button"
+              >
+                Current
+              </button>
+              <button
+                className={planFilter === "upcoming" ? "pill active" : "pill"}
+                onClick={() => setPlanFilter("upcoming")}
+                type="button"
+              >
+                Upcoming
+              </button>
+              <button className={planFilter === "past" ? "pill active" : "pill"} onClick={() => setPlanFilter("past")} type="button">
+                Past
+              </button>
+              <button className={planFilter === "all" ? "pill active" : "pill"} onClick={() => setPlanFilter("all")} type="button">
+                All
+              </button>
+            </div>
+          </div>
           {loading ? <p>Loading...</p> : null}
           <div className="list">
-            {plans.map((plan) => (
+            {visiblePlans.map((plan) => (
               <button
                 className={selectedPlanId === plan.id ? "list-item active" : "list-item"}
                 key={plan.id}
@@ -576,12 +742,11 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
                 <strong>
                   {formatDisplayDate(plan.start_date)} to {formatDisplayDate(plan.end_date)}
                 </strong>
-                <span>v{plan.version}</span>
               </button>
             ))}
-            {!loading && plans.length === 0 ? <p>No plans yet.</p> : null}
+            {!loading && visiblePlans.length === 0 ? <p>No plans in this view yet.</p> : null}
           </div>
-        </aside>
+        </section>
 
         <section className="panel">
           {!selectedPlan ? (
@@ -638,8 +803,8 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
               </div>
 
               <p className="muted">
-                Quick add: click any lunch/dinner slot, type recipe, `Enter` to assign top match, `Shift+Enter` to
-                assign and move to next day, `Backspace/Delete` on empty query to clear.
+                Quick add: choose mode (cook, leftovers, or eating out). For cook mode, type recipe and press `Enter`.
+                Use `Shift+Enter` to add and move to next day. `Backspace/Delete` on empty query clears the slot.
               </p>
 
               <div className="plan-grid">
@@ -652,52 +817,158 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
                   return (
                     <div className="plan-grid-row" key={day}>
                       <div className="plan-day-cell">
-                        <strong>{formatDisplayDate(day)}</strong>
+                        <strong className="plan-day-primary">{formatWeekday(day)}</strong>
+                        <span className="plan-day-secondary">{formatShortDate(day)}</span>
                       </div>
                       <div className="plan-slot-cell">
                         {activeSlot?.day === day && activeSlot.meal_type === "lunch" ? (
                           <div className="quick-add-card">
-                            <input
-                              ref={quickInputRef}
-                              placeholder="Search recipe..."
-                              value={quickQuery}
-                              onChange={(event) => setQuickQuery(event.target.value)}
-                              onKeyDown={handleQuickAddKeyDown}
-                            />
                             <div className="quick-add-list">
-                              {quickMatches.map((recipe) => (
+                              <button
+                                className={quickMode === "cook" ? "pill active" : "pill"}
+                                onClick={() => setQuickMode("cook")}
+                                type="button"
+                              >
+                                Cook
+                              </button>
+                              <button
+                                className={quickMode === "leftover" ? "pill active" : "pill"}
+                                onClick={() => setQuickMode("leftover")}
+                                type="button"
+                              >
+                                Leftovers
+                              </button>
+                              <button
+                                className={quickMode === "eat_out" ? "pill active" : "pill"}
+                                onClick={() => setQuickMode("eat_out")}
+                                type="button"
+                              >
+                                Eating out
+                              </button>
+                            </div>
+                            {quickMode === "cook" ? (
+                              <>
+                                <input
+                                  ref={quickInputRef}
+                                  placeholder="Search recipe..."
+                                  value={quickQuery}
+                                  onChange={(event) => setQuickQuery(event.target.value)}
+                                  onKeyDown={handleQuickAddKeyDown}
+                                />
+                                <div className="quick-add-list">
+                                  {quickMatches.map((recipe) => (
+                                    <button
+                                      className="text-btn"
+                                      key={recipe.id}
+                                      onClick={() =>
+                                        upsertPlanSlot(day, "lunch", { slotType: "cook", recipeId: recipe.id, servingMultiplier: 1 })
+                                      }
+                                      type="button"
+                                    >
+                                      {recipe.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            ) : null}
+                            {quickMode === "leftover" ? (
+                              <>
+                                <select
+                                  value={quickLeftoverId}
+                                  onChange={(event) => setQuickLeftoverId(event.target.value)}
+                                >
+                                  {quickLeftoverOptions.length === 0 ? <option value="">No prior cooked meals</option> : null}
+                                  {quickLeftoverOptions.map((option) => (
+                                    <option key={option.id} value={option.id}>
+                                      {formatDisplayDate(option.plan_date)} {option.meal_type}: {option.recipe_name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="section-actions">
+                                  <button
+                                    className="secondary-btn"
+                                    disabled={quickLeftoverOptions.length === 0}
+                                    onClick={() => {
+                                      const choice =
+                                        quickLeftoverOptions.find((option) => option.id === quickLeftoverId) ??
+                                        quickLeftoverOptions[0];
+                                      if (!choice) return;
+                                      upsertPlanSlot(day, "lunch", {
+                                        slotType: "leftover",
+                                        recipeId: choice.recipe_id,
+                                        leftoverFromItemId: choice.id,
+                                        servingMultiplier: 1,
+                                      });
+                                    }}
+                                    type="button"
+                                  >
+                                    Add leftovers
+                                  </button>
+                                </div>
+                              </>
+                            ) : null}
+                            {quickMode === "eat_out" ? (
+                              <>
+                                <input
+                                  ref={quickInputRef}
+                                  placeholder="Optional note (e.g. sushi)"
+                                  value={quickNote}
+                                  onChange={(event) => setQuickNote(event.target.value)}
+                                  onKeyDown={handleQuickAddKeyDown}
+                                />
                                 <button
-                                  className="text-btn"
-                                  key={recipe.id}
-                                  onClick={() => upsertPlanSlot(day, "lunch", recipe.id, 1)}
+                                  className="secondary-btn"
+                                  onClick={() =>
+                                    upsertPlanSlot(day, "lunch", {
+                                      slotType: "eat_out",
+                                      note: quickNote || "Eating out",
+                                      servingMultiplier: 1,
+                                    })
+                                  }
                                   type="button"
                                 >
-                                  {recipe.name}
+                                  Save eating out
                                 </button>
-                              ))}
-                            </div>
+                              </>
+                            ) : null}
                           </div>
                         ) : null}
                         {lunchItems.length > 0 ? (
                           <>
                             {lunchItems.map((lunch) => (
                               <div className="slot-card" key={lunch.id}>
-                                {lunch.recipe?.id ? (
-                                  <Link className="recipe-link" href={`/recipes/${lunch.recipe.id}`}>
-                                    {lunch.recipe?.name ?? "Recipe"}
-                                  </Link>
+                                {lunch.slot_type === "eat_out" ? (
+                                  <strong>{lunch.note?.trim() || "Eating out"}</strong>
                                 ) : (
-                                  <strong>{lunch.recipe?.name ?? "Recipe"}</strong>
+                                  <>
+                                    {lunch.recipe?.id ? (
+                                      <Link className="recipe-link" href={`/recipes/${lunch.recipe.id}`}>
+                                        {lunch.recipe?.name ?? "Recipe"}
+                                      </Link>
+                                    ) : (
+                                      <strong>{lunch.recipe?.name ?? "Recipe"}</strong>
+                                    )}
+                                    {lunch.slot_type === "leftover" ? (
+                                      <span>
+                                        Leftover from{" "}
+                                        {lunch.leftover_from_item_id && itemById.get(lunch.leftover_from_item_id)
+                                          ? formatDisplayDate(itemById.get(lunch.leftover_from_item_id)!.plan_date)
+                                          : "earlier cook"}
+                                      </span>
+                                    ) : null}
+                                  </>
                                 )}
-                                <div className="serving-controls">
-                                  <button className="text-btn" onClick={() => adjustServing(lunch, -0.25)} type="button">
-                                    -
-                                  </button>
-                                  <span>x {lunch.serving_multiplier}</span>
-                                  <button className="text-btn" onClick={() => adjustServing(lunch, 0.25)} type="button">
-                                    +
-                                  </button>
-                                </div>
+                                {lunch.slot_type === "cook" ? (
+                                  <div className="serving-controls">
+                                    <button className="text-btn" onClick={() => adjustServing(lunch, -0.25)} type="button">
+                                      -
+                                    </button>
+                                    <span>x {lunch.serving_multiplier}</span>
+                                    <button className="text-btn" onClick={() => adjustServing(lunch, 0.25)} type="button">
+                                      +
+                                    </button>
+                                  </div>
+                                ) : null}
                                 <button className="text-btn" onClick={() => removeItem(lunch.id)} type="button">
                                   Remove
                                 </button>
@@ -716,47 +987,152 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
                       <div className="plan-slot-cell">
                         {activeSlot?.day === day && activeSlot.meal_type === "dinner" ? (
                           <div className="quick-add-card">
-                            <input
-                              ref={quickInputRef}
-                              placeholder="Search recipe..."
-                              value={quickQuery}
-                              onChange={(event) => setQuickQuery(event.target.value)}
-                              onKeyDown={handleQuickAddKeyDown}
-                            />
                             <div className="quick-add-list">
-                              {quickMatches.map((recipe) => (
+                              <button
+                                className={quickMode === "cook" ? "pill active" : "pill"}
+                                onClick={() => setQuickMode("cook")}
+                                type="button"
+                              >
+                                Cook
+                              </button>
+                              <button
+                                className={quickMode === "leftover" ? "pill active" : "pill"}
+                                onClick={() => setQuickMode("leftover")}
+                                type="button"
+                              >
+                                Leftovers
+                              </button>
+                              <button
+                                className={quickMode === "eat_out" ? "pill active" : "pill"}
+                                onClick={() => setQuickMode("eat_out")}
+                                type="button"
+                              >
+                                Eating out
+                              </button>
+                            </div>
+                            {quickMode === "cook" ? (
+                              <>
+                                <input
+                                  ref={quickInputRef}
+                                  placeholder="Search recipe..."
+                                  value={quickQuery}
+                                  onChange={(event) => setQuickQuery(event.target.value)}
+                                  onKeyDown={handleQuickAddKeyDown}
+                                />
+                                <div className="quick-add-list">
+                                  {quickMatches.map((recipe) => (
+                                    <button
+                                      className="text-btn"
+                                      key={recipe.id}
+                                      onClick={() =>
+                                        upsertPlanSlot(day, "dinner", { slotType: "cook", recipeId: recipe.id, servingMultiplier: 1 })
+                                      }
+                                      type="button"
+                                    >
+                                      {recipe.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            ) : null}
+                            {quickMode === "leftover" ? (
+                              <>
+                                <select
+                                  value={quickLeftoverId}
+                                  onChange={(event) => setQuickLeftoverId(event.target.value)}
+                                >
+                                  {quickLeftoverOptions.length === 0 ? <option value="">No prior cooked meals</option> : null}
+                                  {quickLeftoverOptions.map((option) => (
+                                    <option key={option.id} value={option.id}>
+                                      {formatDisplayDate(option.plan_date)} {option.meal_type}: {option.recipe_name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="section-actions">
+                                  <button
+                                    className="secondary-btn"
+                                    disabled={quickLeftoverOptions.length === 0}
+                                    onClick={() => {
+                                      const choice =
+                                        quickLeftoverOptions.find((option) => option.id === quickLeftoverId) ??
+                                        quickLeftoverOptions[0];
+                                      if (!choice) return;
+                                      upsertPlanSlot(day, "dinner", {
+                                        slotType: "leftover",
+                                        recipeId: choice.recipe_id,
+                                        leftoverFromItemId: choice.id,
+                                        servingMultiplier: 1,
+                                      });
+                                    }}
+                                    type="button"
+                                  >
+                                    Add leftovers
+                                  </button>
+                                </div>
+                              </>
+                            ) : null}
+                            {quickMode === "eat_out" ? (
+                              <>
+                                <input
+                                  ref={quickInputRef}
+                                  placeholder="Optional note (e.g. date night)"
+                                  value={quickNote}
+                                  onChange={(event) => setQuickNote(event.target.value)}
+                                  onKeyDown={handleQuickAddKeyDown}
+                                />
                                 <button
-                                  className="text-btn"
-                                  key={recipe.id}
-                                  onClick={() => upsertPlanSlot(day, "dinner", recipe.id, 1)}
+                                  className="secondary-btn"
+                                  onClick={() =>
+                                    upsertPlanSlot(day, "dinner", {
+                                      slotType: "eat_out",
+                                      note: quickNote || "Eating out",
+                                      servingMultiplier: 1,
+                                    })
+                                  }
                                   type="button"
                                 >
-                                  {recipe.name}
+                                  Save eating out
                                 </button>
-                              ))}
-                            </div>
+                              </>
+                            ) : null}
                           </div>
                         ) : null}
                         {dinnerItems.length > 0 ? (
                           <>
                             {dinnerItems.map((dinner) => (
                               <div className="slot-card" key={dinner.id}>
-                                {dinner.recipe?.id ? (
-                                  <Link className="recipe-link" href={`/recipes/${dinner.recipe.id}`}>
-                                    {dinner.recipe?.name ?? "Recipe"}
-                                  </Link>
+                                {dinner.slot_type === "eat_out" ? (
+                                  <strong>{dinner.note?.trim() || "Eating out"}</strong>
                                 ) : (
-                                  <strong>{dinner.recipe?.name ?? "Recipe"}</strong>
+                                  <>
+                                    {dinner.recipe?.id ? (
+                                      <Link className="recipe-link" href={`/recipes/${dinner.recipe.id}`}>
+                                        {dinner.recipe?.name ?? "Recipe"}
+                                      </Link>
+                                    ) : (
+                                      <strong>{dinner.recipe?.name ?? "Recipe"}</strong>
+                                    )}
+                                    {dinner.slot_type === "leftover" ? (
+                                      <span>
+                                        Leftover from{" "}
+                                        {dinner.leftover_from_item_id && itemById.get(dinner.leftover_from_item_id)
+                                          ? formatDisplayDate(itemById.get(dinner.leftover_from_item_id)!.plan_date)
+                                          : "earlier cook"}
+                                      </span>
+                                    ) : null}
+                                  </>
                                 )}
-                                <div className="serving-controls">
-                                  <button className="text-btn" onClick={() => adjustServing(dinner, -0.25)} type="button">
-                                    -
-                                  </button>
-                                  <span>x {dinner.serving_multiplier}</span>
-                                  <button className="text-btn" onClick={() => adjustServing(dinner, 0.25)} type="button">
-                                    +
-                                  </button>
-                                </div>
+                                {dinner.slot_type === "cook" ? (
+                                  <div className="serving-controls">
+                                    <button className="text-btn" onClick={() => adjustServing(dinner, -0.25)} type="button">
+                                      -
+                                    </button>
+                                    <span>x {dinner.serving_multiplier}</span>
+                                    <button className="text-btn" onClick={() => adjustServing(dinner, 0.25)} type="button">
+                                      +
+                                    </button>
+                                  </div>
+                                ) : null}
                                 <button className="text-btn" onClick={() => removeItem(dinner.id)} type="button">
                                   Remove
                                 </button>

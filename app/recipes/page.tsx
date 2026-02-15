@@ -15,6 +15,8 @@ type RecipeListItem = {
   instructions_raw: string | null;
 };
 
+type RecipeSortOption = "newest" | "oldest" | "name-asc" | "name-desc" | "servings-desc" | "servings-asc";
+
 type IngredientRow = {
   id: string;
   name: string;
@@ -216,11 +218,42 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
   const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<RecipeSortOption>("newest");
+  const [showEditor, setShowEditor] = useState(false);
 
   const suggestedTags = useMemo(
     () => STARTER_TAGS.filter((tag) => !form.tags.includes(tag) && !knownTags.includes(tag)),
     [form.tags, knownTags],
   );
+
+  const visibleRecipes = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const filtered = recipes.filter((recipe) => {
+      if (!normalizedQuery) return true;
+      return recipe.name.toLowerCase().includes(normalizedQuery);
+    });
+
+    if (sortBy === "newest") return filtered;
+    if (sortBy === "oldest") return [...filtered].reverse();
+
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "servings-desc":
+          return b.base_servings - a.base_servings;
+        case "servings-asc":
+          return a.base_servings - b.base_servings;
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }, [query, recipes, sortBy]);
 
   useEffect(() => {
     loadData();
@@ -230,6 +263,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
   useEffect(() => {
     if (!editRecipeId || recipes.length === 0 || form.id === editRecipeId) return;
     if (recipes.some((recipe) => recipe.id === editRecipeId)) {
+      setShowEditor(true);
       selectRecipe(editRecipeId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -425,6 +459,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
 
       setMessage("Recipe saved.");
       await loadData();
+      setShowEditor(true);
       await selectRecipe(recipeId);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Failed to save recipe.");
@@ -444,6 +479,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
     }
 
     setForm(blankForm());
+    setShowEditor(false);
     setMessage("Recipe deleted.");
     loadData();
   }
@@ -562,7 +598,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
         <p>Create and edit recipes with ingredients, structured steps, pantry flags, and tags.</p>
       </section>
 
-      <section className="split-layout">
+      <section className={showEditor ? "split-layout recipes-layout editor-open" : "recipes-layout"}>
         <aside className="panel">
           <div className="section-head">
             <h2>Your recipes</h2>
@@ -570,38 +606,76 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
               <button className="secondary-btn" disabled={seeding} onClick={loadSampleData} type="button">
                 {seeding ? "Loading..." : "Load sample data"}
               </button>
-              <button className="secondary-btn" onClick={() => setForm(blankForm())} type="button">
+              <button
+                className="secondary-btn"
+                onClick={() => {
+                  setForm(blankForm());
+                  setShowEditor(true);
+                }}
+                type="button"
+              >
                 New recipe
               </button>
+              {showEditor ? (
+                <button className="text-btn" onClick={() => setShowEditor(false)} type="button">
+                  Hide editor
+                </button>
+              ) : null}
             </div>
           </div>
           {loading ? <p>Loading...</p> : null}
+          <div className="recipes-list-controls">
+            <input placeholder="Search recipes..." value={query} onChange={(event) => setQuery(event.target.value)} />
+            <select value={sortBy} onChange={(event) => setSortBy(event.target.value as RecipeSortOption)}>
+              <option value="newest">Sort: Newest first</option>
+              <option value="oldest">Sort: Oldest first</option>
+              <option value="name-asc">Sort: Name A-Z</option>
+              <option value="name-desc">Sort: Name Z-A</option>
+              <option value="servings-desc">Sort: Servings high-low</option>
+              <option value="servings-asc">Sort: Servings low-high</option>
+            </select>
+            <p className="muted">{visibleRecipes.length} recipes shown</p>
+          </div>
           <div className="list">
-            {recipes.map((recipe) => (
+            {visibleRecipes.map((recipe) => (
               <div className={form.id === recipe.id ? "list-item active" : "list-item"} key={recipe.id}>
                 <strong>{recipe.name}</strong>
                 <span>Serves {recipe.base_servings}</span>
                 <div className="section-actions">
-                  <button className="text-btn" onClick={() => selectRecipe(recipe.id)} type="button">
-                    Select
+                  <button
+                    className="text-btn"
+                    onClick={() => {
+                      setShowEditor(true);
+                      selectRecipe(recipe.id);
+                    }}
+                    type="button"
+                  >
+                    Edit
                   </button>
                   <Link href={`/recipes/${recipe.id}`}>View recipe</Link>
                 </div>
               </div>
             ))}
             {!loading && recipes.length === 0 ? <p>No recipes yet.</p> : null}
+            {!loading && recipes.length > 0 && visibleRecipes.length === 0 ? <p>No recipes match your search.</p> : null}
           </div>
         </aside>
 
-        <section className="panel">
+        {showEditor ? (
+          <section className="panel">
           <form className="stack" onSubmit={saveRecipe}>
             <div className="section-head">
               <h2>{form.id ? "Edit recipe" : "New recipe"}</h2>
-              {form.id ? (
-                <button className="danger-btn" onClick={deleteRecipe} type="button">
-                  Delete
+              <div className="section-actions">
+                <button className="text-btn" onClick={() => setShowEditor(false)} type="button">
+                  Close
                 </button>
-              ) : null}
+                {form.id ? (
+                  <button className="danger-btn" onClick={deleteRecipe} type="button">
+                    Delete
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             <label>
@@ -829,7 +903,8 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
           </form>
           {error ? <p className="error-text">{error}</p> : null}
           {message ? <p className="success-text">{message}</p> : null}
-        </section>
+          </section>
+        ) : null}
       </section>
     </AppShell>
   );

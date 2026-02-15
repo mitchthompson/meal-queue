@@ -98,13 +98,52 @@ create table if not exists public.meal_plan_items (
   meal_plan_id uuid not null references public.meal_plans(id) on delete cascade,
   plan_date date not null,
   meal_type text not null check (meal_type in ('lunch', 'dinner')),
-  recipe_id uuid not null references public.recipes(id) on delete cascade,
+  slot_type text not null default 'cook' check (slot_type in ('cook', 'leftover', 'eat_out')),
+  recipe_id uuid references public.recipes(id) on delete cascade,
+  leftover_from_item_id uuid references public.meal_plan_items(id) on delete set null,
+  note text,
   serving_multiplier numeric(8,3) not null default 1 check (serving_multiplier > 0),
   created_at timestamptz not null default now()
 );
 
 -- Allow multiple recipes per meal slot (e.g. dinner mains + sides).
 drop index if exists meal_plan_items_unique_slot_idx;
+
+alter table public.meal_plan_items
+add column if not exists slot_type text not null default 'cook' check (slot_type in ('cook', 'leftover', 'eat_out'));
+
+alter table public.meal_plan_items
+add column if not exists leftover_from_item_id uuid references public.meal_plan_items(id) on delete set null;
+
+alter table public.meal_plan_items
+add column if not exists note text;
+
+alter table public.meal_plan_items
+alter column recipe_id drop not null;
+
+update public.meal_plan_items
+set slot_type = 'cook'
+where slot_type is null;
+
+alter table public.meal_plan_items
+drop constraint if exists meal_plan_items_slot_recipe_check;
+
+alter table public.meal_plan_items
+add constraint meal_plan_items_slot_recipe_check
+check (
+  (slot_type = 'eat_out' and recipe_id is null)
+  or (slot_type in ('cook', 'leftover') and recipe_id is not null)
+);
+
+alter table public.meal_plan_items
+drop constraint if exists meal_plan_items_leftover_link_check;
+
+alter table public.meal_plan_items
+add constraint meal_plan_items_leftover_link_check
+check (
+  (slot_type = 'leftover')
+  or (slot_type <> 'leftover' and leftover_from_item_id is null)
+);
 
 -- Persisted grocery rows keep checklist state stable until regeneration.
 create table if not exists public.grocery_list_items (
@@ -127,6 +166,8 @@ create index if not exists meal_plans_user_id_idx on public.meal_plans(user_id);
 create index if not exists recipes_user_id_idx on public.recipes(user_id);
 create index if not exists tags_user_id_idx on public.tags(user_id);
 create index if not exists meal_plan_items_meal_plan_id_idx on public.meal_plan_items(meal_plan_id);
+create index if not exists meal_plan_items_slot_type_idx on public.meal_plan_items(slot_type);
+create index if not exists meal_plan_items_leftover_from_item_id_idx on public.meal_plan_items(leftover_from_item_id);
 create index if not exists grocery_list_items_meal_plan_id_idx on public.grocery_list_items(meal_plan_id);
 -- Updated at trigger helper
 create or replace function public.set_updated_at()

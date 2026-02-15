@@ -24,7 +24,7 @@ type GroceryItem = {
 };
 
 type MealPlanItemRow = {
-  recipe_id: string;
+  recipe_id: string | null;
   serving_multiplier: number;
 };
 
@@ -40,6 +40,10 @@ function formatDisplayDate(ymd: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
     new Date(`${ymd}T00:00:00`),
   );
+}
+
+function toYmd(date: Date) {
+  return date.toISOString().slice(0, 10);
 }
 
 function formatAmount(value: number) {
@@ -115,10 +119,11 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
   async function loadPlans() {
     setLoading(true);
     setError(null);
+    const todayYmd = toYmd(new Date());
     const { data, error: plansError } = await supabase
       .from("meal_plans")
       .select("id, start_date, end_date, version")
-      .order("start_date", { ascending: false });
+      .gte("end_date", todayYmd);
 
     if (plansError) {
       setError(plansError.message);
@@ -127,8 +132,19 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
     }
 
     const loaded = (data ?? []) as MealPlan[];
-    setPlans(loaded);
-    if (loaded.length > 0) setSelectedPlanId(loaded[0].id);
+    const currentPlans = loaded
+      .filter((plan) => plan.start_date <= todayYmd && plan.end_date >= todayYmd)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date));
+    const futurePlans = loaded
+      .filter((plan) => plan.start_date > todayYmd)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date));
+    const ordered = [...currentPlans, ...futurePlans];
+
+    setPlans(ordered);
+    setSelectedPlanId((current) => {
+      if (current && ordered.some((plan) => plan.id === current)) return current;
+      return ordered[0]?.id ?? null;
+    });
     setLoading(false);
   }
 
@@ -155,7 +171,8 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
       const { count, error: countError } = await supabase
         .from("meal_plan_items")
         .select("*", { count: "exact", head: true })
-        .eq("meal_plan_id", plan.id);
+        .eq("meal_plan_id", plan.id)
+        .eq("slot_type", "cook");
       if (countError) {
         setError(countError.message);
         return;
@@ -181,11 +198,12 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
       const { data: mealItemsData, error: mealItemsError } = await supabase
         .from("meal_plan_items")
         .select("recipe_id, serving_multiplier")
-        .eq("meal_plan_id", plan.id);
+        .eq("meal_plan_id", plan.id)
+        .eq("slot_type", "cook");
       if (mealItemsError) throw mealItemsError;
 
       const mealItems = (mealItemsData ?? []) as MealPlanItemRow[];
-      const recipeIds = Array.from(new Set(mealItems.map((item) => item.recipe_id)));
+      const recipeIds = Array.from(new Set(mealItems.map((item) => item.recipe_id).filter((id): id is string => Boolean(id))));
 
       let ingredients: IngredientRow[] = [];
       if (recipeIds.length > 0) {
@@ -203,6 +221,7 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
       >();
 
       for (const mealItem of mealItems) {
+        if (!mealItem.recipe_id) continue;
         const recipeIngredients = ingredients.filter((ingredient) => ingredient.recipe_id === mealItem.recipe_id);
         const multiplier = Number(mealItem.serving_multiplier || 1);
 
@@ -327,7 +346,6 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
                 <strong>
                   {formatDisplayDate(plan.start_date)} to {formatDisplayDate(plan.end_date)}
                 </strong>
-                <span>v{plan.version}</span>
               </button>
             ))}
             {!loading && plans.length === 0 ? <p>No meal plans yet.</p> : null}
