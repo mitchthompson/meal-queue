@@ -593,11 +593,6 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
 
   return (
     <AppShell userEmail={userEmail}>
-      <section className="hero">
-        <h1>Recipes</h1>
-        <p>Create and edit recipes with ingredients, structured steps, pantry flags, and tags.</p>
-      </section>
-
       <section className={showEditor ? "split-layout recipes-layout editor-open" : "recipes-layout"}>
         <aside className="panel">
           <div className="section-head">

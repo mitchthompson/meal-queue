@@ -90,9 +90,14 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
 
   return (
     <AppShell userEmail={userEmail}>
-      <section className="hero">
-        <h1>Settings</h1>
-        <p>Defaults used when creating new meal plans. Existing plans keep their own history.</p>
+      <section className="panel">
+        <div className="section-head">
+          <h2>Account</h2>
+        </div>
+        <p className="muted">{userEmail ?? "Signed in"}</p>
+        <button className="secondary-btn" onClick={() => supabase.auth.signOut()} type="button">
+          Sign out
+        </button>
       </section>
 
       <section className="panel">

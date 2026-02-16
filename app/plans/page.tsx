@@ -651,12 +651,6 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
 
   return (
     <AppShell userEmail={userEmail}>
-      <section className="hero">
-        <p className="eyebrow">Meal Queue</p>
-        <h1>Meal Plans</h1>
-        <p>Create custom date-range plans and assign optional lunch/dinner recipes by day.</p>
-      </section>
-
       <section className="plans-page-stack">
         <section className="panel">
           <h2>Create plan</h2>

@@ -325,12 +325,6 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
 
   return (
     <AppShell userEmail={userEmail}>
-      <section className="hero">
-        <p className="eyebrow">Meal Queue</p>
-        <h1>Grocery</h1>
-        <p>Generate and use a persisted grocery checklist per meal plan.</p>
-      </section>
-
       <section className="split-layout">
         <aside className="panel">
           <h2>Meal plans</h2>

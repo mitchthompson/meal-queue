@@ -53,6 +53,8 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [focusSteps, setFocusSteps] = useState(false);
+  const [focusedStepIndex, setFocusedStepIndex] = useState(0);
 
   const pantryCount = useMemo(
     () => ingredients.filter((ingredient) => ingredient.is_pantry_staple).length,
@@ -116,8 +118,18 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
     setUnitLabelByCode(
       Object.fromEntries(((unitsRes.data ?? []) as Array<{ code: string; label: string }>).map((unit) => [unit.code, unit.label])),
     );
+    setFocusedStepIndex(0);
+    setFocusSteps(false);
 
     setLoading(false);
+  }
+
+  function adjustServings(delta: number) {
+    if (!recipe) return;
+    const current = Number(servings || recipe.base_servings);
+    const fallback = Number(recipe.base_servings || 1);
+    const next = Number.isFinite(current) ? current + delta : fallback;
+    setServings(String(Math.max(0.25, Number(next.toFixed(2)))));
   }
 
   async function deleteRecipe() {
@@ -138,26 +150,26 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
 
   return (
     <AppShell userEmail={userEmail}>
-      <section className="hero">
-        {loading ? <h1>Loading recipe...</h1> : null}
-        {recipe ? (
-          <>
-            <p className="eyebrow">Recipe View</p>
-            <h1>{recipe.name}</h1>
-            <div className="section-actions recipe-hero-actions">
-              <Link className="secondary-btn" href={`/recipes?edit=${recipe.id}`}>
-                Edit recipe
-              </Link>
+      {loading ? <h1>Loading recipe...</h1> : null}
+      {recipe ? (
+        <section className="section-head recipe-title-row">
+          <h1>{recipe.name}</h1>
+          <div className="section-actions">
+            <Link className="ghost-btn" href="/recipes">
+              Back
+            </Link>
+            <Link className="secondary-btn" href={`/recipes?edit=${recipe.id}`}>
+              Edit recipe
+            </Link>
+            <details className="recipe-danger-menu">
+              <summary>More</summary>
               <button className="danger-btn" disabled={deleting} onClick={deleteRecipe} type="button">
                 {deleting ? "Deleting..." : "Delete recipe"}
               </button>
-              <Link className="secondary-btn" href="/recipes">
-                Back to recipes
-              </Link>
-            </div>
-          </>
-        ) : null}
-      </section>
+            </details>
+          </div>
+        </section>
+      ) : null}
 
       {error ? <p className="error-text">{error}</p> : null}
 
@@ -171,16 +183,24 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
             </div>
             <label>
               Preview servings
-              <input
-                min={0.25}
-                step={0.25}
-                type="number"
-                value={servings}
-                onChange={(event) => setServings(event.target.value)}
-              />
+              <div className="servings-input-row">
+                <button className="secondary-btn" onClick={() => adjustServings(-0.25)} type="button">
+                  -
+                </button>
+                <input
+                  min={0.25}
+                  step={0.25}
+                  type="number"
+                  value={servings}
+                  onChange={(event) => setServings(event.target.value)}
+                />
+                <button className="secondary-btn" onClick={() => adjustServings(0.25)} type="button">
+                  +
+                </button>
+              </div>
             </label>
             {tags.length > 0 ? (
-              <details className="recipe-details" open>
+              <details className="recipe-details">
                 <summary>Tags ({tags.length})</summary>
                 <div className="chip-wrap">
                   {tags.map((tag) => (
@@ -193,7 +213,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
             ) : null}
           </aside>
 
-          <div className="stack">
+          <div className="stack recipe-view-content">
             <article className="panel recipe-view-section">
               <div className="section-head">
                 <h2>Ingredients</h2>
@@ -208,7 +228,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
                         <strong>{ingredient.name}</strong>
                         {ingredient.is_pantry_staple ? <span className="pantry-badge">Pantry staple</span> : null}
                       </div>
-                      <span>
+                      <span className="recipe-amount">
                         {formatAmount(Number(ingredient.amount) * scaleFactor)}{" "}
                         {unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code}
                       </span>
@@ -219,16 +239,53 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
             </article>
 
             <article className="panel recipe-view-section">
-              <h2>Steps</h2>
+              <div className="section-head">
+                <h2>Steps</h2>
+                {steps.length > 0 ? (
+                  <button className="secondary-btn" onClick={() => setFocusSteps((current) => !current)} type="button">
+                    {focusSteps ? "Show all steps" : "Focus mode"}
+                  </button>
+                ) : null}
+              </div>
               {steps.length === 0 ? <p className="muted">No steps.</p> : null}
-              <ol className="recipe-step-list">
-                {steps.map((step) => (
-                  <li className="recipe-step-item" key={step.step_number}>
-                    <span className="recipe-step-index">{step.step_number}</span>
-                    <p>{step.body}</p>
-                  </li>
-                ))}
-              </ol>
+              {steps.length > 0 && focusSteps ? (
+                <div className="stack">
+                  <div className="recipe-step-item">
+                    <span className="recipe-step-index">{steps[focusedStepIndex].step_number}</span>
+                    <p>{steps[focusedStepIndex].body}</p>
+                  </div>
+                  <div className="recipe-focus-controls">
+                    <button
+                      className="secondary-btn"
+                      disabled={focusedStepIndex === 0}
+                      onClick={() => setFocusedStepIndex((current) => Math.max(0, current - 1))}
+                      type="button"
+                    >
+                      Previous
+                    </button>
+                    <span className="muted">
+                      Step {focusedStepIndex + 1} of {steps.length}
+                    </span>
+                    <button
+                      className="secondary-btn"
+                      disabled={focusedStepIndex >= steps.length - 1}
+                      onClick={() => setFocusedStepIndex((current) => Math.min(steps.length - 1, current + 1))}
+                      type="button"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <ol className="recipe-step-list">
+                  {steps.map((step) => (
+                    <li className="recipe-step-item" key={step.step_number}>
+                      <span className="recipe-step-index">{step.step_number}</span>
+                      <p>{step.body}</p>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </article>
 
             {recipe.instructions_raw ? (

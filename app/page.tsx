@@ -31,11 +31,6 @@ type GroceryPreviewItem = {
   is_on_hand: boolean;
 };
 
-type RecipeOption = {
-  id: string;
-  name: string;
-};
-
 function ymdToday() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -84,15 +79,8 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
   const [plans, setPlans] = useState<MealPlan[]>([]);
   const [items, setItems] = useState<PlanItem[]>([]);
   const [groceryByPlanId, setGroceryByPlanId] = useState<Record<string, GroceryPreviewItem[]>>({});
-  const [recipes, setRecipes] = useState<RecipeOption[]>([]);
-  const [quickAddDay, setQuickAddDay] = useState("");
-  const [quickAddMealType, setQuickAddMealType] = useState<"lunch" | "dinner">("dinner");
-  const [quickAddRecipeId, setQuickAddRecipeId] = useState("");
-  const [quickAddQuery, setQuickAddQuery] = useState("");
-  const [quickAddSaving, setQuickAddSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [showNextWeek, setShowNextWeek] = useState(false);
 
   const currentPlan = useMemo(() => {
@@ -155,7 +143,6 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
     return planDays(currentPlan).filter((day) => !dinners.has(day)).length;
   }, [currentPlan, currentItems]);
 
-  const currentPlanDays = useMemo(() => (currentPlan ? planDays(currentPlan) : []), [currentPlan]);
   const today = ymdToday();
   const focusDay = useMemo(() => {
     if (!currentPlan) return "";
@@ -184,12 +171,6 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
         .filter((recipe): recipe is { id?: string; name?: string } => Boolean(recipe)),
     [todayDinner],
   );
-  const quickAddMatches = useMemo(() => {
-    const query = quickAddQuery.trim().toLowerCase();
-    if (!query) return recipes.slice(0, 8);
-    return recipes.filter((recipe) => recipe.name.toLowerCase().includes(query)).slice(0, 8);
-  }, [quickAddQuery, recipes]);
-
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -203,15 +184,9 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
     window.localStorage.setItem("home_show_next_week", String(showNextWeek));
   }, [showNextWeek]);
 
-  useEffect(() => {
-    if (!currentPlan || currentPlanDays.length === 0) return;
-    setQuickAddDay(currentPlanDays.includes(focusDay) ? focusDay : currentPlanDays[0]);
-  }, [currentPlan, currentPlanDays, focusDay]);
-
   async function loadDashboard() {
     setLoading(true);
     setError(null);
-    setMessage(null);
 
     const { data: plansData, error: plansError } = await supabase
       .from("meal_plans")
@@ -241,17 +216,6 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
     } else {
       setItems([]);
     }
-
-    const { data: recipeListData, error: recipeListError } = await supabase
-      .from("recipes")
-      .select("id, name")
-      .order("name", { ascending: true });
-    if (recipeListError) {
-      setError(recipeListError.message);
-      setLoading(false);
-      return;
-    }
-    setRecipes((recipeListData ?? []) as RecipeOption[]);
 
     if (planIds.length > 0) {
       const { data: groceryData, error: groceryError } = await supabase
@@ -284,47 +248,6 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
     }
 
     setLoading(false);
-  }
-
-  async function quickAddToPlan() {
-    const resolvedRecipeId = quickAddRecipeId || quickAddMatches[0]?.id || "";
-    if (!currentPlan || !quickAddDay || !resolvedRecipeId) return;
-
-    setQuickAddSaving(true);
-    setError(null);
-    setMessage(null);
-
-    const { error: insertError } = await supabase.from("meal_plan_items").insert({
-      meal_plan_id: currentPlan.id,
-      plan_date: quickAddDay,
-      meal_type: quickAddMealType,
-      recipe_id: resolvedRecipeId,
-      serving_multiplier: 1,
-    });
-    if (insertError) {
-      setError(insertError.message);
-      setQuickAddSaving(false);
-      return;
-    }
-
-    const refreshIds = plans.slice(0, 4).map((plan) => plan.id);
-    if (refreshIds.length > 0) {
-      const { data: refreshedItems, error: refreshError } = await supabase
-        .from("meal_plan_items")
-        .select("meal_plan_id, plan_date, meal_type, recipe:recipes(id, name)")
-        .in("meal_plan_id", refreshIds);
-      if (refreshError) {
-        setError(refreshError.message);
-        setQuickAddSaving(false);
-        return;
-      }
-      setItems((refreshedItems ?? []) as PlanItem[]);
-    }
-
-    setQuickAddRecipeId("");
-    setQuickAddQuery("");
-    setMessage("Meal added.");
-    setQuickAddSaving(false);
   }
 
   function renderWeek(plan: MealPlan, planItems: PlanItem[]) {
@@ -406,28 +329,21 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
 
   return (
     <AppShell userEmail={userEmail}>
-      <section className="hero">
-        <p className="eyebrow">Meal Queue</p>
-        <h1>Home</h1>
-        <p>Plan today quickly, keep this week on track, and stay ahead of grocery runs.</p>
-      </section>
-
       {error ? <p className="error-text">{error}</p> : null}
       {loading ? <p>Loading dashboard...</p> : null}
 
       {!loading ? (
         <section className="home-grid">
-          <article className="panel home-today-card">
-            <div className="section-head">
-              <h2>Today</h2>
-              {focusDay ? <span className="muted">{formatLongDate(focusDay)}</span> : null}
-            </div>
-            <p className="muted home-section-subtitle">Plan and adjust today&apos;s meals quickly.</p>
-            {currentPlan ? (
+          {currentPlan && (todayLunchRecipes.length > 0 || todayDinnerRecipes.length > 0) ? (
+            <article className="panel home-today-card">
+              <div className="section-head">
+                <h2>Today</h2>
+                {focusDay ? <span className="muted">{formatLongDate(focusDay)}</span> : null}
+              </div>
               <div className="home-today-grid">
-                <div className="home-today-slot">
-                  <strong>Lunch</strong>
-                  {todayLunchRecipes.length > 0 ? (
+                {todayLunchRecipes.length > 0 ? (
+                  <div className="home-today-slot">
+                    <strong>Lunch</strong>
                     <span>
                       {todayLunchRecipes.map((recipe, index) => (
                         <span key={`${recipe.id ?? recipe.name ?? "recipe"}-${index}`}>
@@ -442,19 +358,11 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
                         </span>
                       ))}
                     </span>
-                  ) : (
-                    <span className="muted">Not planned</span>
-                  )}
-                  <span className={`chip ${todayLunchRecipes.length > 0 ? "active" : ""}`}>
-                    {todayLunchRecipes.length > 0 ? `${todayLunchRecipes.length} planned` : "Missing"}
-                  </span>
-                  <Link className={todayLunchRecipes.length > 0 ? "secondary-btn" : "primary-btn"} href="/plans">
-                    {todayLunchRecipes.length > 0 ? "Adjust lunch" : "Pick lunch"}
-                  </Link>
-                </div>
-                <div className="home-today-slot">
-                  <strong>Dinner</strong>
-                  {todayDinnerRecipes.length > 0 ? (
+                  </div>
+                ) : null}
+                {todayDinnerRecipes.length > 0 ? (
+                  <div className="home-today-slot">
+                    <strong>Dinner</strong>
                     <span>
                       {todayDinnerRecipes.map((recipe, index) => (
                         <span key={`${recipe.id ?? recipe.name ?? "recipe"}-${index}`}>
@@ -469,80 +377,12 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
                         </span>
                       ))}
                     </span>
-                  ) : (
-                    <span className="muted">Not planned</span>
-                  )}
-                  <span className={`chip ${todayDinnerRecipes.length > 0 ? "active" : ""}`}>
-                    {todayDinnerRecipes.length > 0 ? `${todayDinnerRecipes.length} planned` : "Missing"}
-                  </span>
-                  <Link className={todayDinnerRecipes.length > 0 ? "secondary-btn" : "primary-btn"} href="/plans">
-                    {todayDinnerRecipes.length > 0 ? "Adjust dinner" : "Pick dinner"}
-                  </Link>
-                </div>
-                <div className="home-today-slot">
-                  <strong>Grocery status</strong>
-                  <span>{needToBuyItems.length} need to buy</span>
-                  <span>{currentGroceryItems.filter((item) => item.is_checked).length} checked</span>
-                </div>
+                  </div>
+                ) : null}
               </div>
-            ) : (
-              <p className="muted">No current meal plan yet.</p>
-            )}
-            {currentPlan ? (
-              <div className="home-quick-add">
-                <h3>Quick add meal</h3>
-                <div className="home-quick-add-grid">
-                  <select value={quickAddDay} onChange={(event) => setQuickAddDay(event.target.value)}>
-                    {currentPlanDays.map((day) => (
-                      <option key={day} value={day}>
-                        {formatDisplayDate(day)}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={quickAddMealType}
-                    onChange={(event) => setQuickAddMealType(event.target.value as "lunch" | "dinner")}
-                  >
-                    <option value="lunch">Lunch</option>
-                    <option value="dinner">Dinner</option>
-                  </select>
-                  <input
-                    placeholder="Search recipe..."
-                    value={quickAddQuery}
-                    onChange={(event) => {
-                      setQuickAddQuery(event.target.value);
-                      setQuickAddRecipeId("");
-                    }}
-                  />
-                  <button
-                    className="primary-btn"
-                    disabled={quickAddSaving || !quickAddDay || (!quickAddRecipeId && quickAddMatches.length === 0)}
-                    onClick={quickAddToPlan}
-                    type="button"
-                  >
-                    {quickAddSaving ? "Adding..." : "Add meal"}
-                  </button>
-                </div>
-                <div className="home-quick-search-results">
-                  {quickAddMatches.map((recipe) => (
-                    <button
-                      className={quickAddRecipeId === recipe.id ? "pill active" : "pill"}
-                      key={recipe.id}
-                      onClick={() => {
-                        setQuickAddRecipeId(recipe.id);
-                        setQuickAddQuery(recipe.name);
-                      }}
-                      type="button"
-                    >
-                      {recipe.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {emptyDinnerCount > 0 ? <p className="muted">{emptyDinnerCount} dinner slot(s) still empty this week.</p> : null}
-            {message ? <p className="success-text">{message}</p> : null}
-          </article>
+              {emptyDinnerCount > 0 ? <p className="muted">{emptyDinnerCount} dinner slot(s) still empty this week.</p> : null}
+            </article>
+          ) : null}
 
           <article className="panel home-week-panel">
             <div className="section-head">
