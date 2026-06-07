@@ -3,11 +3,11 @@
 Reliability is the current priority. Existing household data must remain
 compatible throughout this work.
 
-## Active Milestones
+## Completed Milestones
 
 ### 0. Documentation Foundation
 
-Branch: `codex/docs-foundation`
+Merged: PR #1, commit `0108c44`
 
 - Establish durable project-memory documents.
 - Reconcile outdated project and implementation notes.
@@ -19,6 +19,8 @@ Acceptance:
 - A new session can identify current state, next work, important decisions, and
   operating procedures by following `docs/README.md`.
 - No obsolete document presents completed work as a future plan.
+
+## Active Milestones
 
 ### 1. Reliability Foundation
 

@@ -2,20 +2,27 @@
 
 Last reviewed: 2026-06-07
 
-## Session Handoff
+## Stable Baseline
 
-- **Last completed work:** Mobile UI optimization on commit `022e354`.
-- **In progress:** Documentation foundation on branch
-  `codex/docs-foundation`.
-- **Next action:** Review and merge the documentation foundation, then begin
-  `codex/reliability-foundation`.
-- **Blockers:** None.
+- **Last merged work:** Documentation foundation in PR #1, merge commit
+  `0108c44`.
+- **Current branch:** `main`, tracking `origin/main`.
 - **Remote:** `origin` points to
   `https://github.com/mitchthompson/meal-queue.git`.
 - **Database status:** Existing Supabase data is treated as live. The repository
   currently has a canonical schema file but no ordered migration directory.
-- **Latest verification:** `npm run typecheck` and `npm run build` passed on
-  2026-06-07 for this documentation branch.
+- **Latest application verification:** `npm run typecheck` and `npm run build`
+  passed on 2026-06-07 for the documentation foundation.
+- **Latest documentation verification:** Internal Markdown links and
+  `git diff --check` passed on 2026-06-07.
+
+## Active Handoff
+
+- **In progress:** None after the workflow documentation commit.
+- **Next action:** Create `codex/reliability-foundation` from updated `main`,
+  then add Vitest, core domain tests, and `supabase/migrations/`.
+- **Blockers:** None.
+- **Uncommitted work:** None after the workflow documentation commit.
 
 ## Working Product
 
@@ -58,7 +65,10 @@ Last reviewed: 2026-06-07
 ## Repository Notes
 
 - `main` tracks `origin/main`.
-- Use small `codex/...` branches and pull requests.
+- Use focused `codex/...` branches for implementation work.
+- Pull requests are required for database migrations, broad refactors, and
+  other high-risk changes. Low-risk and documentation-only work may be
+  committed directly to `main`.
 - `.env.local`, `.codex/`, and `recipe-export.json` are local-only.
 - GitHub CLI and Supabase CLI are not currently installed. Pull requests are
   opened in GitHub's web interface, and migrations are applied through the

@@ -39,11 +39,20 @@ replaced decisions as superseded rather than silently deleting them.
 
 - Existing Supabase data is live data and must be preserved with additive
   migrations and preflight checks.
-- Work is delivered as small branches prefixed with `codex/` and reviewed
-  through pull requests before merging to `main`.
-- Documentation updates are part of every pull request's acceptance criteria.
+- Implementation work uses focused branches prefixed with `codex/`.
+- Pull requests are a risk-management tool rather than a requirement for every
+  change. Use them for database migrations, broad refactors, risky behavior
+  changes, or whenever a deliberate review checkpoint is useful.
+- Small, low-risk, and documentation-only changes may be committed directly to
+  `main` after review and verification.
+- Useful incomplete work stays on a pushed feature branch with an explicit
+  handoff. Checkpoint commits may be squashed before merge.
+- Documentation updates are part of each completed change's acceptance
+  criteria.
 - `CURRENT_STATE.md` describes present reality, `ROADMAP.md` describes future
   work, and `HISTORY.md` records completed outcomes.
+- Every session ends with the documented session-wrap process so the next
+  session can resume without relying on conversation history.
 
 ## Superseded Decisions
 

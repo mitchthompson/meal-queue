@@ -22,19 +22,42 @@ Open `http://localhost:3000`.
 
 ## Git Workflow
 
-1. Fetch `origin` and fast-forward local `main`.
-2. Create one focused `codex/...` branch.
-3. Implement the milestone and update relevant documents.
-4. Run the required verification.
-5. Commit only files belonging to the milestone.
-6. Push the branch with upstream tracking.
-7. Open and review a pull request through GitHub's web interface.
-8. Merge, update local `main`, and branch the next milestone from it.
+Start each change by fetching `origin` and confirming local `main` is current.
+
+### Low-Risk Changes
+
+Documentation, small fixes, and other narrowly scoped changes may be committed
+directly to `main` when:
+
+- The diff is easy to review.
+- No database migration or risky behavior change is involved.
+- Appropriate verification passes.
+- The commit remains focused and reversible.
+
+### Feature Branches
+
+Use a focused `codex/...` branch for implementation work, incomplete work that
+must survive between sessions, or any change that should not immediately land
+on `main`.
+
+### Pull Requests
+
+Use a pull request when a change includes:
+
+- A database migration or live-data risk.
+- A broad refactor or cross-cutting behavior change.
+- A difficult rollback.
+- A change that benefits from a deliberate review checkpoint.
+
+For lower-risk feature branches, review the diff and merge into `main` without
+a pull request when the extra ceremony would not improve safety.
+
+After merging any branch, update local `main` before starting the next change.
 
 Do not commit `.env.local`, `.codex/`, `recipe-export.json`, Supabase temporary
 files, or generated build output.
 
-## Pull Request Checklist
+## Change Checklist
 
 - Behavior and motivation are described.
 - `CURRENT_STATE.md`, `ROADMAP.md`, and `HISTORY.md` are updated.
@@ -43,6 +66,38 @@ files, or generated build output.
 - `npm run test` passes once the test suite is introduced.
 - `npm run typecheck` passes.
 - `npm run build` passes.
+
+## End-of-Session Wrap
+
+Run this process before ending a working session, including sessions that stop
+with incomplete work:
+
+1. Inspect the current branch, Git status, and remote tracking state.
+2. Review the diff so unrelated or accidental changes are identified.
+3. Run verification appropriate to the work completed. Record skipped, failed,
+   or blocked checks explicitly.
+4. Update `CURRENT_STATE.md`:
+   - Stable baseline when merged or deployed state changed.
+   - Active branch and work in progress.
+   - Exact next concrete action.
+   - Blockers and unresolved questions.
+   - Database and migration status.
+   - Latest verification results.
+   - Any intentionally uncommitted files.
+5. Update `ROADMAP.md` when milestone status, ordering, or scope changed.
+6. Update `DECISIONS.md`, `ARCHITECTURE.md`, or this file when durable project
+   knowledge changed.
+7. Add a `HISTORY.md` entry only for a completed milestone, merged pull request,
+   applied migration, or significant decision. Do not create a diary entry for
+   every session.
+8. Commit coherent completed work. If unfinished work is valuable, create a
+   clearly labeled checkpoint commit on its feature branch and push it. It may
+   be squashed before merge.
+9. Leave the worktree clean. If that is not appropriate, list every remaining
+   uncommitted file and why it is intentionally uncommitted in
+   `CURRENT_STATE.md`.
+10. Finish with a concise handoff stating what changed, where it lives,
+    verification status, and the next action.
 
 ## Database Changes
 

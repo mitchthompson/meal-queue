@@ -33,16 +33,21 @@ At the start of a new session, read:
 
 ## Update Rules
 
-Every pull request must update the documents affected by its changes:
+Every completed change must update the documents it affects, whether it is
+merged through a pull request or committed directly:
 
 - Update `CURRENT_STATE.md` when behavior, risks, architecture, branch status,
   or the next action changes.
 - Update `ROADMAP.md` when work starts, completes, changes order, or is
   deferred.
-- Append a dated `HISTORY.md` entry before merge.
+- Append a dated `HISTORY.md` entry for completed milestones, merged pull
+  requests, migrations, or significant decisions.
 - Update `DECISIONS.md` for meaningful choices or reversals.
 - Update `ARCHITECTURE.md` and `OPERATIONS.md` when their described behavior
   changes.
 
 Record outcomes and rationale, not full session transcripts. Git remains the
 detailed record of individual code changes.
+
+Before ending a working session, follow the session-wrap process in
+[`OPERATIONS.md`](OPERATIONS.md).

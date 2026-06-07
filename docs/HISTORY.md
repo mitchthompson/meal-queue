@@ -3,6 +3,20 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-06-07 - Hybrid Git and Session-Wrap Workflow
+
+- Merged the documentation foundation through PR #1 at commit `0108c44`.
+- Decided that pull requests are used for risk management rather than required
+  for every change.
+- Database migrations, broad refactors, and risky behavior changes retain a
+  pull-request review gate.
+- Small, low-risk, and documentation-only changes may be committed directly to
+  `main` after verification.
+- Added a required end-of-session wrap covering Git state, verification,
+  current-state handoff, documentation updates, incomplete work, and the exact
+  next action.
+- Next work: begin the reliability foundation milestone.
+
 ## 2026-06-07 - Documentation Foundation Started
 
 - Reviewed the repository, current application flows, Supabase schema, and
@@ -14,8 +28,7 @@ Include outcomes, important tradeoffs, verification, and remaining work.
 - Established the project-memory documentation structure.
 - Verification: internal Markdown links, `git diff --check`,
   `npm run typecheck`, and `npm run build` passed.
-- Remaining work: review and merge this documentation branch, then start the
-  reliability foundation milestone.
+- Result: merged through PR #1 at commit `0108c44`.
 
 ## 2026-02-15 - Mobile UI Optimization
 
