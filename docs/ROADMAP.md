@@ -12,7 +12,7 @@ Merged: PR #1, commit `0108c44`
 - Establish durable project-memory documents.
 - Reconcile outdated project and implementation notes.
 - Ignore local Codex metadata and recipe exports.
-- Make documentation updates part of every pull request.
+- Make documentation updates part of every completed change.
 
 Acceptance:
 

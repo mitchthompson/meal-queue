@@ -4,7 +4,9 @@ Last reviewed: 2026-06-07
 
 ## Stable Baseline
 
-- **Last merged work:** Documentation foundation in PR #1, merge commit
+- **Last completed work:** Hybrid Git and end-of-session workflow documentation
+  committed directly to `main` as `3bfddfa`.
+- **Last pull request:** Documentation foundation in PR #1, merge commit
   `0108c44`.
 - **Current branch:** `main`, tracking `origin/main`.
 - **Remote:** `origin` points to
@@ -18,11 +20,11 @@ Last reviewed: 2026-06-07
 
 ## Active Handoff
 
-- **In progress:** None after the workflow documentation commit.
+- **In progress:** None.
 - **Next action:** Create `codex/reliability-foundation` from updated `main`,
   then add Vitest, core domain tests, and `supabase/migrations/`.
 - **Blockers:** None.
-- **Uncommitted work:** None after the workflow documentation commit.
+- **Uncommitted work:** None.
 
 ## Working Product
 
