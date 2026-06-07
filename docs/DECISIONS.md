@@ -1,25 +1,50 @@
-# Product Decisions (Current)
+# Decisions
 
-## Confirmed
+This document records choices that should survive individual implementation
+sessions. Add a dated entry when a product or technical decision changes. Mark
+replaced decisions as superseded rather than silently deleting them.
 
-- Lunch and dinner are both supported, but optional in planning.
-- Meal plans use custom `start_date` and `end_date` (settings provide defaults).
-- Order day and pickup day default from settings for new plans, but each plan stores its own dates so history is preserved.
-- Ingredient units should come from a controlled list for V1.
-- Tags are user-created; app ships with suggested tags.
-- Grocery list state persists for a meal plan and only refreshes when that plan changes.
-- V1 can scaffold core app first, then deepen auth flows.
-- UI should work well on both desktop and iPhone Safari.
+## Active Decisions
 
-## Instruction Model Recommendation
+### Product Scope
 
-Use structured steps (`recipe_steps` table) as the canonical format for scalability.
+- Meal Queue is optimized for personal or household use, not public-product
+  scale.
+- Lunch and dinner are optional planning slots.
+- A meal slot may contain multiple recipes, a leftover reference, or an
+  eating-out note.
+- Meal plans use explicit `start_date` and `end_date` values rather than a
+  fixed calendar week.
+- Order and pickup weekdays provide defaults, while each plan stores its actual
+  dates so historical plans remain accurate.
+- The primary targets are desktop browsers and iPhone Safari.
 
-Why:
-- Web import and OCR parsing can map naturally into discrete steps.
-- Future features (timers, step checkoff, voice mode, smart highlighting) depend on step structure.
-- Editing UX is cleaner with reorderable step rows.
+### Recipes and Ingredients
 
-Implementation detail:
-- Keep optional `instructions_raw` text on `recipes` for ingest/debug.
-- Parse/import pipeline writes normalized rows to `recipe_steps`.
+- Structured `recipe_steps` are canonical. Optional `instructions_raw` is kept
+  for imports and debugging.
+- Ingredient units come from a controlled list.
+- Grocery quantities combine only when normalized ingredient name, unit, and
+  pantry classification match exactly. Unit conversion is deferred.
+- Tags are user-created, with starter suggestions supplied by the app.
+
+### Grocery State
+
+- Grocery rows are persisted so checklist state survives page navigation.
+- Pantry staples, on-hand state, and checked state belong to a specific plan.
+- Reliability work must preserve unchanged user state when a grocery list is
+  regenerated.
+
+### Engineering Workflow
+
+- Existing Supabase data is live data and must be preserved with additive
+  migrations and preflight checks.
+- Work is delivered as small branches prefixed with `codex/` and reviewed
+  through pull requests before merging to `main`.
+- Documentation updates are part of every pull request's acceptance criteria.
+- `CURRENT_STATE.md` describes present reality, `ROADMAP.md` describes future
+  work, and `HISTORY.md` records completed outcomes.
+
+## Superseded Decisions
+
+None recorded yet.

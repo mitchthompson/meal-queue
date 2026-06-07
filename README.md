@@ -2,13 +2,13 @@
 
 Meal Queue is a meal planner + recipe keeper + grocery list generator built with Next.js + Supabase.
 
-## V1 Scope
+## Current Features
 
-- Recipe CRUD with optional lunch/dinner planning
-- Custom date-range meal plans (default start/end behavior from user settings)
-- Grocery list persistence per meal plan (regenerates when the plan changes)
-- User-defined tags with starter suggestions
-- Supabase auth gate for all app sections
+- Recipe CRUD with ingredients, structured steps, serving scaling, and tags
+- Custom date-range meal plans with lunch, dinner, leftovers, and eating-out slots
+- Persisted grocery lists with pantry, on-hand, and checked states
+- User settings for plan length, week start, ordering, and pickup
+- Supabase email/password authentication and row-level security
 
 ## Stack
 
@@ -33,17 +33,11 @@ npm run dev
 ```
 6. Open `http://localhost:3000` and sign in/sign up.
 
-## Current Routes
+## Project Context
 
-- `/` dashboard + navigation
-- `/settings` user defaults (plan days, start day, order/pickup weekdays)
-- `/recipes` recipe CRUD (ingredients, steps, tags)
-- `/plans` meal plan creation and quick-add scheduling
-- `/grocery` persisted grocery generation + checklist buckets
+Start with [`docs/README.md`](docs/README.md). It defines the reading order and
+the documents that preserve current state, plans, decisions, and history between
+working sessions.
 
-## Docs
-
-- Decisions: `docs/DECISIONS.md`
-- Implementation plan: `docs/IMPLEMENTATION_PLAN.md`
-- Database schema: `supabase/schema.sql`
+The canonical database definition is [`supabase/schema.sql`](supabase/schema.sql).
 
