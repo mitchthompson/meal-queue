@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
+import { formatAmount } from "@/lib/grocery";
 import { supabase } from "@/lib/supabase/client";
 
 type RecipeRecord = {
@@ -26,10 +27,6 @@ type StepRecord = {
   step_number: number;
   body: string;
 };
-
-function formatAmount(value: number) {
-  return Number(value.toFixed(3)).toString();
-}
 
 export default function RecipeDetailPage() {
   return (

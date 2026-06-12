@@ -24,17 +24,19 @@ Acceptance:
 
 ### 1. Reliability Foundation
 
-Planned branch: `codex/reliability-foundation`
+Status: Ready for review on `codex/reliability-foundation`
 
-- Add Vitest and core test scripts.
-- Extract testable date, ingredient scaling, and grocery grouping functions.
-- Add tests for those behaviors.
-- Establish `supabase/migrations/` while keeping `schema.sql` canonical.
+- [x] Add Vitest and core test scripts.
+- [x] Extract testable date, ingredient scaling, and grocery grouping
+  functions.
+- [x] Add tests for those behaviors.
+- [x] Establish `supabase/migrations/` while keeping `schema.sql` canonical.
+- [x] Patch Next.js within major version 15 and resolve npm audit findings.
 
 Acceptance:
 
-- `npm run test`, `npm run typecheck`, and `npm run build` pass.
-- Migration naming and application procedures are documented.
+- [x] `npm run test`, `npm run typecheck`, and `npm run build` pass.
+- [x] Migration naming and application procedures are documented.
 
 ### 2. Atomic Recipe Saves
 

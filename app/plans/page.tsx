@@ -4,6 +4,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
+import {
+  createDefaultsFromStart,
+  dateRange,
+  findNextAvailableStartDate,
+  nextDayInRange,
+  toYmd,
+} from "@/lib/date-utils";
 import { supabase } from "@/lib/supabase/client";
 
 type MealPlan = {
@@ -63,73 +70,10 @@ type LeftoverOption = {
   recipe_name: string;
 };
 
-function toYmd(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function addDays(ymd: string, days: number) {
-  const date = new Date(`${ymd}T00:00:00`);
-  date.setDate(date.getDate() + days);
-  return toYmd(date);
-}
-
-function nextWeekday(weekday: number) {
-  const today = new Date();
-  const copy = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const delta = (weekday - copy.getDay() + 7) % 7;
-  copy.setDate(copy.getDate() + delta);
-  return toYmd(copy);
-}
-
-function weekdayOnOrBefore(startDate: string, weekday: number) {
-  const start = new Date(`${startDate}T00:00:00`);
-  let delta = weekday - start.getDay();
-  if (delta > 0) delta -= 7;
-  start.setDate(start.getDate() + delta);
-  return toYmd(start);
-}
-
-function dateRange(start: string, end: string) {
-  const out: string[] = [];
-  let cursor = new Date(`${start}T00:00:00`);
-  const endDate = new Date(`${end}T00:00:00`);
-  while (cursor <= endDate) {
-    out.push(toYmd(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return out;
-}
-
 function formatDisplayDate(ymd: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
     new Date(`${ymd}T00:00:00`),
   );
-}
-
-function createDefaultsFromStart(startDate: string, settings: SettingsDefaults): PlanForm {
-  return {
-    start_date: startDate,
-    end_date: addDays(startDate, settings.default_plan_days - 1),
-    order_date:
-      settings.default_order_weekday === null ? "" : weekdayOnOrBefore(startDate, settings.default_order_weekday),
-    pickup_date:
-      settings.default_pickup_weekday === null ? "" : weekdayOnOrBefore(startDate, settings.default_pickup_weekday),
-  };
-}
-
-function findNextAvailableStartDate(weekday: number, plans: MealPlan[]) {
-  const usedStartDates = new Set(plans.map((plan) => plan.start_date));
-  let candidate = nextWeekday(weekday);
-  for (let i = 0; i < 120; i += 1) {
-    if (!usedStartDates.has(candidate)) return candidate;
-    candidate = addDays(candidate, 7);
-  }
-  return candidate;
-}
-
-function nextDayInRange(day: string, endDate: string) {
-  const next = addDays(day, 1);
-  return next <= endDate ? next : null;
 }
 
 function formatWeekday(ymd: string) {

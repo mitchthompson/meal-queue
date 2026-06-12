@@ -54,6 +54,16 @@ replaced decisions as superseded rather than silently deleting them.
 - Every session ends with the documented session-wrap process so the next
   session can resume without relying on conversation history.
 
+### Dates and Migrations
+
+- Meal-plan dates are calendar dates, not UTC timestamps. Shared date helpers
+  construct `YYYY-MM-DD` values from local calendar fields to avoid timezone
+  shifts.
+- `supabase/schema.sql` remains the canonical full-schema reference.
+- New database changes use timestamped, forward-only files under
+  `supabase/migrations/`. There is no synthetic baseline migration for the
+  already-live database.
+
 ## Superseded Decisions
 
 None recorded yet.

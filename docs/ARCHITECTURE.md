@@ -17,6 +17,10 @@ the authenticated owner.
 - `app/plans` owns date-range plans and meal-slot scheduling.
 - `app/grocery` owns grocery generation and checklist state.
 - `app/settings` owns household planning defaults.
+- `lib/date-utils.ts` owns pure local-calendar date arithmetic and plan-date
+  defaults.
+- `lib/grocery.ts` owns pure ingredient scaling, normalization, grouping, and
+  grocery-row construction.
 - `lib/supabase/client.ts` creates the browser Supabase client.
 
 ## Data Model
@@ -50,8 +54,9 @@ staleness.
 ### Grocery Generation
 
 The client loads cooked plan items and recipe ingredients, scales quantities,
-groups exact matches, deletes all existing grocery rows, and inserts a new set.
-This currently resets checklist state.
+then passes them to the tested `buildGroceryRows` domain function. The client
+still deletes all existing grocery rows and inserts the new set, which resets
+checklist state.
 
 ## Invariants
 
@@ -66,8 +71,20 @@ This currently resets checklist state.
 ## Known Structural Debt
 
 - Core route files contain UI, state management, queries, and domain logic.
-- Shared date formatting and range logic is duplicated.
+- Display-date formatting remains duplicated across route components.
 - Aggregate writes are composed in the browser instead of database
   transactions.
-- The schema is tracked as one file rather than ordered migrations.
 - Generated Supabase database types are not present.
+
+## Test Boundaries
+
+Vitest currently covers:
+
+- Local calendar formatting and date arithmetic.
+- Plan default and next-start calculations.
+- Ingredient scaling and three-decimal rounding.
+- Grocery normalization, exact-match grouping, pantry separation, and source
+  keys.
+
+Database transactions, row-level security, and UI interactions do not yet have
+automated coverage.

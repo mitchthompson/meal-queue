@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-06-07
+Last reviewed: 2026-06-09
 
 ## Stable Baseline
 
@@ -12,19 +12,21 @@ Last reviewed: 2026-06-07
 - **Remote:** `origin` points to
   `https://github.com/mitchthompson/meal-queue.git`.
 - **Database status:** Existing Supabase data is treated as live. The repository
-  currently has a canonical schema file but no ordered migration directory.
-- **Latest application verification:** `npm run typecheck` and `npm run build`
-  passed on 2026-06-07 for the documentation foundation.
+  has a canonical schema file and a documented forward-only migration
+  directory. No database migration has been applied yet.
+- **Latest application verification:** `npm run test`, `npm run typecheck`, and
+  `npm run build` passed on 2026-06-09 on the reliability foundation branch.
 - **Latest documentation verification:** Internal Markdown links and
-  `git diff --check` passed on 2026-06-07.
+  `git diff --check` passed on 2026-06-09.
 
 ## Active Handoff
 
-- **In progress:** None.
-- **Next action:** Create `codex/reliability-foundation` from updated `main`,
-  then add Vitest, core domain tests, and `supabase/migrations/`.
+- **In progress:** Reliability foundation on
+  `codex/reliability-foundation`, implemented and ready for pull-request
+  review.
+- **Next action:** Push `codex/reliability-foundation` and open a pull request.
 - **Blockers:** None.
-- **Uncommitted work:** None.
+- **Uncommitted work:** None after the reliability foundation commit.
 
 ## Working Product
 
@@ -48,7 +50,12 @@ Last reviewed: 2026-06-07
 - Most screen behavior currently lives in large route components:
   `app/plans/page.tsx`, `app/recipes/page.tsx`, and
   `app/grocery/page.tsx`.
-- `supabase/schema.sql` is the only tracked schema source.
+- Pure date calculations live in `lib/date-utils.ts`.
+- Grocery scaling, normalization, grouping, and amount formatting live in
+  `lib/grocery.ts`.
+- Vitest covers the extracted domain logic.
+- `supabase/schema.sql` is the canonical full schema, and new forward-only
+  changes belong in `supabase/migrations/`.
 
 ## Known Reliability Risks
 
@@ -62,7 +69,8 @@ Last reviewed: 2026-06-07
   can lose concurrent increments.
 - Database constraints do not fully enforce meal dates, same-owner references,
   or valid leftover relationships.
-- There is no automated test suite.
+- Automated coverage currently protects date and grocery calculations, but not
+  Supabase write flows or UI interactions.
 
 ## Repository Notes
 
@@ -75,3 +83,5 @@ Last reviewed: 2026-06-07
 - GitHub CLI and Supabase CLI are not currently installed. Pull requests are
   opened in GitHub's web interface, and migrations are applied through the
   Supabase SQL editor.
+- Next.js is patched to `15.5.19`; targeted transitive overrides keep npm audit
+  at zero known vulnerabilities.
