@@ -68,6 +68,15 @@ replaced decisions as superseded rather than silently deleting them.
   build output, and `node_modules` remain ignored because they hold secrets or
   generated content.
 
+### Front-End Improvements (2026-06-11)
+
+- UI improvement work (feedback overhaul, mobile ergonomics, loading polish)
+  runs after the reliability core so data-integrity fixes land first.
+- Accessibility fixes are folded into related UI work rather than tracked as
+  a separate milestone.
+- Auth flow completion (sign-up confirmation messaging, password reset) is
+  deferred until a need arises; this is a single-household app.
+
 ### Dates and Migrations
 
 - Meal-plan dates are calendar dates, not UTC timestamps. Shared date helpers

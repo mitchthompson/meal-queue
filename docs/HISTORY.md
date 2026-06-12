@@ -3,6 +3,21 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-06-11 - Front-End UI Audit and Milestone 5
+
+- Audited all five screens for layout, responsiveness, accessibility, and
+  interaction flows; visually verified the unauthenticated screens at desktop
+  and iPhone viewports. Full findings: `docs/UI_AUDIT_2026-06-11.md`.
+- Top friction: feedback messages render off-screen with no `aria-live`,
+  text-button tap targets are below iOS guidance, the mobile recipe editor
+  opens without scrolling into view, the plans page buries the week grid, and
+  every navigation shows a loading flash with no cached data.
+- Owner decisions: feedback overhaul, mobile ergonomics, and loading polish
+  become roadmap milestone 5 (after the reliability core, before component
+  hardening, which is now milestone 6); accessibility fixes fold into each
+  track; auth flow completion is deferred.
+- Next work: milestone 2 (atomic recipe saves).
+
 ## 2026-06-11 - Reliability Foundation and Audit Merged
 
 - Merged `codex/reliability-foundation` (`7cfbab2`) and

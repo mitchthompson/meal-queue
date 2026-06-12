@@ -24,11 +24,11 @@ Last reviewed: 2026-06-11
 
 ## Active Handoff
 
-- **In progress:** Detailed front-end UI audit, requested by the owner on
-  2026-06-11 as the next work item ahead of milestone 2.
-- **Next action:** Complete the front-end UI audit, present improvement
-  options to the owner, and record the agreed scope before implementation.
-  Milestone 2 (`codex/atomic-recipe-saves`) follows.
+- **In progress:** Nothing. The front-end UI audit is complete
+  (`docs/UI_AUDIT_2026-06-11.md`) and its agreed scope is recorded as roadmap
+  milestone 5, after the reliability core and before component hardening.
+- **Next action:** Start milestone 2 (atomic recipe saves) on
+  `codex/atomic-recipe-saves`.
 - **Blockers:** None.
 - **Uncommitted work:** None.
 

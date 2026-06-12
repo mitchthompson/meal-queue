@@ -42,8 +42,9 @@ The 2026-06-11 code audit (`docs/CODE_AUDIT_2026-06-11.md`) confirmed
 milestones 2-4 as the agreed scope, in this order, implemented with Postgres
 functions (RPCs) and triggers applied through the Supabase SQL editor.
 
-A detailed front-end UI audit was requested by the owner on 2026-06-11 and
-runs next, before milestone 2 implementation begins.
+The 2026-06-11 front-end UI audit (`docs/UI_AUDIT_2026-06-11.md`) added
+milestone 5 (UI feedback and ergonomics), which runs after the reliability
+core and before component hardening.
 
 ### 2. Atomic Recipe Saves
 
@@ -97,7 +98,32 @@ Acceptance:
 - Regeneration never exposes a partially rebuilt list.
 - Unchanged items retain user state; removed ingredients disappear.
 
-### 5. Component Hardening
+### 5. UI Feedback and Ergonomics
+
+Planned branch: `codex/ui-feedback-ergonomics`
+
+Scoped by the 2026-06-11 UI audit. Accessibility fixes are folded into each
+track rather than a separate milestone.
+
+- Feedback and status overhaul: show save and error messages near the action
+  with `aria-live` announcement and auto-dismiss; surface failures clearly on
+  mobile.
+- Mobile ergonomics: 44px-equivalent tap targets for text buttons,
+  scroll-into-view when the recipe editor opens, reorder the plans page so
+  the week grid comes first, accessible labels for serving controls, and
+  `apple-touch-icon` plus `theme-color` for iPhone home-screen use.
+- Loading and caching polish: remove the session flash, keep fetched data
+  between tab switches, add skeleton states, and add per-page titles.
+
+Acceptance:
+
+- Status messages are visible without scrolling and announced to assistive
+  technology on all five screens.
+- Primary touch controls meet tap-target guidance on a 375px viewport.
+- Navigating between tabs shows previously loaded data without a blank
+  loading flash.
+
+### 6. Component Hardening
 
 Planned branch: `codex/component-hardening`
 
@@ -128,6 +154,16 @@ reliability scope. Details in `docs/CODE_AUDIT_2026-06-11.md`.
 - No optimistic UI; plan mutations feel sluggish on mobile.
 - `supabase/schema.sql` mixes baseline DDL with historical inline `ALTER`
   statements.
+
+## Deferred Fixes (from the 2026-06-11 UI audit)
+
+Details in `docs/UI_AUDIT_2026-06-11.md`.
+
+- Auth flow completion: sign-up confirmation messaging, password reset,
+  friendlier auth errors.
+- Mobile Lunch/Dinner labels rely on `nth-child` CSS coupling (fits milestone
+  6 component hardening).
+- Screen wake-lock during cooking focus mode, richer empty states, dark mode.
 
 ## Deferred Ideas
 
