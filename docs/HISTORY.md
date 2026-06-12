@@ -3,6 +3,24 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-06-09 - Reliability Foundation Implemented
+
+- Added Vitest with 13 tests covering local date arithmetic, plan defaults,
+  ingredient scaling, grocery normalization, exact-match grouping, pantry
+  separation, source keys, and rounding.
+- Extracted shared domain logic into `lib/date-utils.ts` and `lib/grocery.ts`
+  without changing route interfaces.
+- Corrected date serialization to use local calendar fields instead of UTC,
+  preventing timezone-driven off-by-one dates.
+- Established `supabase/migrations/` as a forward-only migration directory
+  without creating a false baseline for the live database.
+- Upgraded Next.js from `15.2.6` to patched release `15.5.19` and added targeted
+  PostCSS and `ws` overrides. `npm audit` reports zero vulnerabilities.
+- Verification: `npm run test`, `npm run typecheck`, `npm run build`, internal
+  Markdown links, and `git diff --check` passed.
+- Remaining work: review, commit, push, and merge the reliability foundation
+  branch before starting atomic recipe saves.
+
 ## 2026-06-07 - Hybrid Git and Session-Wrap Workflow
 
 - Merged the documentation foundation through PR #1 at commit `0108c44`.

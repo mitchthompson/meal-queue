@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
+import { toYmd } from "@/lib/date-utils";
+import {
+  buildGroceryRows,
+  formatAmount,
+  type GroceryIngredient,
+  type GroceryMealItem,
+} from "@/lib/grocery";
 import { supabase } from "@/lib/supabase/client";
 
 type MealPlan = {
@@ -23,31 +30,10 @@ type GroceryItem = {
   source_key: string;
 };
 
-type MealPlanItemRow = {
-  recipe_id: string | null;
-  serving_multiplier: number;
-};
-
-type IngredientRow = {
-  recipe_id: string;
-  name: string;
-  amount: number;
-  unit_code: string;
-  is_pantry_staple: boolean;
-};
-
 function formatDisplayDate(ymd: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
     new Date(`${ymd}T00:00:00`),
   );
-}
-
-function toYmd(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function formatAmount(value: number) {
-  return Number(value.toFixed(3)).toString();
 }
 
 function toErrorMessage(caughtError: unknown, fallback: string) {
@@ -202,59 +188,20 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
         .eq("slot_type", "cook");
       if (mealItemsError) throw mealItemsError;
 
-      const mealItems = (mealItemsData ?? []) as MealPlanItemRow[];
+      const mealItems = (mealItemsData ?? []) as GroceryMealItem[];
       const recipeIds = Array.from(new Set(mealItems.map((item) => item.recipe_id).filter((id): id is string => Boolean(id))));
 
-      let ingredients: IngredientRow[] = [];
+      let ingredients: GroceryIngredient[] = [];
       if (recipeIds.length > 0) {
         const { data: ingredientsData, error: ingredientsError } = await supabase
           .from("ingredients")
           .select("recipe_id, name, amount, unit_code, is_pantry_staple")
           .in("recipe_id", recipeIds);
         if (ingredientsError) throw ingredientsError;
-        ingredients = (ingredientsData ?? []) as IngredientRow[];
+        ingredients = (ingredientsData ?? []) as GroceryIngredient[];
       }
 
-      const combined = new Map<
-        string,
-        { ingredient_name: string; amount: number; unit_code: string; is_pantry_staple: boolean; source_key: string }
-      >();
-
-      for (const mealItem of mealItems) {
-        if (!mealItem.recipe_id) continue;
-        const recipeIngredients = ingredients.filter((ingredient) => ingredient.recipe_id === mealItem.recipe_id);
-        const multiplier = Number(mealItem.serving_multiplier || 1);
-
-        for (const ingredient of recipeIngredients) {
-          const normalizedName = ingredient.name.trim().toLowerCase();
-          const bucketKey = `${normalizedName}|${ingredient.unit_code}|${ingredient.is_pantry_staple ? "1" : "0"}`;
-          const sourceKey = `v${plan.version}|${bucketKey}`;
-          const scaledAmount = Number(ingredient.amount) * multiplier;
-          const current = combined.get(bucketKey);
-          if (current) {
-            current.amount += scaledAmount;
-          } else {
-            combined.set(bucketKey, {
-              ingredient_name: ingredient.name.trim(),
-              amount: scaledAmount,
-              unit_code: ingredient.unit_code,
-              is_pantry_staple: ingredient.is_pantry_staple,
-              source_key: sourceKey,
-            });
-          }
-        }
-      }
-
-      const rows = Array.from(combined.values()).map((value) => ({
-        meal_plan_id: plan.id,
-        ingredient_name: value.ingredient_name,
-        amount: Number(value.amount.toFixed(3)),
-        unit_code: value.unit_code,
-        is_pantry_staple: value.is_pantry_staple,
-        source_key: value.source_key,
-        is_on_hand: false,
-        is_checked: false,
-      }));
+      const rows = buildGroceryRows(plan, mealItems, ingredients);
 
       const { error: deleteError } = await supabase.from("grocery_list_items").delete().eq("meal_plan_id", plan.id);
       if (deleteError) throw deleteError;

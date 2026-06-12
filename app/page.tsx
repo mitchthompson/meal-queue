@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
+import { dateRange, toYmd } from "@/lib/date-utils";
 import { supabase } from "@/lib/supabase/client";
 
 type MealPlan = {
@@ -32,11 +33,7 @@ type GroceryPreviewItem = {
 };
 
 function ymdToday() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function toYmd(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return toYmd(new Date());
 }
 
 function formatDisplayDate(ymd: string) {
@@ -57,14 +54,7 @@ function formatLongDate(ymd: string) {
 }
 
 function planDays(plan: MealPlan) {
-  const out: string[] = [];
-  let cursor = new Date(`${plan.start_date}T00:00:00`);
-  const end = new Date(`${plan.end_date}T00:00:00`);
-  while (cursor <= end) {
-    out.push(toYmd(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return out;
+  return dateRange(plan.start_date, plan.end_date);
 }
 
 export default function HomePage() {

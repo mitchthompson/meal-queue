@@ -14,6 +14,7 @@ Commands:
 ```powershell
 npm install
 npm run dev
+npm run test
 npm run typecheck
 npm run build
 ```
@@ -105,7 +106,8 @@ Existing Supabase records are live data.
 
 For each schema change:
 
-1. Add an ordered SQL file under `supabase/migrations/`.
+1. Add an ordered SQL file under `supabase/migrations/` using
+   `YYYYMMDDHHMMSS_description.sql`.
 2. Include read-only preflight queries for incompatible existing rows.
 3. Prefer additive schema changes and backfills.
 4. Document rollback or forward-recovery steps.
@@ -117,6 +119,9 @@ For each schema change:
 
 Stop if preflight checks return incompatible data. Do not reset the database or
 discard user records to make a migration pass.
+
+See `supabase/migrations/README.md` for the migration-file contract and baseline
+policy.
 
 ## Deployment and Rollback
 
