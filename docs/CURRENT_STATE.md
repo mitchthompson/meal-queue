@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-06-09
+Last reviewed: 2026-06-11
 
 ## Stable Baseline
 
@@ -21,12 +21,15 @@ Last reviewed: 2026-06-09
 
 ## Active Handoff
 
-- **In progress:** Reliability foundation on
-  `codex/reliability-foundation`, implemented and ready for pull-request
-  review.
-- **Next action:** Push `codex/reliability-foundation` and open a pull request.
+- **In progress:** Independent code audit and finalized reliability plan on
+  `codex/code-audit-plan` (branched from `codex/reliability-foundation`).
+  Audit findings live in `docs/CODE_AUDIT_2026-06-11.md`; the `mcp/` server
+  source is now tracked in Git.
+- **Next action:** Open and merge the pull request for
+  `codex/reliability-foundation`, then merge `codex/code-audit-plan`, then
+  start milestone 2 on `codex/atomic-recipe-saves`.
 - **Blockers:** None.
-- **Uncommitted work:** None after the reliability foundation commit.
+- **Uncommitted work:** None after the audit commit.
 
 ## Working Product
 
@@ -71,6 +74,13 @@ Last reviewed: 2026-06-09
   or valid leftover relationships.
 - Automated coverage currently protects date and grocery calculations, but not
   Supabase write flows or UI interactions.
+- Plan version bumps fire for every plan mutation, including changes that do
+  not affect groceries, and the grocery page regenerates silently on load, so
+  minor plan tweaks wipe checklist state without user action.
+- The dashboard loads items for only the 4 newest plans by start date; with
+  several future plans the current week can render empty.
+- `ensureUserSettings` runs twice per sign-in, and default settings values are
+  duplicated across three files inconsistently with the SQL defaults.
 
 ## Repository Notes
 
@@ -79,7 +89,9 @@ Last reviewed: 2026-06-09
 - Pull requests are required for database migrations, broad refactors, and
   other high-risk changes. Low-risk and documentation-only work may be
   committed directly to `main`.
-- `.env.local`, `.codex/`, and `recipe-export.json` are local-only.
+- `.env.local`, `.codex/`, `.mcp.json`, and `recipe-export.json` are
+  local-only. The `mcp/` recipe-import server source is tracked in Git as of
+  2026-06-11; its build output and `node_modules` are not.
 - GitHub CLI and Supabase CLI are not currently installed. Pull requests are
   opened in GitHub's web interface, and migrations are applied through the
   Supabase SQL editor.

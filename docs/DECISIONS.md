@@ -54,6 +54,20 @@ replaced decisions as superseded rather than silently deleting them.
 - Every session ends with the documented session-wrap process so the next
   session can resume without relying on conversation history.
 
+### Reliability Implementation (2026-06-11)
+
+- Database reliability fixes (atomic recipe saves, version increments, grocery
+  regeneration) are implemented with Postgres functions and triggers rather
+  than client-side orchestration. Functions use security-invoker semantics so
+  row-level security continues to apply; the service-role MCP path is the
+  deliberate exception.
+- The reliability scope is milestones 2-4 in roadmap order. Quick-win fixes,
+  grocery-staleness redesign, and the component refactor are deferred and
+  recorded in `ROADMAP.md` so they are not lost.
+- The `mcp/` recipe-import server source is tracked in Git. `.mcp.json`,
+  build output, and `node_modules` remain ignored because they hold secrets or
+  generated content.
+
 ### Dates and Migrations
 
 - Meal-plan dates are calendar dates, not UTC timestamps. Shared date helpers
