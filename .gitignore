@@ -11,6 +11,5 @@ supabase/.temp/
 tsconfig.tsbuildinfo
 .claude/
 .codex/
-mcp/
 .mcp.json
 recipe-export.json

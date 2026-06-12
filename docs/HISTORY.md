@@ -3,6 +3,23 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-06-11 - Independent Code Audit and Plan Confirmation
+
+- Audited all application source, the Supabase schema, tests, and the prior
+  reliability review. Full findings: `docs/CODE_AUDIT_2026-06-11.md`.
+- Confirmed all six previously documented reliability risks as accurate and
+  the milestone 2-5 targeting as sound.
+- New findings: silent over-triggered grocery regeneration compounds the
+  checklist wipe, the dashboard's 4-plan window can hide the current week,
+  duplicate settings initialization, and the `mcp/` server was entirely
+  untracked.
+- Owner decisions: scope is milestones 2-4 in roadmap order, implemented with
+  Postgres functions and triggers; remaining findings deferred and recorded in
+  `ROADMAP.md`; `mcp/` source brought under version control.
+- Verification: `npm run test` (13 passing) and `npm run typecheck` passed.
+- Remaining work: merge `codex/reliability-foundation` and
+  `codex/code-audit-plan`, then start milestone 2.
+
 ## 2026-06-09 - Reliability Foundation Implemented
 
 - Added Vitest with 13 tests covering local date arithmetic, plan defaults,
