@@ -4,8 +4,10 @@ Last reviewed: 2026-06-11
 
 ## Stable Baseline
 
-- **Last completed work:** Hybrid Git and end-of-session workflow documentation
-  committed directly to `main` as `3bfddfa`.
+- **Last completed work:** Reliability foundation and the 2026-06-11 code
+  audit merged to `main` as `7cfbab2` and `e13f158`. GitHub CLI is not
+  installed, so the owner approved merging the reviewed branches locally
+  instead of through web pull requests.
 - **Last pull request:** Documentation foundation in PR #1, merge commit
   `0108c44`.
 - **Current branch:** `main`, tracking `origin/main`.
@@ -14,22 +16,21 @@ Last reviewed: 2026-06-11
 - **Database status:** Existing Supabase data is treated as live. The repository
   has a canonical schema file and a documented forward-only migration
   directory. No database migration has been applied yet.
-- **Latest application verification:** `npm run test`, `npm run typecheck`, and
-  `npm run build` passed on 2026-06-09 on the reliability foundation branch.
-- **Latest documentation verification:** Internal Markdown links and
-  `git diff --check` passed on 2026-06-09.
+- **Latest application verification:** `npm run test` (13 passing),
+  `npm run typecheck`, and `npm run build` passed on 2026-06-11 on merged
+  `main`.
+- **Latest documentation verification:** `git diff --check` passed on
+  2026-06-11.
 
 ## Active Handoff
 
-- **In progress:** Independent code audit and finalized reliability plan on
-  `codex/code-audit-plan` (branched from `codex/reliability-foundation`).
-  Audit findings live in `docs/CODE_AUDIT_2026-06-11.md`; the `mcp/` server
-  source is now tracked in Git.
-- **Next action:** Open and merge the pull request for
-  `codex/reliability-foundation`, then merge `codex/code-audit-plan`, then
-  start milestone 2 on `codex/atomic-recipe-saves`.
+- **In progress:** Detailed front-end UI audit, requested by the owner on
+  2026-06-11 as the next work item ahead of milestone 2.
+- **Next action:** Complete the front-end UI audit, present improvement
+  options to the owner, and record the agreed scope before implementation.
+  Milestone 2 (`codex/atomic-recipe-saves`) follows.
 - **Blockers:** None.
-- **Uncommitted work:** None after the audit commit.
+- **Uncommitted work:** None.
 
 ## Working Product
 

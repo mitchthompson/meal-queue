@@ -20,11 +20,9 @@ Acceptance:
   operating procedures by following `docs/README.md`.
 - No obsolete document presents completed work as a future plan.
 
-## Active Milestones
-
 ### 1. Reliability Foundation
 
-Status: Ready for review on `codex/reliability-foundation`
+Merged: `7cfbab2` on 2026-06-11
 
 - [x] Add Vitest and core test scripts.
 - [x] Extract testable date, ingredient scaling, and grocery grouping
@@ -38,9 +36,14 @@ Acceptance:
 - [x] `npm run test`, `npm run typecheck`, and `npm run build` pass.
 - [x] Migration naming and application procedures are documented.
 
+## Active Milestones
+
 The 2026-06-11 code audit (`docs/CODE_AUDIT_2026-06-11.md`) confirmed
 milestones 2-4 as the agreed scope, in this order, implemented with Postgres
 functions (RPCs) and triggers applied through the Supabase SQL editor.
+
+A detailed front-end UI audit was requested by the owner on 2026-06-11 and
+runs next, before milestone 2 implementation begins.
 
 ### 2. Atomic Recipe Saves
 

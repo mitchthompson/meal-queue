@@ -3,6 +3,18 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-06-11 - Reliability Foundation and Audit Merged
+
+- Merged `codex/reliability-foundation` (`7cfbab2`) and
+  `codex/code-audit-plan` (`e13f158`) into `main`.
+- GitHub CLI is unavailable, so with the owner's approval the reviewed
+  branches were merged locally with merge commits instead of web pull
+  requests. The audit itself served as the review of the reliability
+  foundation diff.
+- Verification on merged `main`: `npm run test` (13 passing),
+  `npm run typecheck`, and `npm run build` passed.
+- Next work: detailed front-end UI audit (owner request), then milestone 2.
+
 ## 2026-06-11 - Independent Code Audit and Plan Confirmation
 
 - Audited all application source, the Supabase schema, tests, and the prior
