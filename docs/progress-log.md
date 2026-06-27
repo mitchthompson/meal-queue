@@ -1,13 +1,40 @@
-# History
+# Progress Log
 
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
+
+## 2026-06-19 - Documentation System Migration
+
+- Migrated the project documentation to a lowercase-kebab canonical system and
+  rewrote internal links to the new filenames: `product.md`, `architecture.md`
+  (now absorbs deploy/setup/migration/rollback content), `qa.md` (verification
+  and acceptance/QA per change type), `current-state.md`, `progress-log.md`
+  (this file, formerly `HISTORY.md`), `decisions.md`, `roadmap.md`, and the
+  rewritten `README.md` index.
+- Added a `/CLAUDE.md` anchor at the repo root as the operating contract for
+  agents; the end-of-session checklist is now canonical there and in `qa.md`.
+- Created net-new docs with no prior equivalent:
+  [design-system.md](design-system.md), [design-flags.md](design-flags.md),
+  [routes.md](routes.md), [data-model.md](data-model.md), and the per-page
+  intent docs under [pages/](pages/) (dashboard, recipes, plans, grocery,
+  settings).
+- Key decision: the design source of truth is in-repo and authoritative —
+  data truth in `supabase/schema.sql` (derived in [data-model.md](data-model.md)),
+  UI truth in the CSS-variable tokens of `app/globals.css` (documented in
+  [design-system.md](design-system.md)), and per-page intent in `pages/<slug>.md`.
+  No CSS class prefix is used: the token system in `app/globals.css` is the
+  namespace, so design values flow through `--color-*`/semantic aliases and are
+  never hardcoded.
+- Flag raised: confirm the Vercel deploy trigger (assumed auto-deploy on push to
+  `main`, unconfirmed) — see [design-flags.md](design-flags.md).
+- The dated artifacts `docs/CODE_AUDIT_2026-06-11.md` and
+  `docs/UI_AUDIT_2026-06-11.md` are unchanged.
 
 ## 2026-06-11 - Front-End UI Audit and Milestone 5
 
 - Audited all five screens for layout, responsiveness, accessibility, and
   interaction flows; visually verified the unauthenticated screens at desktop
-  and iPhone viewports. Full findings: `docs/UI_AUDIT_2026-06-11.md`.
+  and iPhone viewports. Full findings: [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 - Top friction: feedback messages render off-screen with no `aria-live`,
   text-button tap targets are below iOS guidance, the mobile recipe editor
   opens without scrolling into view, the plans page buries the week grid, and
@@ -33,7 +60,7 @@ Include outcomes, important tradeoffs, verification, and remaining work.
 ## 2026-06-11 - Independent Code Audit and Plan Confirmation
 
 - Audited all application source, the Supabase schema, tests, and the prior
-  reliability review. Full findings: `docs/CODE_AUDIT_2026-06-11.md`.
+  reliability review. Full findings: [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md).
 - Confirmed all six previously documented reliability risks as accurate and
   the milestone 2-5 targeting as sound.
 - New findings: silent over-triggered grocery regeneration compounds the
@@ -42,7 +69,7 @@ Include outcomes, important tradeoffs, verification, and remaining work.
   untracked.
 - Owner decisions: scope is milestones 2-4 in roadmap order, implemented with
   Postgres functions and triggers; remaining findings deferred and recorded in
-  `ROADMAP.md`; `mcp/` source brought under version control.
+  [roadmap.md](roadmap.md); `mcp/` source brought under version control.
 - Verification: `npm run test` (13 passing) and `npm run typecheck` passed.
 - Remaining work: merge `codex/reliability-foundation` and
   `codex/code-audit-plan`, then start milestone 2.

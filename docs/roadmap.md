@@ -17,7 +17,7 @@ Merged: PR #1, commit `0108c44`
 Acceptance:
 
 - A new session can identify current state, next work, important decisions, and
-  operating procedures by following `docs/README.md`.
+  operating procedures by following [README.md](README.md).
 - No obsolete document presents completed work as a future plan.
 
 ### 1. Reliability Foundation
@@ -28,7 +28,7 @@ Merged: `7cfbab2` on 2026-06-11
 - [x] Extract testable date, ingredient scaling, and grocery grouping
   functions.
 - [x] Add tests for those behaviors.
-- [x] Establish `supabase/migrations/` while keeping `schema.sql` canonical.
+- [x] Establish `supabase/migrations/` while keeping `supabase/schema.sql` canonical.
 - [x] Patch Next.js within major version 15 and resolve npm audit findings.
 
 Acceptance:
@@ -38,13 +38,14 @@ Acceptance:
 
 ## Active Milestones
 
-The 2026-06-11 code audit (`docs/CODE_AUDIT_2026-06-11.md`) confirmed
-milestones 2-4 as the agreed scope, in this order, implemented with Postgres
-functions (RPCs) and triggers applied through the Supabase SQL editor.
+The 2026-06-11 code audit ([CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md))
+confirmed milestones 2-4 as the agreed scope, in this order, implemented with
+Postgres functions (RPCs) and triggers applied through the Supabase SQL editor.
 
-The 2026-06-11 front-end UI audit (`docs/UI_AUDIT_2026-06-11.md`) added
-milestone 5 (UI feedback and ergonomics), which runs after the reliability
-core and before component hardening.
+The 2026-06-11 front-end UI audit
+([UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md)) added milestone 5 (UI feedback
+and ergonomics), which runs after the reliability core and before component
+hardening.
 
 ### 2. Atomic Recipe Saves
 
@@ -139,7 +140,8 @@ Acceptance:
 ## Deferred Fixes (from the 2026-06-11 audit)
 
 Real issues confirmed in code but deliberately excluded from the current
-reliability scope. Details in `docs/CODE_AUDIT_2026-06-11.md`.
+reliability scope. Details in
+[CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md).
 
 - Dashboard loads items for only the 4 newest plans; with several future plans
   the current week can render empty (`app/page.tsx`).
@@ -157,7 +159,7 @@ reliability scope. Details in `docs/CODE_AUDIT_2026-06-11.md`.
 
 ## Deferred Fixes (from the 2026-06-11 UI audit)
 
-Details in `docs/UI_AUDIT_2026-06-11.md`.
+Details in [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 
 - Auth flow completion: sign-up confirmation messaging, password reset,
   friendlier auth errors.

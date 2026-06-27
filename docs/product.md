@@ -3,8 +3,10 @@
 ## Purpose
 
 Meal Queue is a private meal planner, recipe keeper, and grocery-list generator
-for a person or household. It reduces the repeated work of deciding what to
-cook, scaling recipes, and assembling an order-ready grocery list.
+for a single person or household. It reduces the repeated work of deciding what
+to cook, scaling recipes, and assembling an order-ready grocery list. It is
+optimized for personal/household use; there are no multi-user, sharing, or
+public-product features.
 
 ## Primary Workflow
 
@@ -26,6 +28,8 @@ cook, scaling recipes, and assembling an order-ready grocery list.
   current roadmap.
 
 ## Current Routes
+
+See [routes.md](routes.md) for the full route map and per-page intent docs.
 
 - `/`: Dashboard and current-plan overview.
 - `/recipes`: Recipe library and editor.

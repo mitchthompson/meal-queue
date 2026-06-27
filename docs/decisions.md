@@ -49,8 +49,9 @@ replaced decisions as superseded rather than silently deleting them.
   handoff. Checkpoint commits may be squashed before merge.
 - Documentation updates are part of each completed change's acceptance
   criteria.
-- `CURRENT_STATE.md` describes present reality, `ROADMAP.md` describes future
-  work, and `HISTORY.md` records completed outcomes.
+- [current-state.md](current-state.md) describes present reality,
+  [roadmap.md](roadmap.md) describes future work, and
+  [progress-log.md](progress-log.md) records completed outcomes.
 - Every session ends with the documented session-wrap process so the next
   session can resume without relying on conversation history.
 
@@ -63,7 +64,7 @@ replaced decisions as superseded rather than silently deleting them.
   deliberate exception.
 - The reliability scope is milestones 2-4 in roadmap order. Quick-win fixes,
   grocery-staleness redesign, and the component refactor are deferred and
-  recorded in `ROADMAP.md` so they are not lost.
+  recorded in [roadmap.md](roadmap.md) so they are not lost.
 - The `mcp/` recipe-import server source is tracked in Git. `.mcp.json`,
   build output, and `node_modules` remain ignored because they hold secrets or
   generated content.
@@ -86,6 +87,29 @@ replaced decisions as superseded rather than silently deleting them.
 - New database changes use timestamped, forward-only files under
   `supabase/migrations/`. There is no synthetic baseline migration for the
   already-live database.
+
+### Documentation and Design System (2026-06-19)
+
+- The lowercase-kebab documentation system is canonical. The old UPPERCASE docs
+  are renamed to their lowercase-kebab equivalents (for example
+  [product.md](product.md), [architecture.md](architecture.md),
+  [current-state.md](current-state.md)). `CLAUDE.md` at the repo root is the
+  always-loaded anchor that points into the docs set and holds the canonical
+  end-of-session checklist.
+- The design source of truth lives in the repo, not in an external design tool
+  (no Figma). Data truth is `supabase/schema.sql` plus
+  [data-model.md](data-model.md); UI truth is the CSS-variable tokens in
+  `app/globals.css` plus [design-system.md](design-system.md); per-page intent
+  lives in the per-page docs under `docs/pages/`. Confirm against these live
+  files before building; a missing value is flagged in
+  [design-flags.md](design-flags.md), never invented.
+- No CSS class prefix is used. Meal Queue is a single self-contained app that
+  does not share the DOM with anything else, so the CSS-variable token system in
+  `app/globals.css` is the namespace. All color, spacing, and typography flow
+  through the `--color-*` variables and their semantic aliases (`--bg`,
+  `--surface`, `--ink`, `--muted`, `--brand`, `--brand-2`, `--line`, and
+  related); one-off hex, font, or spacing values are never inlined in
+  components.
 
 ## Superseded Decisions
 
