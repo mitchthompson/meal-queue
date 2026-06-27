@@ -40,6 +40,8 @@ At the start of a new session, read in this order:
 
 **Reference**
 
+- [`setup.md`](setup.md) — local dev setup for a new machine (clone, env,
+  run, verify) and the Claude Code kickoff prompt.
 - [`product.md`](product.md) — product purpose, audience, workflows, and
   boundaries.
 - [`architecture.md`](architecture.md) — system structure, data flow,

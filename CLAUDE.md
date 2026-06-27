@@ -101,4 +101,5 @@ Always confirm against these live files before building. Do **not** trust a plan
 
 ## Docs map
 
-See [docs/README.md](docs/README.md) for the full documentation index.
+See [docs/README.md](docs/README.md) for the full documentation index. New
+machine? See [docs/setup.md](docs/setup.md) for local dev + Claude Code setup.
