@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ---------------------------------------------------------------------
+  # App checks: types, unit tests, production build.
+  #
+  # NOTE: `npm run lint` is intentionally NOT run here. The repo has no
+  # ESLint config, so `next lint` drops into an interactive setup wizard
+  # that would HANG the runner. Configuring ESLint (then adding a lint
+  # step) is a tracked follow-up.
+  # ---------------------------------------------------------------------
+  app-checks:
+    name: App checks (typecheck / test / build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      # `next build` prerenders every route. Each page is a "use client"
+      # component that imports lib/supabase/client.ts, which THROWS at module
+      # load if NEXT_PUBLIC_SUPABASE_* are unset ("Missing Supabase env vars.").
+      # These are public anon-tier values and need not be real for a build, so
+      # we pass harmless placeholders to let the module-load guard pass.
+      # (Verified: with these unset the build exits 1; with placeholders it
+      # exits 0.)
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
+  # ---------------------------------------------------------------------
+  # DB tests: ephemeral LOCAL Supabase stack on the runner, pgTAP.
+  #
+  # No cloud credentials and no link to the live project -- the stack is
+  # spun up locally (GitHub runners provide Docker). `supabase start`
+  # applies the migrations (baseline schema, then save_recipe) and seed.sql
+  # to a fresh database, then `supabase test db` runs the pgTAP suite in
+  # supabase/tests/. This matches the official Supabase CI example.
+  # ---------------------------------------------------------------------
+  db-tests:
+    name: DB tests (Supabase + pgTAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # setup-cli@v1 with version: latest matches the official Supabase docs
+      # example and is known-working. Follow-up: pin to a specific CLI release
+      # (and confirm config.toml major_version against prod) so the bundled
+      # Postgres image cannot drift between runs.
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # `supabase start` applies all migrations (20260101000000_baseline_schema
+      # then 20260627222320_atomic_recipe_save) and seed.sql to a fresh DB.
+      - name: Start local Supabase stack
+        run: supabase start
+
+      - name: Run pgTAP tests
+        run: supabase test db
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop

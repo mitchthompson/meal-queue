@@ -1,0 +1,42 @@
+# Local Supabase config for ephemeral CI / local testing ONLY.
+#
+# This drives `supabase start`, `supabase db reset`, and `supabase test db`.
+# It never points at the live cloud project (no remote project ref / linking
+# here), so the db-tests CI job needs no cloud credentials. Prod stays
+# hand-applied via the Supabase SQL editor and is untouched by this pipeline.
+
+project_id = "meal-queue-local"
+
+[db]
+# Local Postgres port.
+port = 54322
+# Shadow DB port used by `supabase db diff` (unused in CI, but must be valid).
+shadow_port = 54320
+# MUST equal the live database's major version. The Supabase docs say: run
+# `SHOW server_version;` on the remote database to check. This is currently set
+# to 15 (the prior repo assumption and the documented config.toml example), but
+# it is UNCONFIRMED against prod. If prod is Postgres 17, change this to 17 so
+# the local engine matches; the CLI pulls the matching Postgres image
+# automatically. Do this BEFORE treating green CI as a prod gate.
+major_version = 15
+
+[db.seed]
+# Seed runs after migrations on `supabase start` / `supabase db reset`.
+# Our pgTAP test seeds and rolls back all of its own fixtures, so this points at
+# an intentionally inert, version-controlled file (the documented default).
+enabled = true
+sql_paths = ["./seed.sql"]
+
+# Auth/API are left enabled (CLI defaults). The DB-only pgTAP job does not call
+# them, but `supabase start` boots the GoTrue/auth container regardless, which
+# provisions the `auth` schema, `auth.users`, `auth.uid()`, and the
+# `authenticated` / `service_role` roles the tests rely on. Keeping these on is
+# harmless on a CI runner.
+[auth]
+enabled = true
+
+[api]
+enabled = true
+
+[studio]
+enabled = false

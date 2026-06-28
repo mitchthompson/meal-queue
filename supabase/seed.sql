@@ -1,0 +1,8 @@
+-- Seed for the local/CI Supabase stack.
+--
+-- Deliberately empty: supabase/tests/save_recipe_test.sql provisions and rolls
+-- back all of its own fixtures (auth.users, recipes, meal_plans, ...) inside one
+-- transaction, so the test is fully self-contained and order-independent.
+--
+-- Add only DATA here (never schema) if future tests need shared baseline rows.
+-- Runs after migrations on `supabase start` and `supabase db reset`.
