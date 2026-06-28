@@ -304,4 +304,152 @@ drop policy if exists "units_read_all" on public.units;
 create policy "units_read_all" on public.units
 for select using (true);
 
+-- Atomic recipe save (added by migration 20260627222320_atomic_recipe_save.sql).
+-- Single-transaction recipe upsert used by the web client and the MCP save-recipe
+-- tool; replaces the prior client-side delete-then-reinsert sequence so a failed
+-- child write rolls back the whole save. When an existing recipe's ingredient set
+-- changes, it bumps the version of every plan that references the recipe so the
+-- persisted grocery list (source_key carries v<version>|) is detected as stale.
+create or replace function public.save_recipe(
+  p_recipe_id        uuid,
+  p_name             text,
+  p_base_servings    numeric,
+  p_instructions_raw text,
+  p_ingredients      jsonb,
+  p_steps            jsonb,
+  p_tags             jsonb,
+  p_user_id          uuid default null
+)
+returns uuid
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_user_id         uuid;
+  v_recipe_id       uuid;
+  v_is_update       boolean := false;
+  v_old_ingredients text[];
+  v_new_ingredients text[];
+begin
+  -- App path: auth.uid() from the JWT, RLS enforces ownership. Service-role MCP
+  -- path: auth.uid() is null, so the trusted caller supplies p_user_id.
+  v_user_id := coalesce(auth.uid(), p_user_id);
+  if v_user_id is null then
+    raise exception 'save_recipe: no authenticated user and no p_user_id provided';
+  end if;
+  if auth.uid() is not null and p_user_id is not null and p_user_id <> auth.uid() then
+    raise exception 'save_recipe: p_user_id (%) does not match the authenticated user', p_user_id;
+  end if;
+
+  if p_name is null or btrim(p_name) = '' then
+    raise exception 'save_recipe: recipe name is required';
+  end if;
+
+  if p_recipe_id is null then
+    insert into public.recipes (user_id, name, base_servings, instructions_raw)
+    values (
+      v_user_id,
+      btrim(p_name),
+      coalesce(p_base_servings, 2),
+      nullif(btrim(coalesce(p_instructions_raw, '')), '')
+    )
+    returning id into v_recipe_id;
+  else
+    v_is_update := true;
+    update public.recipes
+       set name             = btrim(p_name),
+           base_servings    = coalesce(p_base_servings, 2),
+           instructions_raw = nullif(btrim(coalesce(p_instructions_raw, '')), '')
+     where id = p_recipe_id
+       and user_id = v_user_id
+    returning id into v_recipe_id;
+
+    if v_recipe_id is null then
+      raise exception 'save_recipe: recipe % not found or not owned by the caller', p_recipe_id;
+    end if;
+  end if;
+
+  -- Capture the existing ingredient identity set before replacing it. The signature
+  -- covers what determines the generated grocery rows: normalized name, unit, and
+  -- pantry flag (buildGroceryRows' bucket key) PLUS amount (the summed quantity).
+  if v_is_update then
+    select coalesce(array_agg(sig order by sig), array[]::text[])
+      into v_old_ingredients
+    from (
+      select lower(btrim(name)) || '|' || amount::text || '|' || unit_code || '|' || is_pantry_staple::text as sig
+      from public.ingredients
+      where recipe_id = v_recipe_id
+    ) old_ings;
+  end if;
+
+  delete from public.ingredients  where recipe_id = v_recipe_id;
+  delete from public.recipe_steps where recipe_id = v_recipe_id;
+  delete from public.recipe_tags  where recipe_id = v_recipe_id;
+
+  insert into public.ingredients (recipe_id, name, amount, unit_code, is_pantry_staple)
+  select
+    v_recipe_id,
+    btrim(ing->>'name'),
+    coalesce((ing->>'amount')::numeric, 0),
+    ing->>'unit_code',
+    coalesce((ing->>'is_pantry_staple')::boolean, false)
+  from jsonb_array_elements(coalesce(p_ingredients, '[]'::jsonb)) as ing
+  where btrim(coalesce(ing->>'name', '')) <> '';
+
+  insert into public.recipe_steps (recipe_id, step_number, body)
+  select v_recipe_id, (row_number() over (order by ord))::int, body
+  from (
+    select btrim(step_body) as body, ord
+    from jsonb_array_elements_text(coalesce(p_steps, '[]'::jsonb)) with ordinality as t(step_body, ord)
+    where btrim(coalesce(step_body, '')) <> ''
+  ) kept_steps;
+
+  insert into public.tags (user_id, name)
+  select distinct v_user_id, lower(btrim(tag))
+  from jsonb_array_elements_text(coalesce(p_tags, '[]'::jsonb)) as tag
+  where btrim(coalesce(tag, '')) <> ''
+  on conflict (user_id, name) do nothing;
+
+  insert into public.recipe_tags (recipe_id, tag_id)
+  select v_recipe_id, t.id
+  from public.tags t
+  where t.user_id = v_user_id
+    and t.name in (
+      select distinct lower(btrim(tag))
+      from jsonb_array_elements_text(coalesce(p_tags, '[]'::jsonb)) as tag
+      where btrim(coalesce(tag, '')) <> ''
+    );
+
+  if v_is_update then
+    select coalesce(array_agg(sig order by sig), array[]::text[])
+      into v_new_ingredients
+    from (
+      select lower(btrim(name)) || '|' || amount::text || '|' || unit_code || '|' || is_pantry_staple::text as sig
+      from public.ingredients
+      where recipe_id = v_recipe_id
+    ) new_ings;
+
+    if v_old_ingredients is distinct from v_new_ingredients then
+      -- Owner-scoped for defense-in-depth: redundant under RLS on the app path, but
+      -- it keeps the service-role (RLS-bypassing) MCP path from ever touching another
+      -- owner's plans.
+      update public.meal_plans
+         set version = version + 1
+       where user_id = v_user_id
+         and id in (
+           select distinct meal_plan_id
+           from public.meal_plan_items
+           where recipe_id = v_recipe_id
+         );
+    end if;
+  end if;
+
+  return v_recipe_id;
+end;
+$$;
+
+grant execute on function public.save_recipe(uuid, text, numeric, text, jsonb, jsonb, jsonb, uuid)
+  to authenticated, service_role;
+
 
