@@ -73,8 +73,23 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### No automated coverage for Supabase write flows or UI interactions
 - **Where it's used:** Test suite (Vitest); writes in `app/plans/page.tsx`, `app/recipes/page.tsx`, `app/grocery/page.tsx`
-- **What's needed:** Automated tests currently protect date and grocery calculations only. Supabase write flows and UI interactions have no coverage, so regressions in save/regenerate/version logic are not caught. Needs test coverage for the write paths and key UI interactions (partially addressed as milestones land, but the gap is currently open).
+- **What's needed:** Automated tests currently protect date and grocery calculations only. Supabase write flows and UI interactions have no coverage, so regressions in save/regenerate/version logic are not caught. Needs test coverage for the write paths and key UI interactions (partially addressed as milestones land, but the gap is currently open). Update (2026-06-27): milestone 1.5 adds a pgTAP suite for `save_recipe` (atomicity, RLS, version bump) run in CI against an ephemeral local Supabase stack — closing this gap for the save path once CI runs; broader UI-interaction coverage stays open.
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
+
+### `npm run lint` is non-functional (no ESLint config)
+- **Where it's used:** `npm run lint` (= `next lint`); CI app-checks job
+- **What's needed:** There is no ESLint config in the repo, so `next lint` (deprecated, removed in Next.js 16) drops into an interactive setup wizard and cannot run non-interactively (it would hang in CI). The CI app-checks job deliberately omits lint for now. Needs an ESLint config (and migration off the deprecated `next lint` to the ESLint CLI), then re-add a lint step to CI.
+- **Source:** Session 2026-06-27 baseline verification
+
+### `supabase/config.toml` `major_version` unconfirmed against prod
+- **Where it's used:** `supabase/config.toml` (milestone 1.5 local/CI stack)
+- **What's needed:** `major_version = 15` is an assumption (matches the prior repo assumption; the current Supabase CLI default template is 17). If prod runs Postgres 17, CI validates against a different engine. Confirm via `SHOW server_version;` (or Dashboard → Project Settings → Database) and align before treating green CI as a prod gate.
+- **Source:** Session 2026-06-27 (CI harness)
+
+### `npm audit` reports 1 high-severity vulnerability (docs previously said zero)
+- **Where it's used:** dependency tree (reported by `npm ci`)
+- **What's needed:** `npm ci` reports 1 high-severity vulnerability; the reliability foundation (2026-06-11) had brought `npm audit` to zero, so this was likely disclosed since. Triage and patch within the major version (no dependency upgrade without owner approval). Untouched this session.
+- **Source:** Session 2026-06-27 baseline verification
 
 ## Resolved
 

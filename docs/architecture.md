@@ -104,7 +104,11 @@ Vitest currently covers:
   keys.
 
 Database transactions, row-level security, and UI interactions do not yet have
-automated coverage.
+automated coverage in the committed baseline. Milestone 1.5 (on
+`codex/atomic-recipe-saves`, 2026-06-27) adds a CI pgTAP suite that exercises the
+`save_recipe` function — atomicity rollback, RLS/owner-scope, and version-bump
+invalidation — against an ephemeral local Supabase stack on GitHub Actions
+(no cloud credentials). Broader UI-interaction coverage remains open.
 
 ## Deploy & Operations
 
@@ -180,7 +184,10 @@ Deploy order:
 
 - Git remote: `https://github.com/mitchthompson/meal-queue.git`.
 - GitHub CLI is not installed; pull requests use GitHub's web interface.
-- Supabase CLI is not installed; database changes use the Supabase SQL editor.
+- Supabase CLI: used for **local/CI testing only** (an ephemeral local stack +
+  pgTAP, as of milestone 1.5, 2026-06-27). Prod database changes are still
+  hand-applied through the Supabase SQL editor; `supabase db push` is not run
+  against the live project.
 
 ## Related Docs
 

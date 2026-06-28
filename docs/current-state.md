@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-06-19
+Last reviewed: 2026-06-27
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -15,9 +15,14 @@ grocery generator. Start here, then follow the links into the detailed docs.
 ## Current build phase
 
 **Reliability core.** The reliability foundation (milestone 1) is merged.
-**Next up: milestone 2 — atomic recipe saves** on `codex/atomic-recipe-saves`.
-Existing household data is live and must stay compatible throughout this work.
-See [roadmap.md](roadmap.md) for the full milestone plan.
+**Milestone 2 — atomic recipe saves is code-complete on
+`codex/atomic-recipe-saves`** (the `save_recipe` Postgres function + client
+switch), but is **not committed and not applied to prod**. Ahead of applying it,
+this session added **milestone 1.5 — CI + test harness** (GitHub Actions +
+pgTAP) so `save_recipe` is proven against a real Postgres before the live
+hand-apply ("plan B": no staging existed). Existing household data is live and
+must stay compatible throughout. See [roadmap.md](roadmap.md) for the full
+milestone plan.
 
 ## Stable Baseline
 
@@ -28,29 +33,43 @@ See [roadmap.md](roadmap.md) for the full milestone plan.
   pull requests.
 - **Last pull request:** Documentation foundation in PR #1, merge commit
   `0108c44`.
-- **Current branch:** `main`, tracking `origin/main`.
+- **Current branch:** `codex/atomic-recipe-saves` (created this session, not yet
+  pushed). `main` is unchanged and still tracks `origin/main`. The branch carries
+  uncommitted milestone 2 + milestone 1.5 work (see Active Handoff).
 - **Remote:** `origin` points to
   `https://github.com/mitchthompson/meal-queue.git`.
 - **Database status:** Existing Supabase data is treated as live. The repository
   has a canonical schema file (`supabase/schema.sql`) and a documented
   forward-only migration directory (`supabase/migrations/`). No database
   migration has been applied yet.
-- **Latest application verification:** `npm run test` (13 passing),
-  `npm run typecheck`, and `npm run build` passed on 2026-06-11 on merged
-  `main`. See [qa.md](qa.md) for the verification procedure.
+- **Latest application verification:** on 2026-06-27 (branch
+  `codex/atomic-recipe-saves`): `npm run test` 13/13 pass; `npm run typecheck`
+  clean (after excluding `mcp/` from the web-app tsconfig); `npm run build` green
+  with placeholder `NEXT_PUBLIC_*` env. `npm run lint` is **non-functional** (no
+  ESLint config — see [design-flags.md](design-flags.md)). The pgTAP DB tests
+  have **not** run yet (no local Docker; they run in CI). See [qa.md](qa.md).
 - **Latest documentation verification:** `git diff --check` passed on
   2026-06-11.
 
 ## Active Handoff
 
-- **In progress:** Nothing. The front-end UI audit is complete
-  ([UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md)) and its agreed scope is
-  recorded as roadmap milestone 5, after the reliability core and before
-  component hardening.
-- **Next action:** Start milestone 2 (atomic recipe saves) on
-  `codex/atomic-recipe-saves`.
-- **Blockers:** None.
-- **Uncommitted work:** None.
+- **In progress:** Milestone 2 (atomic recipe saves) is code-complete and
+  milestone 1.5 (CI + test harness) is scaffolded — **both uncommitted on
+  `codex/atomic-recipe-saves`**. Nothing is committed, pushed, or applied to the
+  live database.
+- **Next action:** (1) Owner sign-off on the CI/local-only baseline-migration
+  decision; (2) confirm prod's Postgres major version (`SHOW server_version;`)
+  and align `supabase/config.toml` (`major_version`, currently 15); (3) commit
+  the branch, push, and open a PR to `main` to run CI; (4) on green CI, apply
+  `supabase/migrations/20260627222320_atomic_recipe_save.sql` in the Supabase SQL
+  editor, then acceptance-test; (5) MCP `save-recipe` cutover (needs
+  `cd mcp && npm ci`); (6) resume milestones 3–4.
+- **Blockers:** None hard. Awaiting the two owner inputs above (baseline
+  sign-off, prod Postgres version).
+- **Uncommitted work:** Milestone 2 (`save_recipe` migration, `schema.sql`
+  sync, `app/recipes/page.tsx` RPC switch) and milestone 1.5 (CI workflow,
+  pgTAP test, `config.toml`, CI/local-only baseline, seed, doc reconciliations),
+  plus the `tsconfig.json` `mcp` exclusion — all on the branch.
 
 ## Page status
 
@@ -60,7 +79,7 @@ Per-page intent lives in `docs/pages/<slug>.md`.
 | Page | Route | Status |
 | --- | --- | --- |
 | Dashboard | `/` (`app/page.tsx`) | Working; known issue — loads items for only the 4 newest plans (see open issues) |
-| Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working; non-atomic save is the milestone 2 target |
+| Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working; atomic `save_recipe` RPC switch is code-complete on `codex/atomic-recipe-saves` (milestone 2), pending CI + prod apply |
 | Recipe detail | `/recipes/[id]` (`app/recipes/[id]/page.tsx`) | Working |
 | Plans | `/plans` (`app/plans/page.tsx`) | Working |
 | Grocery | `/grocery` (`app/grocery/page.tsx`) | Working; regenerates silently on load (resets checklist state) |
@@ -86,7 +105,8 @@ From [roadmap.md](roadmap.md). Reliability is the current priority.
 | --- | --- | --- | --- |
 | 0 | Documentation Foundation | — | Done (PR #1, `0108c44`) |
 | 1 | Reliability Foundation | — | Done (`7cfbab2`, 2026-06-11) |
-| 2 | Atomic Recipe Saves | `codex/atomic-recipe-saves` | Next |
+| 1.5 | CI + Test Harness | `codex/atomic-recipe-saves` | In progress — scaffolded, not committed/run (added 2026-06-27) |
+| 2 | Atomic Recipe Saves | `codex/atomic-recipe-saves` | In progress — code complete on branch; pending CI proof + prod apply |
 | 3 | Plan Integrity | `codex/plan-integrity` | Planned |
 | 4 | Grocery State Preservation | `codex/grocery-state-preservation` | Planned |
 | 5 | UI Feedback and Ergonomics | `codex/ui-feedback-ergonomics` | Planned (after reliability core) |
@@ -167,7 +187,14 @@ Highest-signal items:
 
 - **Non-atomic recipe save** (`app/recipes/page.tsx`): parent update, child
   delete, child insert run as separate client requests; a failure can leave a
-  partially updated recipe. (Milestone 2 fixes this.)
+  partially updated recipe. (Milestone 2 fix — the `save_recipe` RPC — is
+  code-complete on `codex/atomic-recipe-saves`, pending CI proof and the prod
+  hand-apply.)
+- **Tooling flags raised 2026-06-27** (detail in [design-flags.md](design-flags.md)):
+  `npm run lint` is non-functional (no ESLint config; `next lint` opens an
+  interactive wizard); `supabase/config.toml` `major_version = 15` is unconfirmed
+  against prod (CLI default is now 17 — confirm with `SHOW server_version;`);
+  `npm ci` reports 1 high-severity vulnerability (docs previously said zero).
 - **Stale groceries after ingredient edits:** editing recipe ingredients does
   not invalidate grocery lists for plans using that recipe. (Milestone 2.)
 - **Grocery regeneration loses state:** delete-and-recreate resets checked,
