@@ -37,92 +37,38 @@ export function registerSaveRecipe(server: McpServer): void {
     inputSchema,
     async ({ user_id, name, base_servings, instructions_raw, tags, ingredients, steps }) => {
       try {
-        // 1. Insert the recipe
-        const { data: recipe, error: recipeError } = await supabase
-          .from("recipes")
-          .insert({
-            user_id,
-            name,
-            base_servings,
-            instructions_raw: instructions_raw || null,
-          })
-          .select("id")
-          .single();
+        // Single transactional save via the save_recipe Postgres function
+        // (migration 20260627222320_atomic_recipe_save.sql): parent + ingredients
+        // + steps + tags are written atomically, so a failed child row rolls back
+        // the whole save. This client uses the service-role key, so auth.uid() is
+        // null inside the function and ownership comes from p_user_id (the
+        // documented RLS-bypass path). Blank step bodies and blank-name
+        // ingredients are filtered server-side; tags are normalized and deduped.
+        const { data: recipeId, error } = await supabase.rpc("save_recipe", {
+          p_recipe_id: null,
+          p_name: name,
+          p_base_servings: base_servings,
+          p_instructions_raw: instructions_raw || null,
+          p_ingredients: ingredients,
+          p_steps: steps,
+          p_tags: tags,
+          p_user_id: user_id,
+        });
 
-        if (recipeError) throw new Error(`Failed to insert recipe: ${recipeError.message}`);
-        const recipeId = recipe.id;
+        if (error) throw new Error(`Failed to save recipe: ${error.message}`);
+        if (!recipeId) throw new Error("save_recipe returned no recipe id.");
 
-        // 2. Insert ingredients
-        if (ingredients.length > 0) {
-          const ingredientRows = ingredients.map((ing) => ({
-            recipe_id: recipeId,
-            name: ing.name,
-            amount: ing.amount,
-            unit_code: ing.unit_code,
-            is_pantry_staple: ing.is_pantry_staple,
-          }));
-
-          const { error: ingError } = await supabase.from("ingredients").insert(ingredientRows);
-          if (ingError) throw new Error(`Failed to insert ingredients: ${ingError.message}`);
-        }
-
-        // 3. Insert steps
-        const stepRows = steps
-          .filter((body) => body.trim())
-          .map((body, index) => ({
-            recipe_id: recipeId,
-            step_number: index + 1,
-            body: body.trim(),
-          }));
-
-        if (stepRows.length > 0) {
-          const { error: stepsError } = await supabase.from("recipe_steps").insert(stepRows);
-          if (stepsError) throw new Error(`Failed to insert steps: ${stepsError.message}`);
-        }
-
-        // 4. Upsert tags and link them
-        if (tags.length > 0) {
-          // Insert tags (ignore conflicts on user_id+name)
-          const { error: tagInsertError } = await supabase
-            .from("tags")
-            .upsert(
-              tags.map((tagName) => ({
-                user_id,
-                name: tagName.toLowerCase().trim(),
-              })),
-              { onConflict: "user_id,name", ignoreDuplicates: true },
-            );
-
-          if (tagInsertError) throw new Error(`Failed to upsert tags: ${tagInsertError.message}`);
-
-          // Fetch tag IDs
-          const { data: tagRows, error: tagFetchError } = await supabase
-            .from("tags")
-            .select("id, name")
-            .eq("user_id", user_id)
-            .in(
-              "name",
-              tags.map((t) => t.toLowerCase().trim()),
-            );
-
-          if (tagFetchError) throw new Error(`Failed to fetch tags: ${tagFetchError.message}`);
-
-          if (tagRows && tagRows.length > 0) {
-            const { error: linkError } = await supabase.from("recipe_tags").insert(
-              tagRows.map((tag) => ({
-                recipe_id: recipeId,
-                tag_id: tag.id,
-              })),
-            );
-            if (linkError) throw new Error(`Failed to link tags: ${linkError.message}`);
-          }
-        }
+        // Mirror the server-side blank filtering so the reported counts match
+        // what was actually stored.
+        const keptIngredients = ingredients.filter((ing) => ing.name.trim()).length;
+        const keptSteps = steps.filter((body) => body.trim()).length;
+        const keptTags = new Set(tags.map((t) => t.toLowerCase().trim()).filter(Boolean)).size;
 
         return {
           content: [
             {
               type: "text" as const,
-              text: `Recipe "${name}" saved successfully.\nRecipe ID: ${recipeId}\nIngredients: ${ingredients.length}\nSteps: ${stepRows.length}\nTags: ${tags.length}`,
+              text: `Recipe "${name}" saved successfully.\nRecipe ID: ${recipeId}\nIngredients: ${keptIngredients}\nSteps: ${keptSteps}\nTags: ${keptTags}`,
             },
           ],
         };
