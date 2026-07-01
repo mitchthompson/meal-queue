@@ -130,6 +130,24 @@ replaced decisions as superseded rather than silently deleting them.
 - The MCP `save-recipe` cutover to the `save_recipe` RPC is a deferred follow-up
   on the same branch (not a blocker for applying the milestone 2 migration).
 
+### Explicit Data API Grants and CI Pinning (2026-07-01)
+
+- Table privileges for `anon`/`authenticated`/`service_role` are declared
+  **explicitly** in the schema (migration `20260701220327_data_api_grants.sql`)
+  rather than relying on Supabase's legacy implicit defaults, which fresh
+  local/CI stacks no longer grant (`auto_expose_new_tables` default flip,
+  2026-05-30). RLS remains the security gate; the grants are the capability
+  layer beneath it. On prod the migration is a no-op documenting reality.
+- CI pins the Supabase CLI to an exact release (2.109.0) instead of `latest`;
+  bumps are deliberate. `supabase start` excludes services the DB-test path
+  does not use, and the pgTAP step fails on pg_prove's `NOTESTS` result so
+  broken test discovery can never read as green.
+- Local DB testing runs on Colima (free/open container runtime) — the
+  "no local Docker" constraint is retired. Prod schema changes remain
+  hand-applied via the SQL editor; **merge order rule confirmed by incident:**
+  apply DB migrations to prod *before* merging dependent client code, because
+  merging to `main` auto-deploys production on Vercel.
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)

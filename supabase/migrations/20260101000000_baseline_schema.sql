@@ -304,6 +304,26 @@ drop policy if exists "units_read_all" on public.units;
 create policy "units_read_all" on public.units
 for select using (true);
 
+-- Explicit Data API grants (added by migration 20260701220327_data_api_grants.sql).
+-- Supabase's legacy implicit default privileges are no longer granted on fresh
+-- stacks (auto_expose_new_tables default flip, 2026-05-30), so the grants the
+-- app relies on are declared explicitly. RLS remains the security gate; these
+-- are the coarse capability layer beneath it. No sequence grants are needed
+-- (uuid keys via gen_random_uuid(); no serial/identity sequences).
+grant select, insert, update, delete on table
+  public.recipes,
+  public.ingredients,
+  public.recipe_steps,
+  public.recipe_tags,
+  public.tags,
+  public.meal_plans,
+  public.meal_plan_items,
+  public.user_settings,
+  public.grocery_list_items
+to authenticated, service_role;
+
+grant select on table public.units to anon, authenticated, service_role;
+
 -- Atomic recipe save (added by migration 20260627222320_atomic_recipe_save.sql).
 -- Single-transaction recipe upsert used by the web client and the MCP save-recipe
 -- tool; replaces the prior client-side delete-then-reinsert sequence so a failed

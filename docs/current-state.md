@@ -14,15 +14,15 @@ grocery generator. Start here, then follow the links into the detailed docs.
 
 ## Current build phase
 
-**Reliability core.** The reliability foundation (milestone 1) is merged.
-**Milestone 2 — atomic recipe saves is code-complete on
-`codex/atomic-recipe-saves`** (the `save_recipe` Postgres function + client
-switch), but is **not committed and not applied to prod**. Ahead of applying it,
-this session added **milestone 1.5 — CI + test harness** (GitHub Actions +
-pgTAP) so `save_recipe` is proven against a real Postgres before the live
-hand-apply ("plan B": no staging existed). Existing household data is live and
-must stay compatible throughout. See [roadmap.md](roadmap.md) for the full
-milestone plan.
+**Reliability core.** **Milestone 2 (atomic recipe saves) is merged to `main`
+(PR #2, `061f541`) and deployed on Vercel.** The `save_recipe` DB migration is
+being hand-applied to prod (backup-first); until it lands, prod recipe-saves
+error (everything else works). Milestone 1.5 (CI + pgTAP harness) is in: the
+suite is proven locally (33/33 on a fresh PG17 stack) and its first CI failure
+was root-caused to missing explicit Data API grants — fix on
+`codex/ci-grants-fix`, awaiting push/PR. The local Supabase stack now runs on
+Colima, so DB changes are provable locally before prod. Existing household data
+is live and must stay compatible throughout. See [roadmap.md](roadmap.md).
 
 ## Stable Baseline
 
@@ -33,9 +33,9 @@ milestone plan.
   pull requests.
 - **Last pull request:** Documentation foundation in PR #1, merge commit
   `0108c44`.
-- **Current branch:** `codex/atomic-recipe-saves` (created this session, not yet
-  pushed). `main` is unchanged and still tracks `origin/main`. The branch carries
-  uncommitted milestone 2 + milestone 1.5 work (see Active Handoff).
+- **Current branch:** `codex/ci-grants-fix` (off merged `main`). `main` contains
+  milestone 2 (PR #2, `061f541`) and is deployed on Vercel;
+  `codex/atomic-recipe-saves` is merged and can be deleted.
 - **Remote:** `origin` points to
   `https://github.com/mitchthompson/meal-queue.git`.
 - **Database status:** Existing Supabase data is treated as live. The repository
@@ -53,24 +53,28 @@ milestone plan.
 
 ## Active Handoff
 
-- **In progress:** Milestone 2 (atomic recipe saves) is code-complete and
-  milestone 1.5 (CI + test harness) is scaffolded — **both uncommitted on
-  `codex/atomic-recipe-saves`**. Nothing is committed, pushed, or applied to the
-  live database.
-- **Next action:** (1) open a PR to `main` from the pushed branch to run CI;
-  (2) on green CI, apply
-  `supabase/migrations/20260627222320_atomic_recipe_save.sql` in the Supabase
-  SQL editor, then acceptance-test (needs `.env.local`, still missing);
-  (3) rebuild the MCP server (`cd mcp && npm run build`) only after the
-  migration is applied; (4) resume milestones 3–4. Done since the 06-27 wrap:
-  baseline decision signed off; MCP `save-recipe` cutover implemented, verified,
-  and pushed; prod confirmed as Postgres 17.6 and `config.toml` aligned to 17.
-- **Blockers:** None hard. Awaiting the two owner inputs above (baseline
-  sign-off, prod Postgres version).
-- **Uncommitted work:** Milestone 2 (`save_recipe` migration, `schema.sql`
-  sync, `app/recipes/page.tsx` RPC switch) and milestone 1.5 (CI workflow,
-  pgTAP test, `config.toml`, CI/local-only baseline, seed, doc reconciliations),
-  plus the `tsconfig.json` `mcp` exclusion — all on the branch.
+- **In progress:** `codex/ci-grants-fix` — the explicit Data API grants
+  migration (`20260701220327_data_api_grants.sql`, owner-approved; no-op on
+  prod), `schema.sql` mirror, regenerated baseline, and hardened `ci.yml`
+  (CLI pinned 2.109.0, service excludes, NOTESTS guard). Proven locally:
+  fresh-from-migrations DB + pgTAP → 33/33.
+- **Next action:** (1) owner: confirm a recipe save in the live app (10-second
+  UI check) and run `gh auth login` as `mitchthompson` (Option A — keep
+  `2a-webteam` active; agent pins the account per command via
+  `GH_TOKEN=$(gh auth token --user mitchthompson)`); (2) open the PR for
+  `codex/ci-grants-fix` → first green db-tests run → merge; (3) apply the
+  grants migration to prod after merge (verified no-op, bookkeeping);
+  (4) resume milestones 3–4.
+- **Blockers:** None. The `save_recipe` migration was applied to prod on
+  2026-07-01 via the agent-run runbook (backup
+  `~/meal-queue-backup-2026-07-01-1636.dump`, 98K, 10-table manifest verified →
+  preflights → single-transaction apply → function registered, row counts
+  unchanged → rolled-back live smoke test returned a uuid → PostgREST probe
+  answers with the function's own auth guard). Prod recipe-saving is restored
+  pending the owner's UI confirmation. `.env.local` exists (DB access verified);
+  the MCP server `dist/` is rebuilt on the RPC path.
+- **Uncommitted work:** The `codex/ci-grants-fix` change set above (committing
+  imminently this session).
 
 ## Page status
 
@@ -106,8 +110,8 @@ From [roadmap.md](roadmap.md). Reliability is the current priority.
 | --- | --- | --- | --- |
 | 0 | Documentation Foundation | — | Done (PR #1, `0108c44`) |
 | 1 | Reliability Foundation | — | Done (`7cfbab2`, 2026-06-11) |
-| 1.5 | CI + Test Harness | `codex/atomic-recipe-saves` | In progress — scaffolded, not committed/run (added 2026-06-27) |
-| 2 | Atomic Recipe Saves | `codex/atomic-recipe-saves` | In progress — code complete on branch; pending CI proof + prod apply |
+| 1.5 | CI + Test Harness | `codex/ci-grants-fix` | Nearly done — suite 33/33 locally; grants fix pending push/PR for first green CI (2026-07-01) |
+| 2 | Atomic Recipe Saves | — | Merged (PR #2, `061f541`, 2026-07-01); prod DB migration being hand-applied (backup-first) |
 | 3 | Plan Integrity | `codex/plan-integrity` | Planned |
 | 4 | Grocery State Preservation | `codex/grocery-state-preservation` | Planned |
 | 5 | UI Feedback and Ergonomics | `codex/ui-feedback-ergonomics` | Planned (after reliability core) |

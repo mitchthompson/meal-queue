@@ -63,22 +63,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # setup-cli@v1 with version: latest matches the official Supabase docs
-      # example and is known-working. Follow-up: pin to a specific CLI release
-      # (and confirm config.toml major_version against prod) so the bundled
-      # Postgres image cannot drift between runs.
+      # Pinned to the CLI release the suite was verified against locally
+      # (2026-07-01, Postgres 17 matching prod 17.6). Bump deliberately, never
+      # float on `latest` — CLI/image drift can turn green runs red with no
+      # repo change.
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.109.0
 
-      # `supabase start` applies all migrations (20260101000000_baseline_schema
-      # then 20260627222320_atomic_recipe_save) and seed.sql to a fresh DB.
+      # `supabase start` applies all migrations (baseline schema incl. explicit
+      # Data API grants, then the forward migrations) and seed.sql to a fresh
+      # DB. Services the pgTAP path never touches are excluded — fewer image
+      # pulls, faster runs; the same list also works around the Colima
+      # docker.sock mount bug in `vector` for local runs, keeping local and CI
+      # invocations identical.
       - name: Start local Supabase stack
-        run: supabase start
+        run: supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,mailpit,supavisor
 
+      # NOTESTS guard: pg_prove exits 0 when it discovers ZERO test files, so a
+      # broken glob or moved tests directory would read as green while testing
+      # nothing. Fail loudly instead. (pipefail preserves the real pg_prove
+      # exit code through the tee.)
       - name: Run pgTAP tests
-        run: supabase test db
+        run: |
+          set -o pipefail
+          supabase test db 2>&1 | tee /tmp/pgtap-output.txt
+          if grep -q "Result: NOTESTS" /tmp/pgtap-output.txt; then
+            echo "::error::pg_prove discovered no test files (NOTESTS) — test discovery is broken"
+            exit 1
+          fi
 
       - name: Stop local Supabase stack
         if: always()

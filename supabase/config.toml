@@ -38,3 +38,19 @@ enabled = true
 
 [studio]
 enabled = false
+
+# Services the DB-test path never touches — disabled to cut image pulls, CI
+# runtime, and flake surface. [analytics] must stay off: its vector container
+# bind-mounts the Docker socket at a path that does not exist under Colima
+# (mount error) and adds nothing to pgTAP runs.
+[analytics]
+enabled = false
+
+[realtime]
+enabled = false
+
+[storage]
+enabled = false
+
+[edge_runtime]
+enabled = false

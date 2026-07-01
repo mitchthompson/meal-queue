@@ -6,11 +6,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Open
 
-### Vercel deploy trigger
-- **Where it's used:** Vercel project / hosting
-- **What's needed:** Confirm whether `main` auto-deploys on push, which branch is the production branch, and whether a manual promote/preview step exists. Currently an assumption. See [architecture](architecture.md).
-- **Source:** Session decision (canonical context)
-
 ### Per-page docs are stubs
 - **Where it's used:** [docs/pages/*.md](pages/) — [dashboard](pages/dashboard.md), [recipes](pages/recipes.md), [plans](pages/plans.md), [grocery](pages/grocery.md), [settings](pages/settings.md)
 - **What's needed:** These are skeletons; flesh out during milestone 5 (UI feedback & ergonomics) as each page is worked.
@@ -45,11 +40,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Where it's used:** [`supabase/schema.sql`](../supabase/schema.sql)
 - **What's needed:** The canonical schema file interleaves baseline DDL with historical inline ALTER statements, making the canonical schema hard to read. Needs the baseline DDL consolidated/cleaned so `schema.sql` reflects the current canonical schema, with historical ALTERs moved into the forward-only migrations directory.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes
-
-### MCP save-recipe tool uses the same non-atomic insert sequence
-- **Where it's used:** `mcp/` recipe-import server (save-recipe tool)
-- **What's needed:** ~~The MCP save-recipe tool uses the same non-atomic insert sequence as the app.~~ Update (2026-07-01): the tool is switched to the `save_recipe` RPC on `codex/atomic-recipe-saves` (service-role path via `p_user_id`). Remaining to resolve: apply the `20260627222320_atomic_recipe_save.sql` migration to prod **before** rebuilding/using the MCP server (`cd mcp && npm run build`) — until then the shipped `dist/` still runs the old non-atomic code, which is the correct interim state. Also noted: `mcp/` has 9 npm-audit findings of its own (2 moderate, 7 high) — triage separately.
-- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (Repository and tooling); also [roadmap](roadmap.md) Milestone 2
 
 ### Auth flow incomplete: no sign-up confirmation messaging, no password reset, unfriendly errors
 - **Where it's used:** Auth UI (`components/auth-gate.tsx` and sign-up/sign-in flow)
@@ -99,6 +89,12 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Session-end verification commands
 - **Resolution:** `npm run lint` + `npm run typecheck` + `npm run test` every session; `npm run build` when shipping a build-affecting change. See [qa](qa.md).
+
+### MCP save-recipe tool non-atomic insert sequence
+- **Resolution (2026-07-01):** The tool was switched to the `save_recipe` RPC (service-role path via `p_user_id`), the migration was applied to prod the same day, and `mcp/dist/` was rebuilt — the MCP path is now atomic end to end. Still open separately: `mcp/` has 9 npm-audit findings of its own (2 moderate, 7 high) — triage before heavy MCP use.
+
+### Vercel deploy trigger
+- **Resolution (2026-07-01):** Confirmed by observation — merging PR #2 to `main` auto-deployed production on Vercel, and branch pushes produce preview deployments. `main` is the production branch; there is no manual promote step. Every merge to `main` is therefore a release: the deploy-order rule (apply DB migrations **before** merging dependent client code) is mandatory, not theoretical — this is exactly how the `save_recipe` client reached prod ahead of its function.
 
 ### `supabase/config.toml` `major_version` vs prod
 - **Resolution (2026-07-01):** Prod is Postgres **17.6** (owner ran `SHOW server_version;`). `config.toml` `major_version` set to 17, so CI/local tests run the same engine as prod. Re-confirm only if the Supabase project is ever upgraded. (Not exposed via the REST API — the dashboard/SQL editor is the way to check.)
