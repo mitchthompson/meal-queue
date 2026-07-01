@@ -380,82 +380,34 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
     setMessage(null);
 
     try {
-      const payload = {
-        user_id: userId,
-        name: form.name.trim(),
-        base_servings: Number(form.base_servings || 2),
-        instructions_raw: form.instructions_raw.trim() || null,
-      };
-
-      if (!payload.name) {
+      const name = form.name.trim();
+      if (!name) {
         throw new Error("Recipe name is required.");
       }
 
-      let recipeId = form.id;
-      if (form.id) {
-        const { error: updateError } = await supabase.from("recipes").update(payload).eq("id", form.id);
-        if (updateError) throw updateError;
-      } else {
-        const { data, error: insertError } = await supabase.from("recipes").insert(payload).select("id").single();
-        if (insertError) throw insertError;
-        recipeId = data.id;
-      }
-
-      if (!recipeId) throw new Error("Unable to determine recipe id.");
-
-      const [deleteIngredientsRes, deleteStepsRes, deleteRecipeTagsRes] = await Promise.all([
-        supabase.from("ingredients").delete().eq("recipe_id", recipeId),
-        supabase.from("recipe_steps").delete().eq("recipe_id", recipeId),
-        supabase.from("recipe_tags").delete().eq("recipe_id", recipeId),
-      ]);
-      if (deleteIngredientsRes.error || deleteStepsRes.error || deleteRecipeTagsRes.error) {
-        throw new Error(
-          deleteIngredientsRes.error?.message ||
-            deleteStepsRes.error?.message ||
-            deleteRecipeTagsRes.error?.message ||
-            "Failed resetting recipe details.",
-        );
-      }
-
-      const ingredientRows = form.ingredients
-        .filter((item) => item.name.trim())
-        .map((item) => ({
-          recipe_id: recipeId,
-          name: item.name.trim(),
+      // Single transactional upsert (parent + ingredients + steps + tags) via the
+      // save_recipe RPC. Any invalid child row rolls back the whole save, and the
+      // function bumps the version of plans referencing this recipe when its
+      // ingredient set changes so their grocery lists are detected as stale.
+      const { data: savedId, error: saveError } = await supabase.rpc("save_recipe", {
+        p_recipe_id: form.id,
+        p_name: name,
+        p_base_servings: Number(form.base_servings || 2),
+        p_instructions_raw: form.instructions_raw,
+        p_ingredients: form.ingredients.map((item) => ({
+          name: item.name,
           amount: Number(item.amount || 0),
           unit_code: item.unit_code,
           is_pantry_staple: item.is_pantry_staple,
-        }));
+        })),
+        p_steps: form.steps.map((step) => step.body),
+        p_tags: form.tags,
+      });
 
-      if (ingredientRows.length > 0) {
-        const { error: ingredientError } = await supabase.from("ingredients").insert(ingredientRows);
-        if (ingredientError) throw ingredientError;
-      }
+      if (saveError) throw saveError;
 
-      const stepRows = form.steps
-        .map((step) => step.body.trim())
-        .filter(Boolean)
-        .map((body, index) => ({
-          recipe_id: recipeId,
-          step_number: index + 1,
-          body,
-        }));
-
-      if (stepRows.length > 0) {
-        const { error: stepsError } = await supabase.from("recipe_steps").insert(stepRows);
-        if (stepsError) throw stepsError;
-      }
-
-      const tagRows = await upsertTags(form.tags);
-      if (tagRows.length > 0) {
-        const { error: linkError } = await supabase.from("recipe_tags").insert(
-          tagRows.map((tag) => ({
-            recipe_id: recipeId,
-            tag_id: tag.id,
-          })),
-        );
-        if (linkError) throw linkError;
-      }
+      const recipeId = (savedId as string | null) ?? form.id;
+      if (!recipeId) throw new Error("Unable to determine recipe id.");
 
       setMessage("Recipe saved.");
       await loadData();

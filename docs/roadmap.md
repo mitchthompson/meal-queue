@@ -47,9 +47,44 @@ The 2026-06-11 front-end UI audit
 and ergonomics), which runs after the reliability core and before component
 hardening.
 
+### 1.5 CI + Test Harness
+
+Branch: `codex/atomic-recipe-saves` (added 2026-06-27)
+
+Added ahead of applying the reliability migrations because there is no staging
+environment ("plan B"): prove database changes against a real Postgres before
+the live hand-apply.
+
+- GitHub Actions CI: an app-checks job (`npm ci` + typecheck + test + build with
+  placeholder `NEXT_PUBLIC_*` env; no lint until ESLint is configured) and a
+  db-tests job (ephemeral local Supabase stack via the CLI + pgTAP; no cloud
+  credentials).
+- pgTAP coverage for `save_recipe` (atomicity rollback, version-bump
+  invalidation, RLS/owner-scope on the app and service-role paths).
+- A CI/local-only baseline migration (`20260101000000_baseline_schema.sql`, a
+  regenerable copy of `schema.sql`) so a fresh CI database builds the schema
+  before forward migrations validate. Never applied to prod; supersedes the
+  "no synthetic baseline" rule for the local/CI path only (see
+  [decisions.md](decisions.md)).
+- The Supabase CLI is used for local/CI testing only; prod stays hand-applied.
+
+Acceptance:
+
+- CI runs green on a PR to `main`.
+- `save_recipe` is proven by the pgTAP suite before it is applied to prod.
+
+Follow-ups: pin the CLI version, configure ESLint and add a lint step, add a CI
+guard that diffs the baseline against `schema.sql`, and confirm `config.toml`
+`major_version` against prod.
+
 ### 2. Atomic Recipe Saves
 
-Planned branch: `codex/atomic-recipe-saves`
+Branch: `codex/atomic-recipe-saves`
+
+**Status (2026-06-27):** code complete on the branch (the `save_recipe` function
++ client RPC switch), adversarially reviewed; **not committed or applied to
+prod.** Pending CI proof (milestone 1.5) and the live hand-apply. Decision: the
+version bump is **diff-based** (fires only when the ingredient set changes).
 
 - Add a `save_recipe` Postgres function (security invoker, so row-level
   security still applies) that updates the recipe parent and replaces

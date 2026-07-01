@@ -3,6 +3,76 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-06-27 - Milestone 2 Implemented (on branch) + CI/Test Harness Foundation
+
+Worked on `codex/atomic-recipe-saves`. **Nothing committed or pushed; no prod
+database change applied.** Both the Milestone 2 code and a new CI/test-harness
+foundation are staged in the working tree for review.
+
+- **Setup / baseline.** Installed dependencies with `npm ci` (repo had no
+  `node_modules`). Confirmed the project lives one level below the shell cwd at
+  `meal-queue/meal-queue`. `npm run test` 13/13 pass. `npm run typecheck` was red
+  only because the root `tsconfig` globbed the separate `mcp/` package (deps not
+  installed) — fixed by excluding `mcp` from the web-app tsconfig (matches the
+  documented MCP boundary); typecheck is now clean. `npm run lint` is
+  **non-functional** (no ESLint config; `next lint` is deprecated and opens an
+  interactive wizard) — flagged. `npm ci` reports **1 high-severity vuln**
+  (docs previously said zero) — flagged, untouched.
+- **Milestone 2 — Atomic Recipe Saves (code complete, not applied).** Added
+  `supabase/migrations/20260627222320_atomic_recipe_save.sql`: a
+  `save_recipe(...)` Postgres function (security invoker, `search_path` pinned)
+  that upserts the recipe parent and replaces ingredients/steps/tags in one
+  transaction — any failed child rolls back the whole save. On an update whose
+  ingredient identity set changed, it bumps `meal_plans.version` for the owner's
+  referencing plans, so grocery lists (`source_key` carries `v<version>|`) are
+  detected stale and regenerate. Reflected byte-identically in `schema.sql`.
+  Switched the client save (`app/recipes/page.tsx`) to a single
+  `supabase.rpc("save_recipe", …)`. Reviewed adversarially across six lenses
+  (no code defects); applied hardenings: owner-scoped the version-bump UPDATE,
+  corrected a misleading comment, appended `notify pgrst, 'reload schema';`, and
+  added an APPLY ORDER note. Confirmed the live-DB assumptions via the prior
+  project agent: RLS enabled + policies match `schema.sql`; no relevant schema
+  drift; `authenticated` holds table DML grants; no pre-existing `save_recipe`;
+  a current plan with cook items exists for acceptance testing. Vercel deploy
+  trigger and Supabase email-confirmation remain unconfirmed.
+- **Milestone 1.5 — CI + Test Harness (new milestone, scaffolded, not run).**
+  Owner chose to build a testing foundation before applying reliability
+  migrations to prod ("plan B"), since there is no staging. Free approach:
+  `pg_dump`/`supabase db dump` for backups (Pro-tier PITR not needed); an
+  ephemeral local Supabase stack as "staging" (CI uses GitHub runners' Docker,
+  so no local Docker is required). Scaffolded `.github/workflows/ci.yml`
+  (app-checks: `npm ci`/typecheck/test/build with placeholder `NEXT_PUBLIC_*`
+  env, no lint; db-tests: `supabase start` → `supabase test db`, no cloud
+  credentials), `supabase/config.toml`, `supabase/seed.sql`, and
+  `supabase/tests/save_recipe_test.sql` (33 pgTAP assertions: happy-path
+  normalization, wholesale child replacement, atomicity rollback on FK/check
+  violations, version-bump vs no-op, RLS/owner-scope on the app and service-role
+  paths). Resolved the "prod predates migrations" wrinkle with a CI/local-only
+  baseline `20260101000000_baseline_schema.sql` (regenerable byte-identical copy
+  of `schema.sql`, sorts first) so a fresh CI DB builds the schema before the
+  function validates under `check_function_bodies`. Verified locally as far as
+  possible without Docker: typecheck clean, 13/13 tests, `next build` green with
+  placeholder env (red without), baseline byte-identical to `schema.sql`. The
+  db-tests job itself has not run — first real proof is the CI run.
+- **Key decisions.** Diff-based version bump (only when the ingredient set
+  changes) over always-bump. MCP `save-recipe` cutover to the RPC deferred to a
+  follow-up commit on the same branch (needs `cd mcp && npm ci`). Introduce the
+  Supabase CLI for local/CI testing only; prod stays hand-applied via the SQL
+  editor. CI/local-only baseline supersedes the "no synthetic baseline
+  migration" rule for the local/CI path only (recorded in
+  [decisions.md](decisions.md) and `supabase/migrations/README.md`).
+- **Flags raised.** `npm run lint` non-functional; `config.toml`
+  `major_version = 15` unconfirmed vs prod (CLI default is now 17 — confirm with
+  `SHOW server_version;`); 1 high-severity `npm audit` finding. See
+  [design-flags.md](design-flags.md).
+- **Next steps.** (1) Owner sign-off on the CI/local-only baseline decision;
+  (2) confirm prod's Postgres major version and align `config.toml`; (3) commit
+  the branch, push, open a PR to `main` to run CI; (4) on green CI, apply the
+  `save_recipe` migration in the Supabase SQL editor, then acceptance-test;
+  (5) MCP `save-recipe` cutover; (6) resume Milestones 3–4. Optional: read-only
+  Supabase MCP for verification, pin the CLI version, configure ESLint, add a
+  baseline-vs-`schema.sql` CI diff guard.
+
 ## 2026-06-19 - Documentation System Migration
 
 - Migrated the project documentation to a lowercase-kebab canonical system and

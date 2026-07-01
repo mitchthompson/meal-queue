@@ -111,6 +111,48 @@ replaced decisions as superseded rather than silently deleting them.
   related); one-off hex, font, or spacing values are never inlined in
   components.
 
+### CI, Test Harness, and Version-Bump Policy (2026-06-27)
+
+- A testing foundation is built **before** applying the reliability migrations to
+  prod ("plan B"), because there is no staging environment. Free approach:
+  logical backups via `pg_dump` / `supabase db dump` (Supabase Pro PITR is not
+  required), and an ephemeral local Supabase stack as "staging."
+- The **Supabase CLI is introduced for local/CI testing only.** Prod schema
+  changes stay hand-applied through the Supabase SQL editor; `supabase db push`
+  is not run against the live project.
+- CI is GitHub Actions: an app-checks job (`npm ci` + typecheck + test + build)
+  and a db-tests job (local Supabase stack + pgTAP), with **no cloud credentials**
+  — the DB job uses a throwaway local database on the runner. The DB job needs no
+  local Docker (GitHub runners provide it).
+- The `save_recipe` version bump is **diff-based**: it bumps referencing plans
+  only when the recipe's ingredient identity set actually changes, avoiding the
+  over-triggered grocery regeneration that always-bumping would cause.
+- The MCP `save-recipe` cutover to the `save_recipe` RPC is a deferred follow-up
+  on the same branch (not a blocker for applying the milestone 2 migration).
+
 ## Superseded Decisions
 
-None recorded yet.
+### CI/local-only baseline migration (2026-06-27)
+
+- Supersedes the "There is no synthetic baseline migration for the
+  already-live database" clause under **Dates and Migrations** above, but
+  ONLY for the local/CI testing path.
+- A new file `supabase/migrations/20260101000000_baseline_schema.sql` exists
+  purely so a fresh, EPHEMERAL local/CI database (created by
+  `supabase start` / `supabase db reset`) can build the full schema before the
+  `20260627222320_atomic_recipe_save.sql` migration validates. Without it,
+  applying only the `save_recipe` migration to an empty database fails:
+  the function body references tables that do not yet exist and
+  `check_function_bodies` (on by default) rejects it.
+- It is a verbatim, regenerable copy of `supabase/schema.sql`
+  (`cp supabase/schema.sql supabase/migrations/20260101000000_baseline_schema.sql`),
+  timestamped to sort BEFORE the `save_recipe` migration.
+- It is **NEVER applied to prod.** Prod predates the migrations directory and
+  stays hand-applied via the Supabase SQL editor; `supabase db push` is not
+  used. `schema.sql` remains the canonical full-schema reference.
+- Prod risk is negligible: the file never reaches prod, and `schema.sql` is
+  idempotent (every `create table` / `create policy` / trigger / constraint is
+  guarded with `if not exists` or `drop ... if exists`).
+- Resolved 2026-07-01: prod is Postgres 17.6 (confirmed with
+  `SHOW server_version;`), and `supabase/config.toml` `major_version` is set
+  to 17 so CI/local tests run the same engine as prod.
