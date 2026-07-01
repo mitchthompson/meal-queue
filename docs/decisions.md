@@ -153,8 +153,6 @@ replaced decisions as superseded rather than silently deleting them.
 - Prod risk is negligible: the file never reaches prod, and `schema.sql` is
   idempotent (every `create table` / `create policy` / trigger / constraint is
   guarded with `if not exists` or `drop ... if exists`).
-- Unresolved at time of writing: the local Postgres `major_version` in
-  `supabase/config.toml` is set to 15 (matching the prior repo assumption and
-  the documented Supabase config example). Confirm against the live database
-  with `SHOW server_version;` and align before treating green CI as a prod
-  gate. If prod is Postgres 17, change `major_version` to 17.
+- Resolved 2026-07-01: prod is Postgres 17.6 (confirmed with
+  `SHOW server_version;`), and `supabase/config.toml` `major_version` is set
+  to 17 so CI/local tests run the same engine as prod.

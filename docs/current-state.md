@@ -57,16 +57,14 @@ milestone plan.
   milestone 1.5 (CI + test harness) is scaffolded — **both uncommitted on
   `codex/atomic-recipe-saves`**. Nothing is committed, pushed, or applied to the
   live database.
-- **Next action:** (1) confirm prod's Postgres major version
-  (`SHOW server_version;` — not exposed via the REST API, needs the dashboard or
-  SQL editor) and align `supabase/config.toml` (`major_version`, currently 15);
-  (2) open a PR to `main` from the pushed branch to run CI; (3) on green CI,
-  apply `supabase/migrations/20260627222320_atomic_recipe_save.sql` in the
-  Supabase SQL editor, then acceptance-test (needs `.env.local`, still missing);
-  (4) rebuild the MCP server (`cd mcp && npm run build`) only after the
-  migration is applied; (5) resume milestones 3–4. Done since the 06-27 wrap:
-  baseline decision signed off, MCP `save-recipe` cutover implemented and
-  verified on the branch.
+- **Next action:** (1) open a PR to `main` from the pushed branch to run CI;
+  (2) on green CI, apply
+  `supabase/migrations/20260627222320_atomic_recipe_save.sql` in the Supabase
+  SQL editor, then acceptance-test (needs `.env.local`, still missing);
+  (3) rebuild the MCP server (`cd mcp && npm run build`) only after the
+  migration is applied; (4) resume milestones 3–4. Done since the 06-27 wrap:
+  baseline decision signed off; MCP `save-recipe` cutover implemented, verified,
+  and pushed; prod confirmed as Postgres 17.6 and `config.toml` aligned to 17.
 - **Blockers:** None hard. Awaiting the two owner inputs above (baseline
   sign-off, prod Postgres version).
 - **Uncommitted work:** Milestone 2 (`save_recipe` migration, `schema.sql`
@@ -195,9 +193,9 @@ Highest-signal items:
   hand-apply.)
 - **Tooling flags raised 2026-06-27** (detail in [design-flags.md](design-flags.md)):
   `npm run lint` is non-functional (no ESLint config; `next lint` opens an
-  interactive wizard); `supabase/config.toml` `major_version = 15` is unconfirmed
-  against prod (CLI default is now 17 — confirm with `SHOW server_version;`);
-  `npm ci` reports 1 high-severity vulnerability (docs previously said zero).
+  interactive wizard); `npm ci` reports 1 high-severity vulnerability (docs
+  previously said zero); `mcp/` has 9 npm-audit findings of its own. Resolved
+  2026-07-01: prod confirmed Postgres 17.6, `config.toml` aligned to 17.
 - **Stale groceries after ingredient edits:** editing recipe ingredients does
   not invalidate grocery lists for plans using that recipe. (Milestone 2.)
 - **Grocery regeneration loses state:** delete-and-recreate resets checked,

@@ -12,13 +12,11 @@ project_id = "meal-queue-local"
 port = 54322
 # Shadow DB port used by `supabase db diff` (unused in CI, but must be valid).
 shadow_port = 54320
-# MUST equal the live database's major version. The Supabase docs say: run
-# `SHOW server_version;` on the remote database to check. This is currently set
-# to 15 (the prior repo assumption and the documented config.toml example), but
-# it is UNCONFIRMED against prod. If prod is Postgres 17, change this to 17 so
-# the local engine matches; the CLI pulls the matching Postgres image
-# automatically. Do this BEFORE treating green CI as a prod gate.
-major_version = 15
+# MUST equal the live database's major version so CI/local tests run the same
+# engine as prod. Confirmed 2026-07-01 via `SHOW server_version;` on prod:
+# 17.6 -> major_version 17. The CLI pulls the matching Postgres image
+# automatically. Re-confirm if the Supabase project is ever upgraded.
+major_version = 17
 
 [db.seed]
 # Seed runs after migrations on `supabase start` / `supabase db reset`.
