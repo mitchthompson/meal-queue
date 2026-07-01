@@ -14,15 +14,17 @@ grocery generator. Start here, then follow the links into the detailed docs.
 
 ## Current build phase
 
-**Reliability core.** **Milestone 2 (atomic recipe saves) is merged to `main`
-(PR #2, `061f541`) and deployed on Vercel.** The `save_recipe` DB migration is
-being hand-applied to prod (backup-first); until it lands, prod recipe-saves
-error (everything else works). Milestone 1.5 (CI + pgTAP harness) is in: the
-suite is proven locally (33/33 on a fresh PG17 stack) and its first CI failure
-was root-caused to missing explicit Data API grants — fix on
-`codex/ci-grants-fix`, awaiting push/PR. The local Supabase stack now runs on
-Colima, so DB changes are provable locally before prod. Existing household data
-is live and must stay compatible throughout. See [roadmap.md](roadmap.md).
+**Reliability core.** **Milestones 1.5 and 2 are complete (2026-07-01).**
+Atomic recipe saves are live in prod: the `save_recipe` function is applied and
+verified (rolled-back live smoke test + API probe), the web client and the MCP
+tool both use it, and grocery invalidation is diff-based. The CI harness is
+proven end to end — PR #3 produced the first fully green run (app checks +
+33/33 pgTAP against a fresh PG17 stack, 1m02s). The local Colima stack makes DB
+changes provable before prod, and prod DB access (backup/preflight/apply/verify
+runbooks) is agent-executable with owner approval per operation.
+**Next up: milestone 3 — plan integrity** on `codex/plan-integrity`. Existing
+household data is live and must stay compatible throughout. See
+[roadmap.md](roadmap.md).
 
 ## Stable Baseline
 
@@ -53,26 +55,23 @@ is live and must stay compatible throughout. See [roadmap.md](roadmap.md).
 
 ## Active Handoff
 
-- **In progress:** `codex/ci-grants-fix` — the explicit Data API grants
-  migration (`20260701220327_data_api_grants.sql`, owner-approved; no-op on
-  prod), `schema.sql` mirror, regenerated baseline, and hardened `ci.yml`
-  (CLI pinned 2.109.0, service excludes, NOTESTS guard). Proven locally:
-  fresh-from-migrations DB + pgTAP → 33/33.
-- **Next action:** (1) owner: confirm a recipe save in the live app (10-second
-  UI check) and run `gh auth login` as `mitchthompson` (Option A — keep
-  `2a-webteam` active; agent pins the account per command via
-  `GH_TOKEN=$(gh auth token --user mitchthompson)`); (2) open the PR for
-  `codex/ci-grants-fix` → first green db-tests run → merge; (3) apply the
-  grants migration to prod after merge (verified no-op, bookkeeping);
-  (4) resume milestones 3–4.
-- **Blockers:** None. The `save_recipe` migration was applied to prod on
-  2026-07-01 via the agent-run runbook (backup
-  `~/meal-queue-backup-2026-07-01-1636.dump`, 98K, 10-table manifest verified →
-  preflights → single-transaction apply → function registered, row counts
-  unchanged → rolled-back live smoke test returned a uuid → PostgREST probe
-  answers with the function's own auth guard). Prod recipe-saving is restored
-  pending the owner's UI confirmation. `.env.local` exists (DB access verified);
-  the MCP server `dist/` is rebuilt on the RPC path.
+- **In progress:** Nothing. PR #3 (`240b508`) merged with the first fully green
+  CI run; the grants migration was applied to prod immediately after and proven
+  a no-op (210 grant rows byte-identical before/after). All migrations in
+  `supabase/migrations/` are applied to prod. Local and remote feature branches
+  are cleaned up.
+- **Next action:** Start milestone 3 (plan integrity) on `codex/plan-integrity`
+  — now on rails: pgTAP tests first, local Colima-stack proof, green CI, then
+  the approved prod runbook. One small outstanding confirmation: the owner's
+  10-second UI recipe-save check in the live app (everything below the UI is
+  verified).
+- **Blockers:** None.
+- **Environment notes:** `.env.local` exists (prod DB access verified,
+  PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
+  pending first use); `gh` holds both accounts (`2a-webteam` active,
+  `mitchthompson` pinned per command); backup at
+  `~/meal-queue-backup-2026-07-01-1636.dump`; MCP server `dist/` rebuilt on the
+  RPC path.
 - **Uncommitted work:** The `codex/ci-grants-fix` change set above (committing
   imminently this session).
 
@@ -110,8 +109,8 @@ From [roadmap.md](roadmap.md). Reliability is the current priority.
 | --- | --- | --- | --- |
 | 0 | Documentation Foundation | — | Done (PR #1, `0108c44`) |
 | 1 | Reliability Foundation | — | Done (`7cfbab2`, 2026-06-11) |
-| 1.5 | CI + Test Harness | `codex/ci-grants-fix` | Nearly done — suite 33/33 locally; grants fix pending push/PR for first green CI (2026-07-01) |
-| 2 | Atomic Recipe Saves | — | Merged (PR #2, `061f541`, 2026-07-01); prod DB migration being hand-applied (backup-first) |
+| 1.5 | CI + Test Harness | — | Done (PR #3, `240b508`, 2026-07-01) — first green CI: 33/33 pgTAP in 1m02s |
+| 2 | Atomic Recipe Saves | — | Done (PR #2, `061f541`; prod migrations applied + verified 2026-07-01) |
 | 3 | Plan Integrity | `codex/plan-integrity` | Planned |
 | 4 | Grocery State Preservation | `codex/grocery-state-preservation` | Planned |
 | 5 | UI Feedback and Ergonomics | `codex/ui-feedback-ergonomics` | Planned (after reliability core) |

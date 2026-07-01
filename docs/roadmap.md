@@ -49,7 +49,11 @@ hardening.
 
 ### 1.5 CI + Test Harness
 
-Branch: `codex/atomic-recipe-saves` (added 2026-06-27)
+Done: PR #3 (`240b508`), 2026-07-01. First green run: app checks + 33/33 pgTAP
+against a fresh Postgres 17 stack in 1m02s. Branch history:
+`codex/atomic-recipe-saves` (scaffold, 2026-06-27) + `codex/ci-grants-fix`
+(explicit Data API grants — root cause of the first red run — CLI pinning,
+NOTESTS guard).
 
 Added ahead of applying the reliability migrations because there is no staging
 environment ("plan B"): prove database changes against a real Postgres before
@@ -79,12 +83,11 @@ guard that diffs the baseline against `schema.sql`, and confirm `config.toml`
 
 ### 2. Atomic Recipe Saves
 
-Branch: `codex/atomic-recipe-saves`
-
-**Status (2026-06-27):** code complete on the branch (the `save_recipe` function
-+ client RPC switch), adversarially reviewed; **not committed or applied to
-prod.** Pending CI proof (milestone 1.5) and the live hand-apply. Decision: the
-version bump is **diff-based** (fires only when the ingredient set changes).
+Done: PR #2 (`061f541`) merged 2026-07-01; `save_recipe` applied to prod the
+same day (backup-first agent runbook, rolled-back live smoke test, API probe)
+and the grants migration applied post-merge (verified no-op). Web client and
+MCP tool both use the RPC. Version bump is **diff-based** (fires only when the
+ingredient set changes). Acceptance proven by 33/33 pgTAP in CI.
 
 - Add a `save_recipe` Postgres function (security invoker, so row-level
   security still applies) that updates the recipe parent and replaces

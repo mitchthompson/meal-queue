@@ -3,6 +3,23 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-01 (evening) - PR #3 Merged: First Green CI; Grants No-Op Applied; Milestones 1.5 + 2 Complete
+
+- `gh` set up with both accounts (`2a-webteam` active machine-wide,
+  `mitchthompson` pinned per command via `GH_TOKEN=$(gh auth token --user ...)`;
+  SSH protocol so git credentials are untouched). Agent opened PR #3, watched
+  checks, and merged on owner approval.
+- **First fully green CI run:** app checks 46s; **DB tests (Supabase + pgTAP)
+  1m02s, 33/33** — the service-exclusion list paid off. Milestone 1.5
+  acceptance met.
+- Merge `240b508`; Vercel redeployed `main` (CI/docs-only diff). Grants
+  migration then applied to prod and **proven a no-op**: 210 grant rows
+  byte-identical before/after. All migrations in `supabase/migrations/` are now
+  applied to prod; feature branches deleted (local + remote).
+- Milestones 1.5 and 2 are complete. Next: milestone 3 (plan integrity) on
+  `codex/plan-integrity`, using the full rails: pgTAP first, local Colima
+  proof, green CI, approved prod runbook.
+
 ## 2026-07-01 (later) - save_recipe Applied to Prod via Agent Runbook
 
 - Owner provided scoped access: `.env.local` (session-pooler `DATABASE_URL`
