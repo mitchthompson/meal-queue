@@ -3,6 +3,52 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-01 - Milestone 2 Merged; CI Failure Root-Caused and Fixed; Tooling
+
+- **Milestone 2 landed on `main`.** The MCP `save-recipe` tool was cut over to
+  the `save_recipe` RPC (adversarially verified), prod was confirmed Postgres
+  **17.6** and `config.toml` aligned to 17, the branch was pushed, and the owner
+  merged PR #2. **Merging deployed production on Vercel** — which resolved the
+  long-open deploy-trigger flag by observation (auto-deploy on `main`, previews
+  on branches) but also shipped the RPC client ahead of its database function,
+  leaving prod recipe-saves broken until the migration is applied (the owner is
+  applying it with a `pg_dump` backup taken first). Lesson recorded: apply
+  migrations before merging dependent client code — merge = release.
+- **First CI run: app-checks green; db-tests (pgTAP) red.** Root cause found by
+  a multi-agent diagnosis, then **reproduced locally**: the Supabase CLI's
+  `auto_expose_new_tables` default flip (2026-05-30) means fresh stacks no
+  longer grant `anon`/`authenticated`/`service_role` the legacy implicit table
+  privileges — and the schema never declared any. Test 1 died with
+  `42501: permission denied for table recipes` and the single-transaction suite
+  cascaded. Prod is unaffected (predates the flip, keeps its grants).
+- **Fix (owner-approved) on `codex/ci-grants-fix`:** migration
+  `20260701220327_data_api_grants.sql` making the Data API grants explicit
+  (no-op on prod; documents existing reality), mirrored in `schema.sql`,
+  baseline regenerated. `ci.yml` hardened: CLI pinned to 2.109.0, unneeded
+  services excluded from `supabase start` (faster, and works around a
+  Colima-specific `vector` docker.sock mount bug locally), and a **NOTESTS
+  guard** (pg_prove exits 0 on zero discovered tests — a broken glob would
+  otherwise read as green).
+- **Verification:** full-fidelity local rehearsal — `supabase db reset` (fresh
+  DB purely from migrations) + `supabase test db` → **33/33 pass**. Also
+  verified the failure mode first (without grants: identical to CI), so the fix
+  is causally proven, not coincidental.
+- **Tooling installed** (owner-approved): GitHub CLI 2.95, Colima 0.10 + docker
+  client, Supabase CLI 2.109 (binary install — note: v2.109 ships `supabase` +
+  `supabase-go` as co-located binaries; brew tap was blocked by outdated Xcode
+  CLT), libpq 18.4 (`pg_dump`/`psql` for PG17 prod). The local Supabase stack
+  now runs on Colima — the "no local Docker" constraint is retired.
+- **Repo-local git identity** set to the `mitchthompson` GitHub account
+  (noreply email) so commits link to the profile; other projects unaffected.
+- **Gotchas recorded:** background shell commands can lose cwd (the nested
+  `meal-queue/meal-queue` layout makes the CLI silently boot a default,
+  config-less stack from the outer dir — symptom: project named `meal-queue`
+  instead of `meal-queue-local`, `NOTESTS`); CLI 2.109 renamed excludable
+  services (`vector,logflare,mailpit,supavisor,...`).
+- **Remaining:** owner finishes backup + applies the `save_recipe` migration +
+  `gh auth login`; push `codex/ci-grants-fix` → PR → first green db-tests run;
+  then milestones 3–4.
+
 ## 2026-06-27 - Milestone 2 Implemented (on branch) + CI/Test Harness Foundation
 
 Worked on `codex/atomic-recipe-saves`. **Nothing committed or pushed; no prod

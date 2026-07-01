@@ -6,11 +6,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Open
 
-### Vercel deploy trigger
-- **Where it's used:** Vercel project / hosting
-- **What's needed:** Confirm whether `main` auto-deploys on push, which branch is the production branch, and whether a manual promote/preview step exists. Currently an assumption. See [architecture](architecture.md).
-- **Source:** Session decision (canonical context)
-
 ### Per-page docs are stubs
 - **Where it's used:** [docs/pages/*.md](pages/) — [dashboard](pages/dashboard.md), [recipes](pages/recipes.md), [plans](pages/plans.md), [grocery](pages/grocery.md), [settings](pages/settings.md)
 - **What's needed:** These are skeletons; flesh out during milestone 5 (UI feedback & ergonomics) as each page is worked.
@@ -99,6 +94,9 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Session-end verification commands
 - **Resolution:** `npm run lint` + `npm run typecheck` + `npm run test` every session; `npm run build` when shipping a build-affecting change. See [qa](qa.md).
+
+### Vercel deploy trigger
+- **Resolution (2026-07-01):** Confirmed by observation — merging PR #2 to `main` auto-deployed production on Vercel, and branch pushes produce preview deployments. `main` is the production branch; there is no manual promote step. Every merge to `main` is therefore a release: the deploy-order rule (apply DB migrations **before** merging dependent client code) is mandatory, not theoretical — this is exactly how the `save_recipe` client reached prod ahead of its function.
 
 ### `supabase/config.toml` `major_version` vs prod
 - **Resolution (2026-07-01):** Prod is Postgres **17.6** (owner ran `SHOW server_version;`). `config.toml` `major_version` set to 17, so CI/local tests run the same engine as prod. Re-confirm only if the Supabase project is ever upgraded. (Not exposed via the REST API — the dashboard/SQL editor is the way to check.)
