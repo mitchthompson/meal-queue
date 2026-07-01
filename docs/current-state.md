@@ -58,16 +58,21 @@ is live and must stay compatible throughout. See [roadmap.md](roadmap.md).
   prod), `schema.sql` mirror, regenerated baseline, and hardened `ci.yml`
   (CLI pinned 2.109.0, service excludes, NOTESTS guard). Proven locally:
   fresh-from-migrations DB + pgTAP → 33/33.
-- **Next action:** (1) owner: finish `pg_dump` backup, apply
-  `20260627222320_atomic_recipe_save.sql` in the SQL editor (fixes live
-  recipe-saves), verify with a real save, and run `gh auth login`;
-  (2) push `codex/ci-grants-fix` → PR → first green db-tests run;
-  (3) rebuild the MCP server (`cd mcp && npm run build`) only after the prod
-  migration is applied; (4) create `.env.local` for local acceptance testing;
-  (5) resume milestones 3–4.
-- **Blockers:** Prod recipe-saving errors until the `save_recipe` migration is
-  applied (deploy-order slip: PR #2 merged before the DB migration; see
-  [progress-log.md](progress-log.md) 2026-07-01).
+- **Next action:** (1) owner: confirm a recipe save in the live app (10-second
+  UI check) and run `gh auth login` as `mitchthompson` (Option A — keep
+  `2a-webteam` active; agent pins the account per command via
+  `GH_TOKEN=$(gh auth token --user mitchthompson)`); (2) open the PR for
+  `codex/ci-grants-fix` → first green db-tests run → merge; (3) apply the
+  grants migration to prod after merge (verified no-op, bookkeeping);
+  (4) resume milestones 3–4.
+- **Blockers:** None. The `save_recipe` migration was applied to prod on
+  2026-07-01 via the agent-run runbook (backup
+  `~/meal-queue-backup-2026-07-01-1636.dump`, 98K, 10-table manifest verified →
+  preflights → single-transaction apply → function registered, row counts
+  unchanged → rolled-back live smoke test returned a uuid → PostgREST probe
+  answers with the function's own auth guard). Prod recipe-saving is restored
+  pending the owner's UI confirmation. `.env.local` exists (DB access verified);
+  the MCP server `dist/` is rebuilt on the RPC path.
 - **Uncommitted work:** The `codex/ci-grants-fix` change set above (committing
   imminently this session).
 

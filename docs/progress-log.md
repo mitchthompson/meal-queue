@@ -3,6 +3,34 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-01 (later) - save_recipe Applied to Prod via Agent Runbook
+
+- Owner provided scoped access: `.env.local` (session-pooler `DATABASE_URL`
+  + anon key; verified read-only first) and a read-only Supabase MCP config
+  (`.mcp.json`, OAuth, `read_only=true`). GitHub access: Option A chosen —
+  `mitchthompson` added to `gh` as a secondary account, `2a-webteam` stays
+  active machine-wide; agent pins the account per command with
+  `GH_TOKEN=$(gh auth token --user mitchthompson)`.
+- **Agent-executed prod runbook** (every step gated, all visible in
+  transcript): `pg_dump` backup (98K, 10-table manifest verified, stored
+  outside the repo) → preflights (no existing overload; counts
+  27/264/141/138/19) → single-transaction apply of
+  `20260627222320_atomic_recipe_save.sql` → function registered, counts
+  unchanged → **rolled-back live smoke test** (real `save_recipe` call against
+  prod returned a uuid, then rolled back; zero residue) → PostgREST probe
+  initially `PGRST202`, refreshed within ~30s of `notify pgrst` to answer with
+  the function's own auth-guard error (`P0001`), proving API registration.
+  **Prod recipe-saving restored.**
+- Security note confirmed in passing: functions default to PUBLIC execute, so
+  anon can *call* `save_recipe`, but RLS rejects any anon write (no
+  `auth.uid()`); a belt-and-suspenders `revoke execute ... from public` is a
+  possible future hardening, not urgent.
+- MCP server `dist/` rebuilt — the atomic RPC path is now what the import
+  tool ships.
+- Remaining: owner UI save confirmation; PR + first green CI for
+  `codex/ci-grants-fix`; apply the grants migration to prod post-merge
+  (verified no-op).
+
 ## 2026-07-01 - Milestone 2 Merged; CI Failure Root-Caused and Fixed; Tooling
 
 - **Milestone 2 landed on `main`.** The MCP `save-recipe` tool was cut over to
