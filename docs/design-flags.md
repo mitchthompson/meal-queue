@@ -48,7 +48,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### MCP save-recipe tool uses the same non-atomic insert sequence
 - **Where it's used:** `mcp/` recipe-import server (save-recipe tool)
-- **What's needed:** The MCP save-recipe tool uses the same non-atomic delete-then-reinsert sequence as the app and runs with the service-role key (bypassing RLS by design). It should adopt the milestone 2 `save_recipe` Postgres function once that lands so its writes are transactional. Open until milestone 2 is implemented and the tool is switched over.
+- **What's needed:** ~~The MCP save-recipe tool uses the same non-atomic insert sequence as the app.~~ Update (2026-07-01): the tool is switched to the `save_recipe` RPC on `codex/atomic-recipe-saves` (service-role path via `p_user_id`). Remaining to resolve: apply the `20260627222320_atomic_recipe_save.sql` migration to prod **before** rebuilding/using the MCP server (`cd mcp && npm run build`) — until then the shipped `dist/` still runs the old non-atomic code, which is the correct interim state. Also noted: `mcp/` has 9 npm-audit findings of its own (2 moderate, 7 high) — triage separately.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (Repository and tooling); also [roadmap](roadmap.md) Milestone 2
 
 ### Auth flow incomplete: no sign-up confirmation messaging, no password reset, unfriendly errors

@@ -57,13 +57,16 @@ milestone plan.
   milestone 1.5 (CI + test harness) is scaffolded — **both uncommitted on
   `codex/atomic-recipe-saves`**. Nothing is committed, pushed, or applied to the
   live database.
-- **Next action:** (1) Owner sign-off on the CI/local-only baseline-migration
-  decision; (2) confirm prod's Postgres major version (`SHOW server_version;`)
-  and align `supabase/config.toml` (`major_version`, currently 15); (3) commit
-  the branch, push, and open a PR to `main` to run CI; (4) on green CI, apply
-  `supabase/migrations/20260627222320_atomic_recipe_save.sql` in the Supabase SQL
-  editor, then acceptance-test; (5) MCP `save-recipe` cutover (needs
-  `cd mcp && npm ci`); (6) resume milestones 3–4.
+- **Next action:** (1) confirm prod's Postgres major version
+  (`SHOW server_version;` — not exposed via the REST API, needs the dashboard or
+  SQL editor) and align `supabase/config.toml` (`major_version`, currently 15);
+  (2) open a PR to `main` from the pushed branch to run CI; (3) on green CI,
+  apply `supabase/migrations/20260627222320_atomic_recipe_save.sql` in the
+  Supabase SQL editor, then acceptance-test (needs `.env.local`, still missing);
+  (4) rebuild the MCP server (`cd mcp && npm run build`) only after the
+  migration is applied; (5) resume milestones 3–4. Done since the 06-27 wrap:
+  baseline decision signed off, MCP `save-recipe` cutover implemented and
+  verified on the branch.
 - **Blockers:** None hard. Awaiting the two owner inputs above (baseline
   sign-off, prod Postgres version).
 - **Uncommitted work:** Milestone 2 (`save_recipe` migration, `schema.sql`
