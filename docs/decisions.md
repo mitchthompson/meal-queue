@@ -164,6 +164,21 @@ replaced decisions as superseded rather than silently deleting them.
   migration-first window double-bumps harmlessly; client-first would silently
   stop grocery invalidation.
 
+### Grocery Identity and Staleness (2026-07-02)
+
+- Grocery rows have a **stable identity**: `source_key` is
+  `lower(trim(name))|unit_code|pantry-classification` with no version prefix,
+  unique per plan. Regeneration is a transactional **upsert by identity**
+  (`regenerate_grocery_list`), so user state (`is_checked`, `is_on_hand`, and
+  the manual pantry override) survives for any ingredient that persists; the
+  recipe-derived pantry classification lives in the identity while the row's
+  `is_pantry_staple` stays user-mutable.
+- Staleness is plan-level: `meal_plans.groceries_version` records which plan
+  version the list was generated from; the list is stale when it differs from
+  `version` (bumped only by grocery-relevant changes per milestone 3). The old
+  source-key version-prefix convention is retired; legacy rows are normalized
+  on their first regeneration without losing state.
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)

@@ -3,6 +3,33 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-02 - Milestone 4 (Grocery State Preservation) Implemented and Locally Proven
+
+- On `codex/grocery-state-preservation`: live preflights first (0 duplicate
+  stripped identities across 783 rows → unique index safe; 18/19 plans' lists
+  current → backfill scope). Migration `20260702023356`: additive
+  `meal_plans.groceries_version` (staleness bookkeeping, backfilled where the
+  list matches the current version), unique index on
+  `(meal_plan_id, source_key)`, and `regenerate_grocery_list(p_plan_id)` — one
+  transaction that normalizes legacy `v<n>|` keys, upserts fresh aggregates by
+  the stable identity `name|unit|pantry` (DO UPDATE touches only amount +
+  display name, so `is_checked` / `is_on_hand` / manual pantry overrides are
+  preserved), deletes obsolete rows only after the upsert succeeds, and stamps
+  `groceries_version = version` under the same plan-row lock milestone 3 uses.
+- Grocery page: client-side fetch/build/delete/insert regeneration replaced by
+  one RPC; staleness is now `groceries_version !== version` (the source-key
+  prefix hack is gone); regen-loop guard added. `lib/grocery.ts` stays as the
+  vitest-covered reference for the SQL's semantics.
+- pgTAP suite #3 (25 assertions): aggregation math, state preservation through
+  amount changes/removals/additions, legacy-row normalization with state
+  intact, RLS rejection, empty-plan stamping. **Local proof: 108/108 across
+  three suites**; typecheck, vitest 13/13, build green. Reviewed inline
+  (ultracode off + spend-limit prudence) rather than via a multi-agent pass —
+  the change is smaller than M3 and follows the twice-proven pattern.
+- Remaining: PR → green CI → owner-gated prod apply (migration BEFORE client
+  merge; old client stays compatible in the window) → merge → reliability core
+  complete.
+
 ## 2026-07-02 - Milestone 3 (Plan Integrity) Implemented and Locally Proven
 
 - On `codex/plan-integrity`, on the full rails: live-data preflights FIRST
