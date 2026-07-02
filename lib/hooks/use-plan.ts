@@ -1,0 +1,612 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
+import {
+  createDefaultsFromStart,
+  findNextAvailableStartDate,
+  nextDayInRange,
+  toYmd,
+} from "@/lib/date-utils";
+import { toErrorMessage } from "@/lib/errors";
+import { supabase } from "@/lib/supabase/client";
+
+// Data layer for the plans screen (milestone 6 extraction — behavior
+// identical to the former in-page logic). Owns plan/recipe/settings loading,
+// plan CRUD, slot upserts and leftover linking, list filtering, and the
+// quick-add state machine (which the write flows mutate, so it lives here);
+// the page keeps only presentation.
+
+export type MealPlan = {
+  id: string;
+  start_date: string;
+  end_date: string;
+  order_date: string | null;
+  pickup_date: string | null;
+  version: number;
+};
+
+export type RecipeOption = {
+  id: string;
+  name: string;
+  base_servings: number;
+};
+
+export type MealSlotType = "cook" | "leftover" | "eat_out";
+
+export type MealPlanItem = {
+  id: string;
+  plan_date: string;
+  meal_type: "lunch" | "dinner";
+  slot_type: MealSlotType;
+  leftover_from_item_id: string | null;
+  note: string | null;
+  serving_multiplier: number;
+  recipe: RecipeOption | null;
+};
+
+export type PlanForm = {
+  start_date: string;
+  end_date: string;
+  order_date: string;
+  pickup_date: string;
+};
+
+export type SettingsDefaults = {
+  default_plan_days: number;
+  week_starts_on: number;
+  default_order_weekday: number | null;
+  default_pickup_weekday: number | null;
+};
+
+export type SlotTarget = {
+  day: string;
+  meal_type: "lunch" | "dinner";
+};
+
+export type PlanListFilter = "current" | "upcoming" | "past" | "all";
+
+export type LeftoverOption = {
+  id: string;
+  plan_date: string;
+  meal_type: "lunch" | "dinner";
+  recipe_id: string;
+  recipe_name: string;
+};
+
+export function usePlan(userId: string) {
+  const [plans, setPlans] = useState<MealPlan[]>([]);
+  const [recipes, setRecipes] = useState<RecipeOption[]>([]);
+  const [items, setItems] = useState<MealPlanItem[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [createForm, setCreateForm] = useState<PlanForm>({
+    start_date: "",
+    end_date: "",
+    order_date: "",
+    pickup_date: "",
+  });
+  const [selectedForm, setSelectedForm] = useState<PlanForm>({
+    start_date: "",
+    end_date: "",
+    order_date: "",
+    pickup_date: "",
+  });
+  const [settingsDefaults, setSettingsDefaults] = useState<SettingsDefaults>({
+    default_plan_days: 7,
+    week_starts_on: 5,
+    default_order_weekday: 3,
+    default_pickup_weekday: 4,
+  });
+  const [activeSlot, setActiveSlot] = useState<SlotTarget | null>(null);
+  const [quickQuery, setQuickQuery] = useState("");
+  const [quickMode, setQuickMode] = useState<MealSlotType>("cook");
+  const [quickLeftoverId, setQuickLeftoverId] = useState("");
+  const [quickNote, setQuickNote] = useState("");
+  const [planFilter, setPlanFilter] = useState<PlanListFilter>("current");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const quickInputRef = useRef<HTMLInputElement | null>(null);
+  const previousPlanFilterRef = useRef<PlanListFilter>(planFilter);
+
+  const selectedPlan = useMemo(() => plans.find((plan) => plan.id === selectedPlanId) ?? null, [plans, selectedPlanId]);
+  const todayYmd = useMemo(() => toYmd(new Date()), []);
+  const visiblePlans = useMemo(() => {
+    const filtered = plans.filter((plan) => {
+      if (planFilter === "all") return true;
+      if (planFilter === "current") return plan.start_date <= todayYmd && plan.end_date >= todayYmd;
+      if (planFilter === "upcoming") return plan.start_date > todayYmd;
+      return plan.end_date < todayYmd;
+    });
+
+    if (planFilter === "upcoming") {
+      return [...filtered].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    }
+    if (planFilter === "past") {
+      return [...filtered].sort((a, b) => b.start_date.localeCompare(a.start_date));
+    }
+    if (planFilter === "current") {
+      return [...filtered].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    }
+    return filtered;
+  }, [planFilter, plans, todayYmd]);
+
+  const itemMap = useMemo(() => {
+    const map = new Map<string, MealPlanItem[]>();
+    for (const item of items) {
+      const key = `${item.plan_date}:${item.meal_type}`;
+      const current = map.get(key) ?? [];
+      current.push(item);
+      map.set(key, current);
+    }
+    return map;
+  }, [items]);
+
+  const itemById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
+
+  const quickMatches = useMemo(() => {
+    const query = quickQuery.trim().toLowerCase();
+    if (!query) return recipes.slice(0, 8);
+    return recipes.filter((recipe) => recipe.name.toLowerCase().includes(query)).slice(0, 8);
+  }, [recipes, quickQuery]);
+
+  const quickLeftoverOptions = useMemo(() => {
+    if (!activeSlot) return [] as LeftoverOption[];
+    return items
+      .filter((item) => item.slot_type === "cook" && item.plan_date < activeSlot.day && item.recipe?.id && item.recipe?.name)
+      .map((item) => ({
+        id: item.id,
+        plan_date: item.plan_date,
+        meal_type: item.meal_type,
+        recipe_id: item.recipe!.id,
+        recipe_name: item.recipe!.name,
+      }))
+      .sort((a, b) => b.plan_date.localeCompare(a.plan_date));
+  }, [activeSlot, items]);
+
+  useEffect(() => {
+    loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  useEffect(() => {
+    if (!selectedPlan) return;
+    setSelectedForm({
+      start_date: selectedPlan.start_date,
+      end_date: selectedPlan.end_date,
+      order_date: selectedPlan.order_date ?? "",
+      pickup_date: selectedPlan.pickup_date ?? "",
+    });
+    loadPlanItems(selectedPlan.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPlanId]);
+
+  useEffect(() => {
+    const filterChanged = previousPlanFilterRef.current !== planFilter;
+    previousPlanFilterRef.current = planFilter;
+    if (visiblePlans.length === 0) return;
+    if (filterChanged || !selectedPlanId || !visiblePlans.some((plan) => plan.id === selectedPlanId)) {
+      setSelectedPlanId(visiblePlans[0].id);
+    }
+  }, [planFilter, selectedPlanId, visiblePlans]);
+
+  useEffect(() => {
+    if (activeSlot) quickInputRef.current?.focus();
+  }, [activeSlot]);
+
+  useEffect(() => {
+    if (quickMode !== "leftover") return;
+    if (!quickLeftoverId && quickLeftoverOptions.length > 0) {
+      setQuickLeftoverId(quickLeftoverOptions[0].id);
+    }
+  }, [quickMode, quickLeftoverId, quickLeftoverOptions]);
+
+  async function loadInitialData() {
+    setLoading(true);
+    setError(null);
+
+    const [plansRes, recipesRes, settingsRes] = await Promise.all([
+      supabase
+        .from("meal_plans")
+        .select("id, start_date, end_date, order_date, pickup_date, version")
+        .order("start_date", { ascending: false }),
+      supabase.from("recipes").select("id, name, base_servings").order("name", { ascending: true }),
+      supabase
+        .from("user_settings")
+        .select("default_plan_days, week_starts_on, default_order_weekday, default_pickup_weekday")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
+
+    if (plansRes.error || recipesRes.error || settingsRes.error) {
+      setError(plansRes.error?.message || recipesRes.error?.message || settingsRes.error?.message || "Failed loading plans.");
+      setLoading(false);
+      return;
+    }
+
+    const loadedPlans = (plansRes.data ?? []) as MealPlan[];
+    setPlans(loadedPlans);
+    if (loadedPlans.length > 0) setSelectedPlanId(loadedPlans[0].id);
+
+    const settings = settingsRes.data ?? {
+      default_plan_days: 7,
+      week_starts_on: 5,
+      default_order_weekday: 3,
+      default_pickup_weekday: 4,
+    };
+    setSettingsDefaults(settings);
+    const defaultStart = findNextAvailableStartDate(settings.week_starts_on, loadedPlans);
+    setCreateForm(createDefaultsFromStart(defaultStart, settings));
+
+    const recipeRows = (recipesRes.data ?? []) as RecipeOption[];
+    setRecipes(recipeRows);
+
+    setLoading(false);
+  }
+
+  async function loadPlanItems(planId: string) {
+    const { data, error: planItemsError } = await supabase
+      .from("meal_plan_items")
+      .select("id, plan_date, meal_type, slot_type, leftover_from_item_id, note, serving_multiplier, recipe:recipes(id, name, base_servings)")
+      .eq("meal_plan_id", planId)
+      .order("plan_date", { ascending: true });
+
+    if (planItemsError) {
+      setError(planItemsError.message);
+      return;
+    }
+
+    setItems(
+      ((data ?? []) as Array<{
+        id: string;
+        plan_date: string;
+        meal_type: "lunch" | "dinner";
+        slot_type: MealSlotType;
+        leftover_from_item_id: string | null;
+        note: string | null;
+        serving_multiplier: number;
+        recipe: RecipeOption[] | RecipeOption | null;
+      }>).map((row) => ({
+        id: row.id,
+        plan_date: row.plan_date,
+        meal_type: row.meal_type,
+        slot_type: row.slot_type,
+        leftover_from_item_id: row.leftover_from_item_id,
+        note: row.note,
+        serving_multiplier: row.serving_multiplier,
+        recipe: Array.isArray(row.recipe) ? row.recipe[0] ?? null : row.recipe,
+      })),
+    );
+  }
+
+  async function refreshPlansAndKeepSelection(currentId?: string) {
+    const { data, error: refreshError } = await supabase
+      .from("meal_plans")
+      .select("id, start_date, end_date, order_date, pickup_date, version")
+      .order("start_date", { ascending: false });
+    if (refreshError) throw refreshError;
+
+    const nextPlans = (data ?? []) as MealPlan[];
+    setPlans(nextPlans);
+    const fallbackId = nextPlans[0]?.id ?? null;
+    setSelectedPlanId(currentId && nextPlans.some((p) => p.id === currentId) ? currentId : fallbackId);
+    return nextPlans;
+  }
+
+  async function createPlan(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const { data, error: createError } = await supabase
+        .from("meal_plans")
+        .insert({
+          user_id: userId,
+          start_date: createForm.start_date,
+          end_date: createForm.end_date,
+          order_date: createForm.order_date || null,
+          pickup_date: createForm.pickup_date || null,
+        })
+        .select("id")
+        .single();
+      if (createError) throw createError;
+
+      const nextPlans = await refreshPlansAndKeepSelection(data.id);
+      const nextStart = findNextAvailableStartDate(settingsDefaults.week_starts_on, nextPlans);
+      setCreateForm(createDefaultsFromStart(nextStart, settingsDefaults));
+      setMessage("Meal plan created.");
+    } catch (caughtError) {
+      setError(toErrorMessage(caughtError, "Failed creating plan."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function savePlanMeta() {
+    if (!selectedPlan) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const { error: updateError } = await supabase
+        .from("meal_plans")
+        .update({
+          start_date: selectedForm.start_date,
+          end_date: selectedForm.end_date,
+          order_date: selectedForm.order_date || null,
+          pickup_date: selectedForm.pickup_date || null,
+        })
+        .eq("id", selectedPlan.id);
+      if (updateError) throw updateError;
+
+      await refreshPlansAndKeepSelection(selectedPlan.id);
+      setMessage("Plan dates saved.");
+    } catch (caughtError) {
+      setError(toErrorMessage(caughtError, "Failed saving plan."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Plan version bumps are handled by the bump_plan_version database trigger
+  // (grocery-relevant item changes only) — no client-side version writes.
+  async function upsertPlanSlot(
+    day: string,
+    mealType: "lunch" | "dinner",
+    options: {
+      slotType: MealSlotType;
+      recipeId?: string | null;
+      servingMultiplier?: number;
+      leftoverFromItemId?: string | null;
+      note?: string | null;
+    },
+    moveToNextDay = false,
+  ) {
+    if (!selectedPlan) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      // The grid renders from the (possibly unsaved) date form; the database
+      // validates against the SAVED range. Catch the mismatch with a clear
+      // message instead of a raw trigger error.
+      if (day < selectedPlan.start_date || day > selectedPlan.end_date) {
+        throw new Error("This day is outside the plan's saved dates. Save the plan dates first, then add meals.");
+      }
+
+      const slotType = options.slotType;
+      const servingMultiplier = options.servingMultiplier ?? 1;
+      const recipeId = options.recipeId ?? null;
+      const leftoverFromItemId = options.leftoverFromItemId ?? null;
+      const note = options.note?.trim() ? options.note.trim() : null;
+
+      const { error: insertError } = await supabase.from("meal_plan_items").insert({
+        meal_plan_id: selectedPlan.id,
+        plan_date: day,
+        meal_type: mealType,
+        slot_type: slotType,
+        recipe_id: recipeId,
+        leftover_from_item_id: leftoverFromItemId,
+        note,
+        serving_multiplier: servingMultiplier,
+      });
+      if (insertError) throw insertError;
+
+      await loadPlanItems(selectedPlan.id);
+      await refreshPlansAndKeepSelection(selectedPlan.id);
+      if (slotType === "leftover") {
+        setMessage("Leftover added to plan.");
+      } else if (slotType === "eat_out") {
+        setMessage("Eating out added to plan.");
+      } else {
+        setMessage("Recipe added to plan.");
+      }
+      if (moveToNextDay) {
+        const nextDay = nextDayInRange(day, selectedForm.end_date);
+        if (nextDay) {
+          setActiveSlot({ day: nextDay, meal_type: mealType });
+          setQuickQuery("");
+        } else {
+          setActiveSlot(null);
+        }
+      } else {
+        setActiveSlot(null);
+      }
+    } catch (caughtError) {
+      setError(toErrorMessage(caughtError, "Failed adding meal."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeItem(itemId: string) {
+    if (!selectedPlan) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const { error: deleteError } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
+      if (deleteError) throw deleteError;
+
+      await loadPlanItems(selectedPlan.id);
+      await refreshPlansAndKeepSelection(selectedPlan.id);
+      setMessage("Meal removed.");
+    } catch (caughtError) {
+      setError(toErrorMessage(caughtError, "Failed removing meal."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteSelectedPlan() {
+    if (!selectedPlan) return;
+    if (!window.confirm("Delete this meal plan and all its planned items?")) return;
+
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const { error: deleteError } = await supabase.from("meal_plans").delete().eq("id", selectedPlan.id);
+      if (deleteError) throw deleteError;
+
+      const nextPlans = await refreshPlansAndKeepSelection();
+      const nextStart = findNextAvailableStartDate(settingsDefaults.week_starts_on, nextPlans);
+      setCreateForm(createDefaultsFromStart(nextStart, settingsDefaults));
+      setItems([]);
+      setMessage("Meal plan deleted.");
+    } catch (caughtError) {
+      setError(toErrorMessage(caughtError, "Failed deleting plan."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function clearSlot(day: string, mealType: "lunch" | "dinner") {
+    if (!selectedPlan) return;
+    const currentItems = itemMap.get(`${day}:${mealType}`) ?? [];
+    if (currentItems.length === 0) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const ids = currentItems.map((item) => item.id);
+      const { error: deleteError } = await supabase.from("meal_plan_items").delete().in("id", ids);
+      if (deleteError) throw deleteError;
+      await loadPlanItems(selectedPlan.id);
+      await refreshPlansAndKeepSelection(selectedPlan.id);
+      setMessage("Meal slot cleared.");
+    } catch (caughtError) {
+      setError(toErrorMessage(caughtError, "Failed clearing slot."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function adjustServing(item: MealPlanItem, delta: number) {
+    if (!selectedPlan) return;
+    if (item.slot_type !== "cook") return;
+    const nextValue = Math.max(0.25, Number((item.serving_multiplier + delta).toFixed(2)));
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const { error: updateError } = await supabase
+        .from("meal_plan_items")
+        .update({ serving_multiplier: nextValue })
+        .eq("id", item.id);
+      if (updateError) throw updateError;
+
+      await loadPlanItems(selectedPlan.id);
+      await refreshPlansAndKeepSelection(selectedPlan.id);
+      setMessage("Serving updated.");
+    } catch (caughtError) {
+      setError(toErrorMessage(caughtError, "Failed updating serving."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function openQuickAdd(day: string, mealType: "lunch" | "dinner") {
+    setActiveSlot({ day, meal_type: mealType });
+    setQuickMode("cook");
+    setQuickLeftoverId("");
+    setQuickNote("");
+    setQuickQuery("");
+  }
+
+  async function handleQuickAddKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!activeSlot) return;
+    if (event.key === "Escape") {
+      setActiveSlot(null);
+      return;
+    }
+    if (quickMode === "cook" && (event.key === "Backspace" || event.key === "Delete") && quickQuery.trim() === "") {
+      event.preventDefault();
+      await clearSlot(activeSlot.day, activeSlot.meal_type);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (quickMode === "cook") {
+        const top = quickMatches[0];
+        if (!top) return;
+        await upsertPlanSlot(
+          activeSlot.day,
+          activeSlot.meal_type,
+          { slotType: "cook", recipeId: top.id, servingMultiplier: 1 },
+          event.shiftKey,
+        );
+        return;
+      }
+      if (quickMode === "leftover") {
+        const choice = quickLeftoverOptions.find((option) => option.id === quickLeftoverId) ?? quickLeftoverOptions[0];
+        if (!choice) return;
+        await upsertPlanSlot(
+          activeSlot.day,
+          activeSlot.meal_type,
+          {
+            slotType: "leftover",
+            recipeId: choice.recipe_id,
+            leftoverFromItemId: choice.id,
+            servingMultiplier: 1,
+          },
+          event.shiftKey,
+        );
+        return;
+      }
+      await upsertPlanSlot(
+        activeSlot.day,
+        activeSlot.meal_type,
+        { slotType: "eat_out", note: quickNote || "Eating out", servingMultiplier: 1 },
+        event.shiftKey,
+      );
+    }
+  }
+
+  return {
+    plans,
+    visiblePlans,
+    selectedPlan,
+    selectedPlanId,
+    selectPlan: setSelectedPlanId,
+    items,
+    itemMap,
+    itemById,
+    createForm,
+    setCreateForm,
+    selectedForm,
+    setSelectedForm,
+    settingsDefaults,
+    planFilter,
+    setPlanFilter,
+    activeSlot,
+    quickQuery,
+    setQuickQuery,
+    quickMode,
+    setQuickMode,
+    quickLeftoverId,
+    setQuickLeftoverId,
+    quickNote,
+    setQuickNote,
+    quickInputRef,
+    quickMatches,
+    quickLeftoverOptions,
+    loading,
+    saving,
+    error,
+    message,
+    createPlan,
+    savePlanMeta,
+    deleteSelectedPlan,
+    upsertPlanSlot,
+    removeItem,
+    clearSlot,
+    adjustServing,
+    openQuickAdd,
+    handleQuickAddKeyDown,
+  };
+}
