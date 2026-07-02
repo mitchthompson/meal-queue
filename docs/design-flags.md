@@ -53,7 +53,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Duplicated code: formatDisplayDate and lunch/dinner columns
 - **Where it's used:** `formatDisplayDate` duplicated in four files; lunch/dinner columns ~330 duplicated lines in `app/plans/page.tsx` (also flagged in CODE_AUDIT as ~1,100-line plans component with near-duplicate columns)
-- **What's needed:** `formatDisplayDate` is duplicated across four files, and the lunch/dinner columns are ~330 near-identical lines. Needs shared date helpers centralized and the duplicated columns extracted into a reusable component. Targeted by milestone 6 (component hardening) but currently deferred.
+- **What's needed:** Update (2026-07-02): the `formatDisplayDate` half is resolved — centralized in `lib/date-utils.ts` (M6 slice 1, PR #7), and the plans component shrank to 571 presentation-only lines over `lib/hooks/use-plan.ts` (M6 slice 3, PR #10). Still open: the lunch/dinner slot cells remain ~330 near-identical JSX lines; extract a shared component (M6 slice 4).
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 14); also [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) risk 6 (oversized route components)
 
 ### No screen wake-lock during cooking focus mode, thin empty states, no dark mode

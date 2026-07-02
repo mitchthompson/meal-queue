@@ -3,6 +3,38 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-02 (night, later) - M6 Slices 2-3 Shipped: Grocery and Plans Data Hooks
+
+- **Onboarding caught stranded work:** slice 2 (`useGroceryList`) existed only
+  as two unpushed local commits on `codex/component-hardening` — the remote
+  branch had been deleted at PR #7's merge, and `git status` on `main` looked
+  clean. Lesson encoded: the leave-behind sweep must check local branches
+  (`git branch -a` + `git log @{u}..`), not just the working tree. (The prior
+  entry's "pushed" claim was written in anticipation of a push that never
+  happened.)
+- **PR #9 merged (`128cab6`):** slice 2 rebased onto `main` (past PR #8,
+  no file overlap), verified, pushed, first-try green CI, deployed. The
+  grocery page is presentation-only over `lib/hooks/use-grocery-list.ts`.
+- **PR #10 merged (`a9c08a9`):** slice 3 — `usePlan` hook
+  (`lib/hooks/use-plan.ts`) extracted from `app/plans/page.tsx`
+  (1,091 → 571 lines). Decision: the quick-add state machine moved into the
+  hook rather than staying in the page, because `upsertPlanSlot` and the
+  keyboard handler mutate it inside the write flows — splitting it would have
+  changed behavior. Verification beyond compile: mechanical diff against the
+  pre-extraction file — moved logic byte-identical (modulo
+  `React.FormEvent`/`React.KeyboardEvent` → type-only imports), JSX differing
+  by exactly one identifier (`setSelectedPlanId` → `selectPlan`, matching the
+  slice-2 hook API).
+- Decision: slice-wise PRs (one per slice) instead of one combined M6 PR —
+  protects finished work from stranding again, keeps diffs reviewable, and
+  matches the slice-1 precedent.
+- Verification: typecheck clean, vitest 15/15, `next build` green (11 routes)
+  before each push; CI first-try green on both PRs (app checks 48s, db tests
+  1m02s, pgTAP 108/108 each). DB layer untouched; no schema, dependency, or
+  behavior changes.
+- Remaining M6 (slice 4): recipes data hook + shared lunch/dinner slot-cell
+  component; settings-defaults single source of truth still open.
+
 ## 2026-07-02 (night) - Mini-M5 Merged; Mockups Approved; Milestone 6 Underway
 
 - Mini-M5 merged (PR #6, `abbf3b2`) and deployed — including a
