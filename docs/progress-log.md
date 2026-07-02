@@ -3,7 +3,65 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-02 (afternoon, latest) - V2 Sweep: token fix (PR #19) + Settings pass (PR #20) shipped
+## 2026-07-02 (evening, latest) - V2 Sweep complete: Recipes pass (PR #21) + recipe detail (PR #22)
+
+- **Round-3 board (Recipes library + editor):** before shots + two
+  CSS-injected direction mocks per screen (A: v2-dressed cards / stacked
+  editor; B: flat hairline rows / iOS-row top fields), redeployed in place
+  to the same artifact URL. **Owner verdicts:** RC1: A *with the serves
+  line dropped* ("unnecessary for this screen") · RC2: yes (rode along
+  with the A mocks) · RC3: **remove "Load sample data" outright** ("left
+  over from before we had Recipes") · RC4: A · RC5: full-width.
+- **PR #21 — Recipes pass** (`codex/v2-recipes`, feat `9fdcd5d` + chore
+  `9821afd`, merge `1a9401b`, deployed): "Recipes" page head + uppercase
+  card labels (`.recipes-head`/`.recipes-card-label`, grouped with the
+  `.settings-*` selectors), 44px search/sort/inputs/buttons, teal
+  "View recipe" links (were the app's last browser-default blue links),
+  serves line removed, and the whole sample-data flow retired
+  (`SAMPLE_RECIPES` + `loadSampleData` + `seeding`, ~280 lines; the dead
+  `upsertTags` helper went with it). Page head hides with the list in the
+  mobile editor takeover so the editor title leads.
+- **Bug found by verification, fixed in PR #21:** the "Recipe saved."
+  confirmation never displayed — `saveRecipe` set the message, then the
+  post-save `selectRecipe` reload cleared it before paint (true on prod
+  since the M6 extraction). Fix: set the message after the reload
+  completes. The verify script's save round-trip caught it (RPC 200 but
+  no status node).
+- **Round-4 board (recipe detail):** mocks A/B, same rhythm. **Owner
+  verdicts:** "variant B for both" (RD1 flat hairline rows for ingredients
+  *and* steps; RD2 full-width teal Start cooking, RD3 header language +
+  44px stepper, RD4 badge fix rode along) · **RD5: yes** (answered in a
+  follow-up after the first build — added to the branch before merge).
+- **PR #22 — recipe detail pass** (`codex/v2-recipe-detail`, feat
+  `006b0ca` + chore `4086954` + RD5 `ba24797`, merge `74da4ea`, deployed):
+  flat rows both lists, chunky Start cooking under the STEPS label (same
+  handler; `?cook=1` unchanged), page-head title + uppercase labels + 44px
+  stepper, and the **pantry-badge cascade quirk fixed at the root** — the
+  `.recipe-meta span` rule (0-1-1) that out-specified `.pantry-badge`
+  (0-1-0) is gone; its styling moved to the existing `.recipe-amount`
+  class, so the badge's amber text finally renders (closes the V1 quirk).
+  RD5: ghost Back → "‹ Recipes" breadcrumb above the title, Edit + More
+  on one row — Start cooking now lands above the fold at 390px.
+- **Verification (as run):** both PRs — typecheck clean, vitest 16/16,
+  `next build` green locally and in CI (pgTAP 108/108, DB untouched).
+  Playwright on the local stack, prod route-blocked: PR #21 22/22 + live
+  `save_recipe` round-trip (2→3, persisted, reverted; seed data restored
+  after an earlier timed-out run left it at 3); PR #22 15/15 + stepper
+  rescale, Cook takeover open, `?cook=1` auto-open — zero console errors.
+  Two transient "Failed to fetch" console errors during verification were
+  traced to the harness (navigation aborting the in-flight settings POST),
+  not the app; the script now settles before navigating.
+- **Toolkit preserved:** `capture-recipes-variants.mjs`,
+  `verify-recipes-pass.mjs`, `gen-board-r3.mjs` (PR #21);
+  `capture-detail-variants.mjs`, `verify-detail-pass.mjs`,
+  `gen-board-r4.mjs` (PR #22). The board's artifact URL is unchanged;
+  round 4 now shows the full sweep record with all pins resolved.
+- **Milestone 7 is complete** (PRs #19–#22). Remaining work: the ten open
+  round-1 board pins (owner verdicts wanted) and the standing follow-ups
+  (settings-defaults source of truth, ESLint + CI lint, npm-audit triage,
+  Actions Node-20 bump).
+
+## 2026-07-02 (afternoon) - V2 Sweep: token fix (PR #19) + Settings pass (PR #20) shipped
 
 - **Part 1 — the token fix** (PR #19, `codex/v2-token-sweep`, `db98272`,
   merged `e5d2cfd` + deployed): all 20 hardcoded old-palette literals in

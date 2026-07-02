@@ -1,82 +1,79 @@
 # Current State
 
-Last reviewed: 2026-07-02
+Last reviewed: 2026-07-02 (evening — milestone 7 complete)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
 
 ## Current build phase
 
-**The reflow is complete; the v2 sweep (milestone 7) is half done.**
-Milestones 0–4, mini-M5, and milestone 6 are done; the database layer is
-atomic, race-free, and state-preserving (108 pgTAP assertions in CI), with
-data layers in `lib/hooks/`. The redesign ([redesign-brief.md](redesign-brief.md))
-shipped screen by screen on 2026-07-02 (Cook PR #13, Today PR #14, Shop
-PR #15, Plan PR #16), review round 1 (PRs #17–#18) landed the same day
-(flat day lists — `meal_type` is vestigial, no schema change — quiet cook
-line, mobile editor takeover), and the **v2 sweep then shipped its first
-half** (same day): **PR #19** retired every hardcoded old-palette literal
-in `app/globals.css` for token-set-v2 variables (acceptance grep: hex hits
-`:root` only), and **PR #20** rebuilt Settings in the v2 layout language
-per the round-2 board verdicts (iOS-style rows, page title + card labels,
-44px targets, full-width teal save). **Next: the Recipes library + editor
-pass, mocks-first**, then recipe detail ([roadmap.md](roadmap.md)
-milestone 7 part 2). Ten round-1 review-board pins are still open in
-[design-flags.md](design-flags.md); the round-2 pins (V1–V2, ST1–ST3) are
-all resolved and shipped.
+**The reflow and the v2 sweep (milestone 7) are both complete.**
+Milestones 0–4, mini-M5, milestone 6, and milestone 7 are done; the
+database layer is atomic, race-free, and state-preserving (108 pgTAP
+assertions in CI), with data layers in `lib/hooks/`. The redesign
+([redesign-brief.md](redesign-brief.md)) shipped screen by screen on
+2026-07-02 (Cook PR #13, Today PR #14, Shop PR #15, Plan PR #16), review
+round 1 (PRs #17–#18) landed the same day, and the **v2 sweep shipped in
+four PRs, all 2026-07-02**: **PR #19** (token fix — hex grep hits `:root`
+only), **PR #20** (Settings, round-2 verdicts), **PR #21** (Recipes
+library + editor, round-3 verdicts: A cards without the serves line,
+header language + teal links, sample-data seeder removed outright, stacked
+editor, full-width save — plus a fix for the save confirmation that had
+never displayed), and **PR #22** (recipe detail, round-4 verdicts: flat
+hairline rows both lists, full-width Start cooking, header language +
+44px stepper, the pantry-badge cascade quirk fixed at the root, and the
+RD5 tighter title row — breadcrumb + one-row actions). **Next: the ten
+open round-1 review-board pins and/or the standing follow-ups** (owner
+picks; see Active Handoff). The round-2/3/4 pins are all resolved and
+shipped.
 
 ## Stable Baseline
 
-- **`main`:** at `83cb415` — the full reflow (PRs #13–#16), review round 1
-  (PRs #17–#18), and the v2 sweep's first half: the token fix (PR #19,
-  merge `e5d2cfd`) and the Settings v2 pass (PR #20, merge `83cb415`), all
-  deployed on Vercel. Merge to `main` auto-deploys (confirmed); Cook was
-  owner-verified on-device in prod.
+- **`main`:** at `74da4ea` — the full reflow (PRs #13–#16), review round 1
+  (PRs #17–#18), and the complete v2 sweep: token fix (PR #19), Settings
+  (PR #20), Recipes library + editor (PR #21, merge `1a9401b`), and recipe
+  detail incl. RD5 (PR #22, merge `74da4ea`), all deployed on Vercel.
+  Merge to `main` auto-deploys (confirmed); Cook was owner-verified
+  on-device in prod.
 - **Prod database:** all four migrations in `supabase/migrations/` are applied
   and verified (`save_recipe`, Data API grants, plan-integrity triggers,
   grocery state preservation). `supabase/schema.sql` is canonical and in sync;
   the timestamped baseline copy is CI/local-only.
 - **CI:** GitHub Actions on every PR — app checks (typecheck / vitest / build)
   and DB tests (ephemeral Supabase stack, 108 pgTAP assertions across three
-  suites), CLI pinned 2.109.0, NOTESTS guard. Twenty PRs merged; every PR's
-  first CI run has been green. Housekeeping flag: the workflow's
+  suites), CLI pinned 2.109.0, NOTESTS guard. Twenty-two PRs merged; every
+  PR's first CI run has been green. Housekeeping flag: the workflow's
   `actions/*@v4` actions warn about deprecated Node 20 — bump versions in
   passing.
-- **Latest verification:** 2026-07-02 (v2 sweep) — typecheck clean, vitest
-  16/16, `next build` green on both branches; pgTAP 108/108 in CI (DB layer
-  untouched again). Both branches driven with Playwright on the local stack:
-  PR #19 — 22/22 computed-style assertions across Settings / recipes list /
-  editor / recipe detail at 390px, full-DOM scan zero retired palette
-  values, zero prod requests (route-blocked); PR #20 — 13/13 layout
-  assertions plus a live save round-trip (7→9, persisted through reload,
-  reverted) — zero console errors throughout.
+- **Latest verification:** 2026-07-02 (v2 sweep back half) — typecheck clean,
+  vitest 16/16, `next build` green on both branches; pgTAP 108/108 in CI (DB
+  layer untouched). Both branches driven with Playwright on the local stack
+  (prod route-blocked): PR #21 — 22/22 assertions at 390px/1280px plus a
+  live `save_recipe` round-trip (servings 2→3, persisted through reload,
+  reverted); PR #22 — 15/15 assertions plus behavior checks (stepper
+  rescales amounts, Start cooking opens the Cook takeover, `?cook=1`
+  deep link auto-opens) — zero console errors throughout.
 - **Remote:** `origin` = `https://github.com/mitchthompson/meal-queue.git`.
 - **Backups:** manual `pg_dump` runbook (libpq 18.4); latest snapshots in
   `~/meal-queue-backup-2026-07-01-*.dump` (98K/113K, 10-table manifests).
 
 ## Active Handoff
 
-- **In progress:** None — v2 sweep part 1 (PR #19) and the Settings pass
-  (PR #20) are merged and deployed; all branches merged, tree clean.
-- **Next action:** **the Recipes library + editor v2 pass, mocks-first**
-  (the Settings pass is the pattern — PR #20). Steps for a stranger:
-  (1) start the local stack + dev server on port 3123 (inline local
-  `NEXT_PUBLIC_*` env; see `scripts/review-board/README.md`), (2) capture
-  `/recipes` (list, and editor open — tap a list item's "Edit") at 390px,
-  (3) build 2 CSS-injected direction mocks bringing the screen's layout
-  language in line with the cycle screens (card labels, spacing, 44px thumb
-  targets — reuse `scripts/review-board/capture-settings-variants.mjs` as
-  the template), (4) redeploy the review board **to its existing artifact
-  URL** with RC-prefixed pins and get owner verdicts, (5) then branch
-  `codex/v2-recipes` off `main` and implement per the verdicts,
-  behavior-neutral, following `app/settings/page.tsx` + the `.settings-*`
-  group in `app/globals.css` (PR #20) as the class-naming pattern. After
-  Recipes: **recipe detail** (same rhythm; also resolve the pantry-badge
-  text-color cascade quirk — `.recipe-meta span` overrides `.pantry-badge`,
-  see the flag). Then: the 10 open round-1 board pins, then the standing
-  follow-ups (settings-defaults single source of truth, ESLint config + CI
-  lint step, npm audit triage — 1 high root, 9 in `mcp/` — and the Actions
-  Node-20 version bump).
+- **In progress:** None — milestone 7 is complete (PRs #19–#22 merged and
+  deployed); all branches merged, tree clean.
+- **Next action:** **owner picks the next unit** from two queues. (a) The
+  **ten open round-1 board pins** in [design-flags.md](design-flags.md) —
+  T1–T4 (settings gear placement, plan-less Today, amber link hover, 640px
+  desktop column), P1–P3 (inline sheets, generate-is-a-link, filter pills),
+  S1–S2 (Regenerate button, On-hand collapsed), C2 ("mark cooked" writes
+  nothing — a schema question) — these are shipped defaults awaiting
+  sign-off, so the move is to ask the owner for verdicts (pin codes in
+  chat), not to build. (b) The **standing follow-ups**: settings-defaults
+  single source of truth, ESLint config + CI lint step (mechanical,
+  self-contained — good first pick), npm audit triage (1 high root, 9 in
+  `mcp/`), and the Actions Node-20 version bump. For any new UI round,
+  the rhythm is mocks-first on the review board (same artifact URL;
+  toolkit + templates in `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -88,13 +85,14 @@ all resolved and shipped.
 ## Page status
 
 Routes confirmed against `app/`. Per-page intent lives in `docs/pages/<slug>.md`
-(stubs; the redesign brief supersedes them for future-state intent).
+([settings](pages/settings.md) and [recipes](pages/recipes.md) are current;
+the other three are stubs the redesign brief supersedes).
 
 | Page | Route | Status |
 | --- | --- | --- |
 | Today | `/` (`app/page.tsx`) | Working — reflow home screen ("Tonight" hero shows up to two meals + "Also tonight", deadline strip, week peek without meal-type sublabels, nudge); data layer in `lib/hooks/use-today.ts` |
-| Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working; atomic `save_recipe` RPC live; on mobile the editor takes over the screen ("‹ Back to recipes", PR #17); data layer in `lib/hooks/use-recipes.ts`; pre-v2 layout language — **next v2 sweep target** |
-| Recipe detail | `/recipes/[id]` (`app/recipes/[id]/page.tsx`) | Working; "Start cooking" launches the reflow's full-screen Cook mode (`components/cook-mode.tsx`); colors tokenized (PR #19) but pre-v2 layout language — v2 sweep target after Recipes (incl. the badge text-color cascade quirk) |
+| Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working — v2 pass shipped (PR #21): page title + card labels, teal links, 44px targets, full-width save, serves line + sample-data seeder removed; atomic `save_recipe` RPC live; mobile editor takeover (PR #17); data layer in `lib/hooks/use-recipes.ts` |
+| Recipe detail | `/recipes/[id]` (`app/recipes/[id]/page.tsx`) | Working — v2 pass shipped (PR #22): flat hairline rows, full-width teal "Start cooking" (launches `components/cook-mode.tsx`), breadcrumb + one-row actions, pantry-badge quirk fixed |
 | Plan | `/plans` (`app/plans/page.tsx`) | Working — flat day lists (no lunch/dinner division, PR #18; `meal_type` vestigial), per-day quick-add (44px rows, recents first), sheets, generate exit; day items in `components/plan-day-items.tsx`; data layer in `lib/hooks/use-plan.ts` |
 | Shop | `/grocery` (`app/grocery/page.tsx`) | Working — reflow chunky direction (pinned order bar, 30px checks, sticky sections); transactional state-preserving regeneration underneath; data layer in `lib/hooks/use-grocery-list.ts` |
 | Settings | `/settings` (`app/settings/page.tsx`) | Working — v2 pass shipped (PR #20): iOS-style rows, page title + card labels, 44px targets, full-width teal save; `ensureUserSettings` runs once per sign-in (defaults duplication still open) |
@@ -117,7 +115,7 @@ mini-M5).
 | 6 | Component Hardening | Done — slices 1–4 (PRs #7, #9, #10, #12); settings-defaults split out as a standalone follow-up |
 | — | The Reflow (redesign) | Done (2026-07-02) — Cook (PR #13), Today (PR #14), Shop (PR #15), Plan (PR #16); token set v2 live app-wide ([redesign-brief.md](redesign-brief.md)) |
 | — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); 10 board pins still open |
-| 7 | V2 Sweep | **In progress** — part 1 token fix done (PR #19) and Settings pass done (PR #20), both 2026-07-02; remaining: Recipes library/editor → recipe detail ([roadmap.md](roadmap.md)) |
+| 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
 
 ## Architecture snapshot
 
@@ -141,10 +139,8 @@ mini-M5).
 
 ## Open issues
 
-- V2 sweep remainder: Recipes library/editor and recipe detail keep the
-  pre-reflow layout language (the `globals.css` literals are gone — PR #19 —
-  and Settings is done — PR #20). Recipe detail also carries the
-  pantry-badge text-color cascade quirk ([design-flags.md](design-flags.md)).
+- Ten round-1 review-board pins await owner verdicts (shipped defaults, not
+  bugs): T1–T4, P1–P3, S1–S2, C2 — see [design-flags.md](design-flags.md).
 - Default settings values duplicated across client files vs SQL defaults
   (standalone follow-up — split out of M6 by owner decision, 2026-07-02).
 - No route-level `error.tsx` / `loading.tsx` boundaries; unmapped errors still

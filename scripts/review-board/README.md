@@ -36,6 +36,18 @@ progress-log has the full story). Reuse for the v2 sweep and future rounds.
   fallback) and hard-block requests to `*.supabase.co` at the browser level.
 - Generated outputs (`shots*/`, `review-board*.html`) are gitignored.
 
+## Rounds 3–4 (v2 sweep back half) additions
+
+- `capture-recipes-variants.mjs` / `capture-detail-variants.mjs` — the
+  round-3 (Recipes library + editor) and round-4 (recipe detail) direction
+  mocks; same pattern as the Settings variants.
+- `verify-recipes-pass.mjs` / `verify-detail-pass.mjs` — layout assertions
+  + behavior round-trips (live `save_recipe` save; Cook takeover, stepper
+  rescale, `?cook=1` deep link) + as-built shots.
+- `gen-board-r3.mjs` / `gen-board-r4.mjs` — the round boards; r4 is the
+  final milestone-7 record (all rounds' pins resolved). Boards deploy in
+  place to the same artifact URL — always redeploy, never mint a new link.
+
 ## Caveats
 
 - `capture.mjs` requires `playwright-core` (resolved from an npx cache path

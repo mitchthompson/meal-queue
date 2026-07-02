@@ -218,7 +218,8 @@ Acceptance:
 
 ### 7. V2 Sweep (reflow round 2)
 
-**Status: in progress — part 1 and the Settings pass shipped 2026-07-02.**
+**Status: done — all four PRs shipped 2026-07-02 (token fix #19, Settings
+#20, Recipes library/editor #21, recipe detail #22).**
 The reflow rebuilt only the four cycle screens; token set v2 landed at the
 token level, but hardcoded old-palette values survived in `app/globals.css`
 and the non-cycle screens kept their pre-reflow layout language. The owner
@@ -236,21 +237,29 @@ catalogued in the "Pre-reflow remnants" flag in
     2026-07-02 per round-2 board verdicts (ST1: B iOS-style rows, ST2
     full-width teal save, ST3 page title + card labels); live save
     round-trip verified.
-  - [ ] **Recipes library + editor** — next; mocks-first on the review
-    board, then implement following the Settings-pass pattern.
-  - [ ] **Recipe detail** — after Recipes; also resolves the pantry-badge
-    text-color cascade quirk (see the flag).
+  - [x] **Recipes library + editor** — done, PR #21 (`codex/v2-recipes`),
+    merged + deployed 2026-07-02 per round-3 board verdicts (RC1: A cards
+    without the serves line, RC2 header language + teal links, RC3 sample
+    data removed outright, RC4 stacked editor, RC5 full-width save); also
+    fixed the never-displaying save confirmation.
+  - [x] **Recipe detail** — done, PR #22 (`codex/v2-recipe-detail`),
+    merged + deployed 2026-07-02 per round-4 verdicts (RD1: B flat rows
+    both lists, RD2 full-width Start cooking, RD3 header language + 44px
+    stepper, RD4 pantry-badge cascade quirk fixed at the root, RD5
+    breadcrumb + one-row title actions).
 - Auth screen intentionally excluded — it folds into the deferred auth-flow
   work (sign-up confirmation, password reset) whenever that is scheduled.
 
-Acceptance:
+Acceptance (all met, 2026-07-02):
 
-- No hardcoded palette values outside the `:root` token definitions
+- [x] No hardcoded palette values outside the `:root` token definitions
   (`grep -E '#[0-9a-fA-F]{3,8}' app/globals.css` hits tokens and true
   one-offs only, each justified by a comment).
-- Settings, Recipes library/editor, and recipe detail read as token-set-v2
-  screens on a 390px viewport, owner-verified from review-board shots.
-- Behavior neutral throughout — this is a look-and-feel round only.
+- [x] Settings, Recipes library/editor, and recipe detail read as
+  token-set-v2 screens on a 390px viewport, owner-verified from
+  review-board shots (rounds 2–4, all pins resolved).
+- [x] Behavior neutral throughout, with three owner-approved exceptions
+  (serves line removed, sample-data seeder removed, save-confirmation fix).
 
 ## Deferred Fixes (from the 2026-06-11 audit)
 

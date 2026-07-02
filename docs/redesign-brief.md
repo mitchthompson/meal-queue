@@ -99,10 +99,13 @@ board; PRs #17–#18) changed one organizing idea and two ergonomics:
   below the list.
 
 Next look-and-feel round: the **v2 sweep** ([roadmap.md](roadmap.md)
-milestone 7) — first half shipped 2026-07-02: the token fix (PR #19, every
-pre-v2 hardcoded value → v2 tokens) and the Settings pass (PR #20,
-iOS-style rows per the round-2 board verdicts). Remaining: Recipes
-library + editor, then recipe detail.
+milestone 7) — **complete, all four PRs shipped 2026-07-02**: the token fix
+(PR #19), Settings (PR #20, iOS-style rows per round-2 verdicts), Recipes
+library + editor (PR #21, round-3 verdicts — A cards, header language,
+sample-data seeder retired), and recipe detail (PR #22, round-4 verdicts —
+flat rows, chunky Start cooking, breadcrumb title row). Every screen except
+auth now speaks the v2 layout language; what remains design-wise is the ten
+open round-1 board pins.
 
 ## Open questions (answer as screens are built)
 
