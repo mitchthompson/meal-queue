@@ -179,6 +179,19 @@ replaced decisions as superseded rather than silently deleting them.
   source-key version-prefix convention is retired; legacy rows are normalized
   on their first regeneration without losing state.
 
+### Component Hardening Wrap (2026-07-02)
+
+- **Milestone 6 closes with slices 1–4** (shared date formatters,
+  `useGroceryList`, `usePlan`, `useRecipes` + the shared `PlanSlotCell`).
+  The settings-defaults single source of truth is **split out of M6 as its
+  own follow-up** (owner decision) — tracked in
+  [design-flags.md](design-flags.md) and the roadmap's Deferred Fixes; not
+  yet scheduled.
+- **Slice 4 held strict behavior neutrality** (owner call): the nth-child
+  mobile-label CSS coupling was preserved, not restructured. The shared cell
+  (`components/plan-slot-cell.tsx`) documents the constraint in its header;
+  the flag stays open as a candidate for the reflow's Plan screen.
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)

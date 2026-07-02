@@ -28,7 +28,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### ensureUserSettings runs twice per sign-in and default settings disagree across files
 - **Where it's used:** `components/auth-gate.tsx` (`ensureUserSettings`); default values duplicated across three client files vs [`supabase/schema.sql`](../supabase/schema.sql)
-- **What's needed:** Update (2026-07-02): the duplicate call is fixed (mini-M5) — `ensureUserSettings` now runs once per sign-in via the guarded session effect. Still open: default settings values are duplicated in three files and disagree with the SQL defaults (DB: null order/pickup weekdays; client: 3/4) — needs a single source of truth (M6 territory). See [data model](data-model.md).
+- **What's needed:** Update (2026-07-02): the duplicate call is fixed (mini-M5) — `ensureUserSettings` now runs once per sign-in via the guarded session effect. Still open: default settings values are duplicated in three files and disagree with the SQL defaults (DB: null order/pickup weekdays; client: 3/4) — needs a single source of truth. Split out of M6 as its own follow-up (owner decision, 2026-07-02); not yet scheduled. See [data model](data-model.md).
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes and [current-state](current-state.md) Known Reliability Risks
 
 ### Raw Supabase error strings render in the UI; no route-level error or loading boundaries
@@ -47,14 +47,9 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Auth flow gaps, finding 6); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
 
 ### Mobile Lunch/Dinner labels rely on nth-child CSS coupling
-- **Where it's used:** [`app/globals.css`](../app/globals.css) (nth-child `::before` label injection) coupled to plan grid markup in `app/plans/page.tsx`
-- **What's needed:** Mobile Lunch/Dinner labels are injected via nth-child `::before` pseudo-elements, coupling the stylesheet to markup child order (fragile if markup reorders). Needs the labels driven by markup/data rather than child-order CSS. Slated to fit milestone 6 (component hardening) but currently deferred.
+- **Where it's used:** [`app/globals.css`](../app/globals.css) (nth-child `::before` label injection) coupled to the plan-grid row markup, now rendered by `components/plan-slot-cell.tsx` inside `app/plans/page.tsx`
+- **What's needed:** Mobile Lunch/Dinner labels are injected via nth-child `::before` pseudo-elements, coupling the stylesheet to markup child order (fragile if markup reorders). Needs the labels driven by markup/data rather than child-order CSS. Update (2026-07-02): deliberately left unchanged by M6 slice 4 (strict behavior neutrality, owner call); the markup now has a single edit site — `components/plan-slot-cell.tsx`, whose header documents the constraint. Candidate for the reflow's Plan screen.
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 13); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
-
-### Duplicated code: formatDisplayDate and lunch/dinner columns
-- **Where it's used:** `formatDisplayDate` duplicated in four files; lunch/dinner columns ~330 duplicated lines in `app/plans/page.tsx` (also flagged in CODE_AUDIT as ~1,100-line plans component with near-duplicate columns)
-- **What's needed:** Update (2026-07-02): the `formatDisplayDate` half is resolved — centralized in `lib/date-utils.ts` (M6 slice 1, PR #7), and the plans component shrank to 571 presentation-only lines over `lib/hooks/use-plan.ts` (M6 slice 3, PR #10). Still open: the lunch/dinner slot cells remain ~330 near-identical JSX lines; extract a shared component (M6 slice 4).
-- **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 14); also [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) risk 6 (oversized route components)
 
 ### No screen wake-lock during cooking focus mode, thin empty states, no dark mode
 - **Where it's used:** Recipe detail focus mode and new-user empty states across routes; global theming in [`app/globals.css`](../app/globals.css)
@@ -77,6 +72,14 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** Session 2026-06-27 baseline verification
 
 ## Resolved
+
+### Duplicated code: formatDisplayDate and lunch/dinner columns
+- **Resolution (2026-07-02):** Both halves done. `formatDisplayDate`
+  centralized in `lib/date-utils.ts` (M6 slice 1, PR #7). The lunch/dinner
+  slot cells unified into `components/plan-slot-cell.tsx` (M6 slice 4,
+  PR #12) — plans page 571 → 266 lines, behavior-neutral (mechanical-diff
+  verified; the nth-child label coupling was preserved and remains its own
+  open flag above).
 
 ### Design source of truth
 - **Resolution:** No external Figma. In-repo is authoritative: [`supabase/schema.sql`](../supabase/schema.sql) (data) + [`app/globals.css`](../app/globals.css) tokens + [design-system](design-system.md) (UI) + [docs/pages/*.md](pages/) (page intent).

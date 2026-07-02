@@ -3,6 +3,45 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-02 (night, latest) - M6 Complete: Slice 4 Ships useRecipes + Shared PlanSlotCell
+
+- **PR #12 merged (`3409fd9`), first-try green CI (app checks 42s, db tests
+  1m03s), deployed to Vercel.** Slice 4 on `codex/recipes-hook-slot-cells`,
+  two commits:
+  - `lib/hooks/use-recipes.ts` extracted from `app/recipes/page.tsx`
+    (859 → 359 lines): recipe/tag/unit loading, the editor form and its
+    save/delete/seed flows, list filtering, and editor visibility (the write
+    flows and the `?edit=` deep link mutate it, so it lives in the hook,
+    which takes `editRecipeId` as a parameter — the page still reads
+    `useSearchParams`). The tag-input draft stays in the page as
+    presentation-only state, per the grocery-page precedent.
+  - `components/plan-slot-cell.tsx` unifies the two ~164-line near-identical
+    lunch/dinner blocks in `app/plans/page.tsx` (571 → 266 lines). Root div
+    stays `plan-slot-cell` as a direct child of `plan-grid-row`, so the
+    mobile Lunch/Dinner labels injected by the nth-child `::before` rules in
+    `globals.css` keep matching; per the approved scope (strict behavior
+    neutrality) the coupling was preserved, not restructured — flag stays
+    open, single edit site now the component.
+- **Decision (owner):** settings-defaults single source of truth is split out
+  of M6 as its own follow-up; **milestone 6 closes with slices 1–4.** See
+  [decisions.md](decisions.md) (Component Hardening Wrap) and the flag in
+  [design-flags.md](design-flags.md).
+- **Verification:** typecheck clean; vitest 15/15; `next build` green
+  (11 routes; plans/recipes still static). Mechanical diff against
+  pre-extraction HEAD: recipes-page JSX byte-identical; all six moved data
+  functions, both memos, the deep-link effect, all types, and the sample data
+  identical (modulo `export` keywords and `React.FormEvent` → type-only
+  import); both slot-cell blocks reduce to the component under exactly the
+  intended substitutions; the plans-page additions are only the import, the
+  shared-props object, and two `<PlanSlotCell>` calls. CI reran the full
+  suite (108/108 pgTAP — DB layer untouched).
+- Flag resolved: "Duplicated code: formatDisplayDate and lunch/dinner
+  columns" (both halves; moved to Resolved in design-flags).
+- **Next: the reflow, screen by screen** — suggested order Cook, Today, Shop,
+  Plan ([redesign-brief.md](redesign-brief.md) Sequencing); confirm
+  Cook-first with the owner at onboard. Token set v2 lands with the first
+  reflow screen.
+
 ## 2026-07-02 (night, later) - M6 Slices 2-3 Shipped: Grocery and Plans Data Hooks
 
 - **Onboarding caught stranded work:** slice 2 (`useGroceryList`) existed only

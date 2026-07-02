@@ -190,16 +190,20 @@ Acceptance:
 
 ### 6. Component Hardening
 
-**Status (2026-07-02): slices 1–3 merged**, as the foundation for the reflow
-([redesign-brief.md](redesign-brief.md)): slice 1 (shared date formatters,
-PR #7), slice 2 (`useGroceryList` hook, PR #9), slice 3 (`usePlan` hook,
-PR #10 — plans page 1,091 → 571 lines). Remaining (slice 4): recipes hook,
-shared components (the duplicated lunch/dinner slot cells), settings-defaults
-single source of truth. Each slice behavior-neutral and CI-guarded, one PR
-per slice.
+**Status (2026-07-02): done — slices 1–4 merged**, as the foundation for the
+reflow ([redesign-brief.md](redesign-brief.md)): slice 1 (shared date
+formatters, PR #7), slice 2 (`useGroceryList` hook, PR #9), slice 3 (`usePlan`
+hook, PR #10 — plans page 1,091 → 571 lines), slice 4 (`useRecipes` hook +
+shared `PlanSlotCell`, PR #12 — recipes page 859 → 359 lines, plans page
+571 → 266). Settings-defaults single source of truth was split out of M6 as
+its own follow-up (owner decision, 2026-07-02) — tracked in Deferred Fixes
+below and [design-flags.md](design-flags.md). Each slice was behavior-neutral
+(mechanical-diff verified) and CI-guarded, one PR per slice. Acceptance:
+behavior compatible ✓; shared date/grocery logic has vitest coverage, while
+hook/UI-interaction coverage remains an open flag.
 
 Branches: `codex/component-hardening` (slices 1–2), `codex/plans-data-hook`
-(slice 3); slice 4 goes on a fresh branch from `main`.
+(slice 3), `codex/recipes-hook-slot-cells` (slice 4).
 
 - Split oversized recipe, planning, and grocery route components.
 - Centralize shared date and Supabase data-access logic.
@@ -223,7 +227,9 @@ reliability scope. Details in
   Milestone 4 makes this harmless to user state; scoping the bumps and
   prompting before regeneration remain open.
 - `ensureUserSettings` runs twice per sign-in, and default settings values are
-  duplicated across three files inconsistently with the SQL defaults.
+  duplicated across three files inconsistently with the SQL defaults. (The
+  duplicate call was fixed in mini-M5; the defaults single source of truth is
+  a standalone follow-up per the 2026-07-02 owner decision.)
 - Raw Supabase error strings render in the UI; no route-level error or loading
   boundaries.
 - No optimistic UI; plan mutations feel sluggish on mobile.
@@ -236,8 +242,9 @@ Details in [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 
 - Auth flow completion: sign-up confirmation messaging, password reset,
   friendlier auth errors.
-- Mobile Lunch/Dinner labels rely on `nth-child` CSS coupling (fits milestone
-  6 component hardening).
+- Mobile Lunch/Dinner labels rely on `nth-child` CSS coupling (M6 kept it
+  unchanged — strict behavior neutrality; the markup now renders from
+  `components/plan-slot-cell.tsx`; candidate for the reflow's Plan screen).
 - Screen wake-lock during cooking focus mode, richer empty states, dark mode.
 
 ## Deferred Ideas
