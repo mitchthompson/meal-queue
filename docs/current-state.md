@@ -58,15 +58,20 @@ stay compatible throughout. See [roadmap.md](roadmap.md).
 
 ## Active Handoff
 
-- **In progress:** Nothing. Milestone 3 shipped end to end on 2026-07-02: PR #4
-  green on first CI run (83/83 pgTAP), prod applied **migration-first** per the
-  APPLY ORDER rule (backup `~/meal-queue-backup-2026-07-01-1927.dump`;
-  preflights clean; 3 triggers registered; rolled-back live smoke: bump 9→10 +
-  out-of-range rejection, zero residue), then merged (`6d086f2`).
-- **Next action:** Start milestone 4 (grocery state preservation) on
-  `codex/grocery-state-preservation` — same rails. A quick owner UI sanity
-  check of the plans page (add/remove a meal, edit a note — the note edit
-  should no longer reset the grocery checklist) is a nice-to-have confirmation.
+- **In progress:** Milestone 4 implemented on
+  `codex/grocery-state-preservation` (committing/PR-ing this session):
+  migration `20260702023356_grocery_state_preservation.sql`
+  (`regenerate_grocery_list()` transactional upsert-by-identity;
+  `meal_plans.groceries_version` staleness column, backfilled for 18/19 live
+  lists; unique index on (meal_plan_id, source_key)), grocery page regeneration
+  reduced to one RPC, pgTAP suite #3 (25 assertions). Proven locally: 108/108
+  across three suites; typecheck/vitest/build green. Live preflights: 0
+  duplicate identities; 783/783 rows v-prefixed.
+- **Next action:** PR → green CI → owner-gated prod apply (backup-first,
+  **migration before merge**) → merge. Then the reliability core (milestones
+  2–4) is complete; next is milestone 5 (UI feedback and ergonomics). Owner UI
+  sanity checks worth doing after merge: edit a plan note (checklist should
+  survive), regenerate groceries (checked items should stay checked).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -204,9 +209,11 @@ Highest-signal items:
   2026-07-01: prod confirmed Postgres 17.6, `config.toml` aligned to 17.
 - **Stale groceries after ingredient edits:** editing recipe ingredients does
   not invalidate grocery lists for plans using that recipe. (Milestone 2.)
-- **Grocery regeneration loses state:** delete-and-recreate resets checked,
-  on-hand, and manual pantry overrides; the grocery page also regenerates
-  silently on load. (Milestone 4.)
+- **Grocery regeneration loses state:** resolved by milestone 4 (on
+  `codex/grocery-state-preservation`, pending merge/prod): transactional
+  upsert-by-identity preserves checked, on-hand, and pantry-override state.
+  The page still regenerates silently on load, but that is now harmless to
+  user state (prompting stays optional M5 polish).
 - **Plan version races:** version bumps use separate client read/update
   requests that can lose concurrent increments, and fire even for changes that
   do not affect groceries. (Milestone 3.)
