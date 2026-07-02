@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { DEFAULT_UNITS, STARTER_TAGS } from "@/lib/constants";
+import { toErrorMessage } from "@/lib/errors";
+import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
 type RecipeListItem = {
@@ -414,7 +416,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
       setShowEditor(true);
       await selectRecipe(recipeId);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed to save recipe.");
+      setError(toErrorMessage(caughtError, "Failed to save recipe."));
     } finally {
       setSaving(false);
     }
@@ -537,7 +539,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
       await loadData();
       setMessage(`Loaded ${missing.length} sample recipes.`);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed loading sample data.");
+      setError(toErrorMessage(caughtError, "Failed loading sample data."));
     } finally {
       setSeeding(false);
     }
@@ -848,8 +850,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
               {saving ? "Saving..." : "Save recipe"}
             </button>
           </form>
-          {error ? <p className="error-text">{error}</p> : null}
-          {message ? <p className="success-text">{message}</p> : null}
+          <StatusMessage error={error} message={message} />
           </section>
         ) : null}
       </section>

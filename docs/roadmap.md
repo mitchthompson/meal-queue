@@ -152,6 +152,19 @@ Acceptance:
 
 ### 5. UI Feedback and Ergonomics
 
+**Status (2026-07-02): rescoped.** The owner is planning a larger redesign
+(look-and-feel update + a reflow around the actual weekly cycle: Plan → Shop →
+Cook, including an elevated cooking mode), so milestone 5 was split:
+**mini-M5** (the redesign-proof subset, shipped on
+`codex/ui-feedback-ergonomics`): home-screen icon + web manifest +
+theme-color, per-page titles, friendly error mapping (`lib/errors.ts`),
+`aria-live` `StatusMessage` adopted on all screens, session-flash fix, and the
+`ensureUserSettings` duplicate-call fix. The page-specific ergonomics
+(tap-target retrofits, plans-grid reorder, scroll-into-view) are deferred into
+the redesign, which follows milestone 6 (component hardening) as its
+foundation. "Keep data between tabs" moves to milestone 6's data-hook
+extraction.
+
 Planned branch: `codex/ui-feedback-ergonomics`
 
 Scoped by the 2026-06-11 UI audit. Accessibility fixes are folded into each

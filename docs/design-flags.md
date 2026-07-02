@@ -28,12 +28,12 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### ensureUserSettings runs twice per sign-in and default settings disagree across files
 - **Where it's used:** `components/auth-gate.tsx` (`ensureUserSettings`); default values duplicated across three client files vs [`supabase/schema.sql`](../supabase/schema.sql)
-- **What's needed:** `ensureUserSettings` is called once after the auth call and again from the session effect. Separately, default settings values are duplicated in three files and disagree with the SQL defaults (DB: null order/pickup weekdays; client: 3/4). Needs deduplication of the call (single invocation per sign-in) and a single source of truth for default settings that matches the SQL defaults. See [data model](data-model.md).
+- **What's needed:** Update (2026-07-02): the duplicate call is fixed (mini-M5) — `ensureUserSettings` now runs once per sign-in via the guarded session effect. Still open: default settings values are duplicated in three files and disagree with the SQL defaults (DB: null order/pickup weekdays; client: 3/4) — needs a single source of truth (M6 territory). See [data model](data-model.md).
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes and [current-state](current-state.md) Known Reliability Risks
 
 ### Raw Supabase error strings render in the UI; no route-level error or loading boundaries
 - **Where it's used:** UI route components (`app/*`, e.g. `app/plans/page.tsx`, `app/recipes/page.tsx`, `app/grocery/page.tsx`)
-- **What's needed:** Raw Supabase error strings are shown directly to users, and there are no route-level error or loading boundaries. Needs friendly error mapping/handling and Next.js route-level `error.tsx` / `loading.tsx` boundaries.
+- **What's needed:** Update (2026-07-02): mini-M5 added `lib/errors.ts` (friendly mapping for common constraint/permission codes; our own P0001 trigger messages pass through — they are written to be human-readable) and an `aria-live` `StatusMessage` component adopted across all screens. Still open: route-level `error.tsx` / `loading.tsx` boundaries, and unmapped errors still surface raw messages.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes
 
 ### schema.sql mixes baseline DDL with historical inline ALTER migrations

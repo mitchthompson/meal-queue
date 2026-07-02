@@ -3,6 +3,29 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-02 (late) - Mini-M5 Shipped; Redesign Direction Set
+
+- **Strategy:** owner wants a larger redesign — look-and-feel plus a reflow
+  around the real weekly cycle (Plan → Shop → Cook, with an elevated
+  full-screen cooking mode; mobile is the primary surface). Agreed sequence:
+  mini-M5 (redesign-proof polish) → milestone 6 (component extraction as the
+  redesign's foundation) → redesign brief + token-set mockups (direction:
+  calm-utility base with bold/chunky treatment for cook mode and the grocery
+  checklist) → implement screen by screen. Milestone 5 rescoped accordingly in
+  [roadmap.md](roadmap.md).
+- **Mini-M5 (on `codex/ui-feedback-ergonomics`):** app icon generated from the
+  design tokens (sharp, no new deps) + web manifest (standalone display) +
+  theme-color via `lib/design-tokens.ts` (documented TS mirror of
+  `globals.css`); per-page titles (segment layouts + root template); friendly
+  error mapping in `lib/errors.ts` (P0001 trigger messages pass through
+  verbatim) adopted across all catch sites; `aria-live` `StatusMessage`
+  component adopted at every message render site; **session-flash fix**
+  (module-level cached session — tab navigations no longer flash "Loading
+  session..."); **`ensureUserSettings` duplicate call removed** (open flag,
+  half-resolved — the defaults-duplication half remains for M6).
+- Verification: typecheck, vitest 13/13, build (11 routes incl. manifest/icons)
+  green; no `instanceof Error` leftovers in app code.
+
 ## 2026-07-02 (evening) - Milestone 4 Shipped; Reliability Core Complete
 
 - PR #5 green on first CI run (108/108 pgTAP; app checks 47s, db tests 1m12s).

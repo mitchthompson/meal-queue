@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { formatAmount } from "@/lib/grocery";
+import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
 type RecipeRecord = {
@@ -168,7 +169,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
         </section>
       ) : null}
 
-      {error ? <p className="error-text">{error}</p> : null}
+      <StatusMessage error={error} />
 
       {recipe ? (
         <section className="recipe-view-layout">
