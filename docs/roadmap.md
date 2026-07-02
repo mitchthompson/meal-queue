@@ -190,6 +190,12 @@ Acceptance:
 
 ### 6. Component Hardening
 
+**Status (2026-07-02): in progress** on `codex/component-hardening`, as the
+foundation for the reflow ([redesign-brief.md](redesign-brief.md)). Slice 1
+(shared date formatters) merged in PR #7; slice 2 (`useGroceryList` hook) on
+the branch. Remaining: plans hook (the big one), recipes hook, shared
+components. Each slice behavior-neutral and CI-guarded.
+
 Planned branch: `codex/component-hardening`
 
 - Split oversized recipe, planning, and grocery route components.

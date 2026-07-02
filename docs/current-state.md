@@ -39,16 +39,21 @@ data is live and must stay compatible throughout. See [roadmap.md](roadmap.md).
 ## Active Handoff
 
 - **In progress:** Milestone 6 (component hardening) on
-  `codex/component-hardening`, as the redesign foundation. Slice 1 done:
-  shared date display formatters extracted to `lib/date-utils.ts`
-  (`formatDisplayDate` / `formatDayName` / `formatLongDate`, vitest-covered),
-  local copies removed from dashboard/plans/grocery. The redesign brief is in
-  [redesign-brief.md](redesign-brief.md); direction mockups were approved by
-  the owner on-device.
-- **Next action:** continue M6 slices — extract per-page data hooks
-  (`lib/hooks/`: grocery → plans → recipes), then shared components; each
-  slice behavior-neutral and CI-guarded. After M6: the reflow, screen by
-  screen (suggested order: Cook, Today, Shop, Plan), per the brief.
+  `codex/component-hardening` (pushed), as the redesign foundation.
+  **Slice 1 done + merged** (PR #7): shared date formatters →
+  `lib/date-utils.ts`. **Slice 2 done, on the branch:** `useGroceryList` data
+  hook (`lib/hooks/use-grocery-list.ts`) — the grocery page dropped ~380 → 191
+  lines, presentation-only; behavior-neutral, verified. The redesign brief is
+  [redesign-brief.md](redesign-brief.md); the approved direction mockups are
+  in-repo at [mockups/reflow-v1.html](mockups/reflow-v1.html).
+- **Next action:** M6 slice 3 — extract the **plans** data hook
+  (`lib/hooks/use-plan.ts`) from `app/plans/page.tsx` (~1,050 lines; the
+  hardest one: plan CRUD, slot upserts, leftover linking, quick-add state).
+  Follow the `use-grocery-list.ts` pattern: move data logic verbatim,
+  behavior-neutral, page keeps presentation. Then slice 4: recipes hook +
+  shared components (the ~330-line duplicated lunch/dinner columns). Then PR →
+  green CI → owner merge. After M6: the reflow, screen by screen (suggested
+  order: Cook, Today, Shop, Plan), per the brief.
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth

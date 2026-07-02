@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+  <!-- colors are the design tokens: color-primary #1f6d63, color-bg #f7f3ea, color-accent #d06a2f -->
+  <rect width="180" height="180" rx="40" fill="#1f6d63"/>
+  <circle cx="90" cy="86" r="46" fill="#f7f3ea"/>
+  <circle cx="90" cy="86" r="30" fill="none" stroke="#1f6d63" stroke-width="4" opacity="0.35"/>
+  <rect x="52" y="140" width="76" height="8" rx="4" fill="#f7f3ea" opacity="0.9"/>
+  <rect x="62" y="154" width="56" height="8" rx="4" fill="#d06a2f"/>
+  <path d="M82 66 v18 m8 -18 v18 m8 -18 v18 M82 84 h16 v10 a8 8 0 0 1 -16 0 z" stroke="#d06a2f" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
