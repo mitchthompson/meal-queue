@@ -91,22 +91,30 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
 
   return (
     <AppShell userEmail={userEmail}>
+      <div className="page-col">
+      <section className="settings-head">
+        <h1>Settings</h1>
+      </section>
+
       <section className="panel">
-        <div className="section-head">
-          <h2>Account</h2>
-        </div>
+        <h2 className="settings-card-label">Account</h2>
         <p className="muted">{userEmail ?? "Signed in"}</p>
-        <button className="secondary-btn" onClick={() => supabase.auth.signOut()} type="button">
+        <button
+          className="secondary-btn settings-signout"
+          onClick={() => supabase.auth.signOut()}
+          type="button"
+        >
           Sign out
         </button>
       </section>
 
       <section className="panel">
+        <h2 className="settings-card-label">Planning defaults</h2>
         {loading ? (
           <p>Loading settings...</p>
         ) : (
-          <form className="stack" onSubmit={saveSettings}>
-            <label>
+          <form className="settings-form" onSubmit={saveSettings}>
+            <label className="settings-row">
               Default plan length (days)
               <input
                 min={1}
@@ -120,7 +128,7 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
               />
             </label>
 
-            <label>
+            <label className="settings-row">
               Default week starts on
               <select
                 value={form.week_starts_on}
@@ -136,7 +144,7 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
               </select>
             </label>
 
-            <label>
+            <label className="settings-row">
               Default grocery order day
               <select
                 value={form.default_order_weekday ?? ""}
@@ -156,7 +164,7 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
               </select>
             </label>
 
-            <label>
+            <label className="settings-row">
               Default grocery pickup day
               <select
                 value={form.default_pickup_weekday ?? ""}
@@ -176,13 +184,14 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
               </select>
             </label>
 
-            <button className="primary-btn" disabled={saving} type="submit">
+            <button className="settings-save" disabled={saving} type="submit">
               {saving ? "Saving..." : "Save settings"}
             </button>
           </form>
         )}
         <StatusMessage error={error} message={message} />
       </section>
+      </div>
     </AppShell>
   );
 }

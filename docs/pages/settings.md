@@ -1,6 +1,7 @@
 # Settings page
 
-> Status: STUB — confirmed against source. Items marked "TBD — fill during milestone 5" still need design/behavior detail.
+> Status: confirmed against source. Design updated by the v2 sweep Settings pass
+> (2026-07-02, round-2 board verdicts ST1: B / ST2 / ST3); behavior unchanged.
 
 ## Purpose
 
@@ -76,11 +77,17 @@ See [design flags](../design-flags.md).
 
 References: [design system](../design-system.md).
 
-- Layout uses two `.panel` surfaces; headings use `.section-head` + `<h2>`.
+- Layout: content in the `.page-col` 640px column; `.settings-head` page title
+  ("Settings", the cycle screens' h1 pattern); two `.panel` cards headed by
+  uppercase `.settings-card-label` h2s ("Account" / "Planning defaults").
+- Form: `.settings-form` with one `.settings-row` `<label>` per setting —
+  iOS-style grid (label text left, control right at ≤46%), hairline dividers
+  between rows, 44px (`2.75rem`) controls. Owner-picked variant B on the
+  round-2 review board (2026-07-02).
+- Buttons: save is `.settings-save`, a full-width teal bar (the same
+  chunky-exit language as Plan's `.plan-generate`); sign-out is
+  `.secondary-btn.settings-signout` (44px).
 - Account email rendered with the `.muted` helper.
-- Buttons: sign-out uses `.secondary-btn`; save uses `.primary-btn`.
-- Form uses the `.stack` layout with `<label>` wrappers around `<input type="number">`
-  and `<select>` controls (the shared global input styling).
-- Status text via `.error-text` / `.success-text` helpers.
-- Mobile/responsive specifics: TBD — fill during milestone 5.
-- Empty-state polish for first-time users: TBD — fill during milestone 5.
+- Status text via the `aria-live` `StatusMessage` component (mini-M5).
+- Desktop shares the same row layout inside the 640px column.
+- Empty-state polish for first-time users: still TBD (deferred).

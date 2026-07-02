@@ -290,6 +290,23 @@ direction, over the unchanged `use-grocery-list` data layer. Column capped by
   small muted per-row move actions (have this / move to groceries / move
   back).
 
+### Settings components
+
+`app/settings/page.tsx` + the `.settings-*` selectors (v2 sweep Settings pass;
+round-2 board verdicts ST1: B / ST2 / ST3, 2026-07-02). Column capped by
+`.page-col`.
+
+- `.settings-head`: page header — the same h1 pattern as Today/Plan/Shop
+  (`1.5rem`/800/`-0.02em`).
+- `.settings-card-label`: uppercase panel heading (`0.72rem`/800, `0.06em`,
+  muted) — "Account" / "Planning defaults".
+- `.settings-row`: one setting per row, iOS-style — the `<label>` is a grid
+  (`1fr` text / `minmax(0, 46%)` control), hairline dividers between rows,
+  `0.92rem`/600 ink text, controls at `min-height: 2.75rem` (44px).
+- `.settings-save`: full-width teal submit (radius `12px`, `0.9rem` padding,
+  weight 700) — the same chunky-exit language as `.plan-generate`.
+- `.settings-signout`: bumps the secondary sign-out button to `2.75rem`.
+
 ### Cook-mode takeover
 
 `components/cook-mode.tsx` + the `.cook-*` selectors. A `position: fixed;

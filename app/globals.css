@@ -1298,6 +1298,76 @@ textarea {
   padding: 0.5rem 0.15rem;
 }
 
+.settings-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 0.5rem;
+}
+
+.settings-head h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.settings-card-label {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.settings-form {
+  display: grid;
+}
+
+/* One setting per row, iOS-style: label left, control right (owner pick
+   ST1: B, round-2 board 2026-07-02). */
+.settings-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 46%);
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.settings-row:last-of-type {
+  border-bottom: 0;
+}
+
+.settings-row input,
+.settings-row select {
+  min-height: 2.75rem;
+}
+
+.settings-signout {
+  min-height: 2.75rem;
+}
+
+.settings-save {
+  display: block;
+  width: 100%;
+  margin-top: 0.85rem;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.9rem;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  background: var(--brand);
+  color: var(--surface);
+  cursor: pointer;
+}
+
 .cook-mode {
   position: fixed;
   inset: 0;
