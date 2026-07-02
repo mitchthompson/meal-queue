@@ -8,7 +8,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Per-page docs are stubs
 - **Where it's used:** [docs/pages/*.md](pages/) — [today](pages/today.md), [recipes](pages/recipes.md), [plans](pages/plans.md), [grocery](pages/grocery.md), [settings](pages/settings.md)
-- **What's needed:** These are skeletons; flesh out during milestone 5 (UI feedback & ergonomics) as each page is worked.
+- **What's needed:** These are skeletons; flesh out as each page is worked. Update (2026-07-02): [settings](pages/settings.md) is no longer a stub — its design section was rewritten with the v2 Settings pass (PR #20). The other four remain stubs (the redesign brief supersedes them for future-state intent).
 - **Source:** Session decision (canonical context)
 
 ### Today reflow judgment calls (settings gear, plan-less state, amber hover, desktop width)

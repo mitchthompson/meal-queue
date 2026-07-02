@@ -212,6 +212,25 @@ replaced decisions as superseded rather than silently deleting them.
   merged 2026-07-02). Review round 1 (PRs #17–#18) ran on per-action owner
   approval again: explicit go-ahead to build, explicit "good to merge".
 
+### V2 Sweep Layout Language (2026-07-02, round 2)
+
+- Round-2 board verdicts, with the direction pick explicitly delegated by
+  the owner ("they all look good, I'm open to your recommendations"):
+  part-1 token mappings confirmed (V1: the pantry badge's amber outline
+  stays; V2: opaque white mobile panels are fine), and Settings adopts
+  **iOS-style row language** — ST1: B (label left, control right, hairline
+  dividers), ST2: full-width teal primary action, ST3: the cycle screens'
+  page title + uppercase card labels.
+- These verdicts set the layout language for the remaining part-2 screens
+  (Recipes library/editor, recipe detail): per-screen `.<screen>-*` class
+  groups in `globals.css`, `.page-col` cap, 44px controls, uppercase card
+  labels, and a full-width chunky primary action where the screen has one
+  dominant action.
+- The pantry-badge text-color cascade quirk (`.recipe-meta span` at 0-1-1
+  beats `.pantry-badge` at 0-1-0 — pre-existing, also true before the
+  sweep) was deliberately preserved through part 1 for mechanical parity
+  and is assigned to the recipe-detail pass.
+
 ### Flat Days — no lunch/dinner division (2026-07-02, review round 1)
 
 - **The UI has no meal-type concept.** Each plan day is one flat list of

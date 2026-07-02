@@ -99,8 +99,10 @@ board; PRs #17–#18) changed one organizing idea and two ergonomics:
   below the list.
 
 Next look-and-feel round: the **v2 sweep** ([roadmap.md](roadmap.md)
-milestone 7) — kill the surviving pre-v2 hardcoded values, then per-screen
-passes over Settings / Recipes library + editor / recipe detail.
+milestone 7) — first half shipped 2026-07-02: the token fix (PR #19, every
+pre-v2 hardcoded value → v2 tokens) and the Settings pass (PR #20,
+iOS-style rows per the round-2 board verdicts). Remaining: Recipes
+library + editor, then recipe detail.
 
 ## Open questions (answer as screens are built)
 

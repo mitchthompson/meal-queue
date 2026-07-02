@@ -218,25 +218,28 @@ Acceptance:
 
 ### 7. V2 Sweep (reflow round 2)
 
-**Status: approved by the owner 2026-07-02 — the next action.** The reflow
-rebuilt only the four cycle screens; token set v2 landed at the token level,
-but hardcoded old-palette values survive in `app/globals.css` and the
-non-cycle screens kept their pre-reflow layout language. The owner asked for
-a full sweep (2026-07-02 review session); exact offenders are catalogued in
-the "Pre-reflow remnants" flag in [design-flags.md](design-flags.md).
+**Status: in progress — part 1 and the Settings pass shipped 2026-07-02.**
+The reflow rebuilt only the four cycle screens; token set v2 landed at the
+token level, but hardcoded old-palette values survived in `app/globals.css`
+and the non-cycle screens kept their pre-reflow layout language. The owner
+asked for a full sweep (2026-07-02 review session); offenders were
+catalogued in the "Pre-reflow remnants" flag in
+[design-flags.md](design-flags.md).
 
-Suggested branch: `codex/v2-token-sweep` for part 1, then one branch per
-screen pass.
-
-- [ ] **Part 1 — token fix (mechanical, first):** replace every hardcoded
-  old-palette value with token-set-v2 variables — the ≤700px `.panel` cream
-  override (skins every mobile panel: Settings, recipes list/editor, auth,
-  plan sheets), `.recipe-view-section`, `.recipe-meta`, `.recipe-step-item`,
-  `.pantry-badge`, stray `#fff` literals. No layout changes.
+- [x] **Part 1 — token fix (mechanical, first):** done — PR #19
+  (`codex/v2-token-sweep`), merged + deployed 2026-07-02. All 20 literals →
+  v2 tokens; acceptance grep hits `:root` only; no layout changes; verified
+  22/22 computed-style assertions at 390px on the local stack.
 - [ ] **Part 2 — per-screen passes** in the reflow rhythm (branch/PR each,
-  review-board shots for owner sign-off): Settings → Recipes library +
-  editor → recipe detail. Bring layout language (card labels, spacing,
-  thumb targets) in line with the four cycle screens.
+  review-board mocks for owner sign-off before code):
+  - [x] **Settings** — done, PR #20 (`codex/v2-settings`), merged + deployed
+    2026-07-02 per round-2 board verdicts (ST1: B iOS-style rows, ST2
+    full-width teal save, ST3 page title + card labels); live save
+    round-trip verified.
+  - [ ] **Recipes library + editor** — next; mocks-first on the review
+    board, then implement following the Settings-pass pattern.
+  - [ ] **Recipe detail** — after Recipes; also resolves the pantry-badge
+    text-color cascade quirk (see the flag).
 - Auth screen intentionally excluded — it folds into the deferred auth-flow
   work (sign-up confirmation, password reset) whenever that is scheduled.
 

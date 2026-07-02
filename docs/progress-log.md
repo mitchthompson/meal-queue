@@ -3,7 +3,59 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-02 (morning/afternoon, latest) - Reflow Review Round 1: flat days, quiet chips, mobile editor
+## 2026-07-02 (afternoon, latest) - V2 Sweep: token fix (PR #19) + Settings pass (PR #20) shipped
+
+- **Part 1 — the token fix** (PR #19, `codex/v2-token-sweep`, `db98272`,
+  merged `e5d2cfd` + deployed): all 20 hardcoded old-palette literals in
+  `app/globals.css` swapped for token-set-v2 variables. Mappings: the ≤700px
+  `.panel` cream (border `#e4d8c6`, translucent `rgba(255,253,248,.92)`) →
+  `--line`/`--surface` (mobile panels now opaque; the faint box-shadow kept
+  as an elevation cue, not palette); recipe-detail creams (`#c9bba6`,
+  `#fffefb`, `#3d443d`) → line/surface/muted; `.pantry-badge` → the amber
+  accent set (mirrors `.chip.active`'s strong-border-on-soft-tint); eleven
+  stray `#fff`/`#ffffff` → `--surface` (computed-identical, so zero visual
+  change on the cycle screens). Acceptance grep clean: hex in `globals.css`
+  hits `:root` definitions only. No selector or layout changes.
+- **Cascade quirk found while verifying** (flagged, deferred to the
+  recipe-detail pass): `.recipe-meta span` (specificity 0-1-1) has always
+  overridden `.pantry-badge`'s own color/size (0-1-0) — the badge never
+  rendered its old `#5e513d`; it rendered `#3d443d` before the sweep and
+  `var(--muted)` after. Part 1 preserved the quirk for mechanical parity.
+- **Round-2 review board** (redeployed in place to the round-1 artifact URL):
+  part-1 before/after pairs (befores are labeled CSS reconstructions) plus
+  two CSS-injected Settings direction mocks — A (v2 dress on the stacked
+  form) vs B (iOS-style rows). **Owner verdicts, direction delegated
+  ("they all look good, open to your recommendations"):** V1 keep (amber
+  badge outline) · V2 fine (opaque panels) · ST1: B · ST2: full-width save ·
+  ST3: page title + card labels.
+- **Part 2, screen 1 — Settings** (PR #20, `codex/v2-settings`, `ce090f8`,
+  merged `83cb415` + deployed): content in the `.page-col` 640px cap;
+  `.settings-head` h1 (the cycle screens' header pattern); uppercase
+  `.settings-card-label`s (Account / Planning defaults); one `.settings-row`
+  per setting — label left, control right at ≤46%, hairline dividers, 44px
+  controls and sign-out; `.settings-save` full-width teal (Plan's Generate
+  language). Behavior-neutral: same state, handlers, upsert, StatusMessage.
+- **Verification (as run):** PR #19 — typecheck clean, vitest 16/16,
+  `next build` green; Playwright at 390px on the local stack: 22/22
+  computed-style assertions across Settings / recipes list / editor
+  takeover / recipe detail, a full-DOM scan finding zero retired palette
+  values, zero console errors, zero prod requests (route-blocked at the
+  browser). PR #20 — typecheck clean, vitest 16/16, build green; 13/13
+  assertions (title, labels, 2-col rows, ≥44px controls, full-width teal
+  save, 640px cap) plus a **live save round-trip** (plan length 7→9 saved,
+  persisted through reload, reverted) and a desktop sanity shot — zero
+  console errors. All four CI runs (2 PRs + 2 merge pushes) first-try green;
+  twenty PRs merged, streak intact.
+- **Toolkit:** round-2 scripts preserved in `scripts/review-board/` with
+  repo-relative paths — settings-variant capture, both verify drivers
+  (token sweep, Settings pass), and the round-2 board generator.
+- Remaining: part 2 continues with the **Recipes library + editor pass**
+  (mocks-first, same rhythm), then **recipe detail** (which also resolves
+  the badge-text cascade quirk); 10 round-1 board pins still open; standing
+  follow-ups unchanged (settings-defaults SSOT, ESLint + CI lint, npm audit
+  triage, Actions Node-20 bump).
+
+## 2026-07-02 (morning/afternoon) - Reflow Review Round 1: flat days, quiet chips, mobile editor
 
 - **Review method that worked:** built a pinned-screenshot review board (a
   private claude.ai artifact) — the 12 flagged reflow defaults pinned by code
