@@ -192,6 +192,20 @@ replaced decisions as superseded rather than silently deleting them.
   (`components/plan-slot-cell.tsx`) documents the constraint in its header;
   the flag stays open as a candidate for the reflow's Plan screen.
 
+### Reflow Release Rails (2026-07-02)
+
+- **Owner pre-approval for the remainder of the reflow** (granted after Cook
+  mode shipped and was verified on-device): commits, pushes, and merges for
+  the reflow screens (Today, Shop, Plan) may proceed **without per-action
+  approval**, on the usual rails (feature branch → PR → green CI → merge).
+  Condition: handoff docs are updated as each screen lands. This narrowly
+  supersedes the "approval never carries over" rule **for reflow release
+  actions only** — schema changes/migrations, dependency changes, and
+  live-data writes still require explicit per-action approval.
+- **Previews are skipped for the reflow**: the owner is the app's only user
+  and tests directly in production after each merge (Cook shipped this way:
+  PR #13, on-device verification in prod).
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)

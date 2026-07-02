@@ -73,13 +73,18 @@ Cook).
    stable data layer.
 2. **Reflow, screen by screen** (each its own branch/PR on the usual rails):
    suggested order — Cook mode (new, highest owner value), Today (replaces
-   dashboard), Shop, Plan. Tabbar changes land with Today.
+   dashboard), Shop, Plan. Tabbar changes land with Today. **Cook shipped**
+   (PR #13, 2026-07-02, `components/cook-mode.tsx`).
 3. Token set v2 lands with the first reflow screen; old screens keep working
-   (they read the same semantic variables).
+   (they read the same semantic variables). First tranche (`--color-cook-*`,
+   `--font-cook`) landed with Cook, scoped to the takeover.
 
 ## Open questions (answer as screens are built)
 
-- Cook mode: timers per step? (Deferred idea; wake-lock is in scope.)
+- Cook mode: timers per step? (Still deferred. Wake-lock shipped with Cook;
+  chips heuristic + "mark cooked" no-op flagged in
+  [design-flags.md](design-flags.md) — the write question resolves with
+  Today.)
 - Today: what does it show plan-less (first run / gap weeks)?
 - Shop: keep manual "Regenerate" button, or trust staleness entirely?
 - Plan: multi-recipe slots and eat-out notes — chip UI details.

@@ -245,7 +245,8 @@ Details in [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 - Mobile Lunch/Dinner labels rely on `nth-child` CSS coupling (M6 kept it
   unchanged — strict behavior neutrality; the markup now renders from
   `components/plan-slot-cell.tsx`; candidate for the reflow's Plan screen).
-- Screen wake-lock during cooking focus mode, richer empty states, dark mode.
+- Screen wake-lock shipped with the reflow's Cook mode (PR #13, 2026-07-02);
+  richer empty states and dark mode beyond the Cook takeover remain open.
 
 ## Deferred Ideas
 

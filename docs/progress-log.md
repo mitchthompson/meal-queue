@@ -3,7 +3,51 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-02 (night, latest) - M6 Complete: Slice 4 Ships useRecipes + Shared PlanSlotCell
+## 2026-07-02 (late night, latest) - Reflow Screen 1 Ships: Cook Mode Live in Prod
+
+- **PR #13 merged (`50dd5ac`), first-try green CI (app checks 43s, db tests
+  1m03s), Vercel production deploy confirmed.** Branch `codex/reflow-cook`,
+  one commit (`1a54460`). The owner tested on-device against real recipes and
+  approved skipping the preview step ("I'm the only one that uses this app"),
+  so the branch went PR → green CI → merge in one pass.
+- **What shipped:** `components/cook-mode.tsx` — the full-screen dark cooking
+  takeover from the approved mockup, replacing the recipe detail's in-panel
+  focus mode. Step N of M in 1.7rem type, per-step ingredient chips scaled by
+  preview servings, amber progress bars, giant amber Next / 30% Back (hidden
+  on step 1), screen wake-lock while active (best-effort, re-acquired on
+  `visibilitychange`; the "stays awake" note renders only while held), Escape/✕
+  exit, body scroll locked behind. Token set v2's first tranche landed with
+  it: scoped `--color-cook-*` tokens + `--font-cook` (native stack) in
+  `globals.css` — documented in [design-system.md](design-system.md).
+- **Decision: per-step chips are a name-match heuristic** — the schema has no
+  step↔ingredient link, so chips show when a word of the ingredient name (3+
+  letters, plural-tolerant) appears in the step text. Upgraded from full-name
+  substring matching after runtime verification caught it under-matching
+  (a step referencing six ingredients chipped only "salt" — names like
+  "chicken thighs" don't substring-match a step that says "chicken"). Flagged
+  in [design-flags.md](design-flags.md) for tuning against real recipes.
+- **Decision: "Done — mark cooked" writes nothing** — no cooked state exists
+  in the schema; adding one is a migration on the usual rails. Decide when
+  Today is built (Today is the consumer). Per-step timers stay deferred.
+- **Verification:** typecheck clean; vitest 15/15; `next build` green (11
+  routes). Driven end-to-end on the local Supabase stack with playwright-core
+  (cached Chromium, iPhone viewport): sign-up → sample seed → full step walk,
+  Back/Done/Escape, rapid-tap on Done, servings scaling into chips, desktop
+  sanity — zero console errors. Wake-lock confirmed working on prod (HTTPS;
+  plain-HTTP LAN testing can't exercise it).
+- Flag updated: the wake-lock half of "no wake-lock / thin empty states / no
+  dark mode" is resolved; two new Cook flags opened (chips heuristic,
+  mark-cooked no-op).
+- Notes: Cook on desktop is functional but stretched (full-width amber button,
+  no max reading measure) — phone is the target, revisit if it grates. CI now
+  warns `actions/checkout@v4` / `setup-node@v4` target deprecated Node 20 —
+  bump action versions in a housekeeping pass.
+- **Next: Today** (reflow screen 2) on `codex/reflow-today` — replaces the
+  dashboard, fixes the 4-newest-plans bug, tabbar changes land with it. Open
+  question to answer while building: what Today shows plan-less (first run /
+  gap weeks).
+
+## 2026-07-02 (night, M6 wrap) - M6 Complete: Slice 4 Ships useRecipes + Shared PlanSlotCell
 
 - **PR #12 merged (`3409fd9`), first-try green CI (app checks 42s, db tests
   1m03s), deployed to Vercel.** Slice 4 on `codex/recipes-hook-slot-cells`,
