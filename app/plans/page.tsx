@@ -11,6 +11,8 @@ import {
   nextDayInRange,
   toYmd,
 } from "@/lib/date-utils";
+import { toErrorMessage } from "@/lib/errors";
+import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
 type MealPlan = {
@@ -337,7 +339,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       setCreateForm(createDefaultsFromStart(nextStart, settingsDefaults));
       setMessage("Meal plan created.");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed creating plan.");
+      setError(toErrorMessage(caughtError, "Failed creating plan."));
     } finally {
       setSaving(false);
     }
@@ -364,7 +366,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Plan dates saved.");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed saving plan.");
+      setError(toErrorMessage(caughtError, "Failed saving plan."));
     } finally {
       setSaving(false);
     }
@@ -436,7 +438,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
         setActiveSlot(null);
       }
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed adding meal.");
+      setError(toErrorMessage(caughtError, "Failed adding meal."));
     } finally {
       setSaving(false);
     }
@@ -455,7 +457,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Meal removed.");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed removing meal.");
+      setError(toErrorMessage(caughtError, "Failed removing meal."));
     } finally {
       setSaving(false);
     }
@@ -479,7 +481,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       setItems([]);
       setMessage("Meal plan deleted.");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed deleting plan.");
+      setError(toErrorMessage(caughtError, "Failed deleting plan."));
     } finally {
       setSaving(false);
     }
@@ -500,7 +502,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Meal slot cleared.");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed clearing slot.");
+      setError(toErrorMessage(caughtError, "Failed clearing slot."));
     } finally {
       setSaving(false);
     }
@@ -524,7 +526,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Serving updated.");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed updating serving.");
+      setError(toErrorMessage(caughtError, "Failed updating serving."));
     } finally {
       setSaving(false);
     }
@@ -1086,8 +1088,7 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
               </div>
             </div>
           )}
-          {error ? <p className="error-text">{error}</p> : null}
-          {message ? <p className="success-text">{message}</p> : null}
+          <StatusMessage error={error} message={message} />
         </section>
       </section>
     </AppShell>

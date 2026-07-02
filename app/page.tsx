@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { dateRange, toYmd } from "@/lib/date-utils";
+import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
 type MealPlan = {
@@ -319,7 +320,7 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
 
   return (
     <AppShell userEmail={userEmail}>
-      {error ? <p className="error-text">{error}</p> : null}
+      <StatusMessage error={error} />
       {loading ? <p>Loading dashboard...</p> : null}
 
       {!loading ? (

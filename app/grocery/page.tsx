@@ -5,6 +5,8 @@ import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { toYmd } from "@/lib/date-utils";
 import { formatAmount } from "@/lib/grocery";
+import { toErrorMessage } from "@/lib/errors";
+import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
 type MealPlan = {
@@ -30,19 +32,6 @@ function formatDisplayDate(ymd: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
     new Date(`${ymd}T00:00:00`),
   );
-}
-
-function toErrorMessage(caughtError: unknown, fallback: string) {
-  if (caughtError instanceof Error) return caughtError.message;
-  if (
-    typeof caughtError === "object" &&
-    caughtError !== null &&
-    "message" in caughtError &&
-    typeof (caughtError as { message?: unknown }).message === "string"
-  ) {
-    return (caughtError as { message: string }).message;
-  }
-  return fallback;
 }
 
 export default function GroceryPage() {
@@ -382,8 +371,7 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
             </div>
           )}
 
-          {error ? <p className="error-text">{error}</p> : null}
-          {message ? <p className="success-text">{message}</p> : null}
+          <StatusMessage error={error} message={message} />
         </section>
       </section>
     </AppShell>

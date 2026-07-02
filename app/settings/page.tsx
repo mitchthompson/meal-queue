@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { WEEKDAYS } from "@/lib/constants";
+import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
 type SettingsForm = {
@@ -180,8 +181,7 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
             </button>
           </form>
         )}
-        {error ? <p className="error-text">{error}</p> : null}
-        {message ? <p className="success-text">{message}</p> : null}
+        <StatusMessage error={error} message={message} />
       </section>
     </AppShell>
   );

@@ -3,15 +3,24 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { ReactNode } from "react";
+import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
 type AuthGateProps = {
   children: (session: Session) => ReactNode;
 };
 
+// Last-known session, shared across AuthGate mounts. Every page wraps itself
+// in its own AuthGate, so without this each tab navigation re-awaited
+// getSession() and flashed the full-screen "Loading session..." state. With
+// it, navigations render immediately from the cached session while the
+// background refresh + onAuthStateChange keep it honest (sign-out still
+// snaps back to the form).
+let cachedSession: Session | null = null;
+
 export function AuthGate({ children }: AuthGateProps) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(cachedSession);
+  const [loading, setLoading] = useState(cachedSession === null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -23,12 +32,14 @@ export function AuthGate({ children }: AuthGateProps) {
     let mounted = true;
 
     supabase.auth.getSession().then(({ data }) => {
+      cachedSession = data.session ?? null;
       if (!mounted) return;
-      setSession(data.session ?? null);
+      setSession(cachedSession);
       setLoading(false);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      cachedSession = nextSession;
       setSession(nextSession);
     });
 
@@ -69,11 +80,9 @@ export function AuthGate({ children }: AuthGateProps) {
     const { error: authError } = await authCall;
     if (authError) {
       setError(authError.message);
-    } else {
-      const { data } = await supabase.auth.getSession();
-      const userId = data.session?.user?.id;
-      if (userId) await ensureUserSettings(userId);
     }
+    // ensureUserSettings runs once per sign-in via the session effect below
+    // (guarded by initializedUserId) — the duplicate call here is gone.
     setBusy(false);
   }
 
@@ -131,7 +140,7 @@ export function AuthGate({ children }: AuthGateProps) {
             </button>
           </form>
 
-          {error ? <p className="error-text">{error}</p> : null}
+          <StatusMessage error={error} />
 
           <button className="text-btn" onClick={() => setIsSignUp((current) => !current)} type="button">
             {isSignUp ? "Already have an account? Sign in" : "Need an account? Create one"}
