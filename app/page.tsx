@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AppShell, NavIcon } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
-import { addDays, formatDayAbbrev, formatDisplayDate, formatLongDate } from "@/lib/date-utils";
+import { formatDayAbbrev, formatDisplayDate, formatLongDate, formatRelativeDay } from "@/lib/date-utils";
 import { formatAmount } from "@/lib/grocery";
 import { StatusMessage } from "@/components/status-message";
 import { useToday } from "@/lib/hooks/use-today";
@@ -46,15 +46,11 @@ function TodayScreen({ userEmail }: { userEmail?: string }) {
   const pickupRelevant =
     currentPlan?.pickup_date && currentPlan.pickup_date >= today ? currentPlan.pickup_date : null;
 
-  function relativeDay(ymd: string) {
-    if (ymd === today) return "today";
-    if (ymd === addDays(today, 1)) return "tomorrow";
-    return formatLongDate(ymd);
-  }
+  const relativeDay = (ymd: string) => formatRelativeDay(ymd, today);
 
   return (
     <AppShell userEmail={userEmail}>
-      <div className="today-col">
+      <div className="page-col">
       <section className="today-head">
         <h1>Today</h1>
         <div className="today-head-meta">

@@ -57,25 +57,29 @@ attention. The cream/terracotta v1 values are retired.
 | `--color-danger` | `#a13c3c` | Danger/error (muted red). Danger button bg/border, `.error-text`. |
 | `--focus-ring` | `#12695e` | Focus outline color (identical value to `--color-primary`). Used in `:focus-visible`. |
 
-### Cook-mode tokens (token set v2)
+### Slate tokens (the v2 dark set)
 
-The first tranche of the redesign's token set v2 ([redesign-brief.md](redesign-brief.md)),
-introduced with the Cook screen. Values come from the approved mockup
-([mockups/reflow-v1.html](mockups/reflow-v1.html)). Scoped to the `.cook-mode`
-takeover — this is not a global dark mode. Remaining v2 values (paper ground,
-sharpened teal, native type app-wide) land as each reflow screen ships.
+The dark half of token set v2 ([redesign-brief.md](redesign-brief.md)),
+introduced with Cook and shared by Shop's pinned order bar. Values come from
+the approved mockup ([mockups/reflow-v1.html](mockups/reflow-v1.html)). This is
+a scoped surface treatment — not a global dark mode. (Introduced as
+`--color-cook-*` with the Cook screen; renamed to `--color-slate-*` when Shop
+started sharing them.)
 
 | Variable | Value | Role |
 | --- | --- | --- |
-| `--color-cook-bg` | `#131a18` | Cook takeover background (deep slate). Also the text color on the amber Next button. |
-| `--color-cook-surface` | `#1d2724` | Raised surface on slate — ingredient chips, Back button, unfilled progress dots. |
-| `--color-cook-text` | `#f3f6f4` | Primary text on slate. |
-| `--color-cook-text-soft` | `#cbd8d3` | Ingredient-chip text. |
-| `--color-cook-text-muted` | `#9fb0aa` | Secondary text on slate — exit control, step count, Back label. |
-| `--color-cook-text-dim` | `#5e6b67` | Dimmest text on slate — the wake-lock note. |
-| `--color-cook-border` | `#2a3733` | Chip border on slate. |
-| `--color-cook-amber` | `#e8a13d` | The one warm accent — progress dots, step label, Next button, focus ring inside the takeover. |
-| `--font-cook` | native stack (`-apple-system …`) | Cook takeover type. First landing of the v2 "installed-app" native-stack direction; the rest of the app keeps Fraunces/Manrope until their screens reflow. |
+| `--color-slate` | `#131a18` | Dark surface background — Cook takeover, Shop order bar. Also the text color on the amber Next button. |
+| `--color-slate-2` | `#1d2724` | Raised surface on slate — cook chips, Back button, unfilled progress dots. |
+| `--color-slate-text` | `#f3f6f4` | Primary text on slate. |
+| `--color-slate-text-soft` | `#cbd8d3` | Soft text on slate — cook ingredient-chip text. |
+| `--color-slate-text-muted` | `#9fb0aa` | Secondary text on slate — cook exit/step count, order-bar small line. |
+| `--color-slate-text-dim` | `#5e6b67` | Dimmest text on slate — the wake-lock note. |
+| `--color-slate-border` | `#2a3733` | Chip border on slate. |
+
+Amber on slate comes from the global `--brand-2` / `--color-accent`
+(`#e8a13d`): cook progress/Next/focus ring, and the Shop order-bar count.
+Slate surfaces inherit the native `--font-body` stack. `--color-check-border`
+(`#c6ccc6`) is the rest-state border of Shop's 30px checkboxes.
 
 ### Semantic aliases
 
@@ -94,15 +98,16 @@ Short names for the most common raw tokens. **Prefer the alias** where one exist
 These raw tokens have **no alias** and are referenced by their full `--color-*` name:
 `--color-surface-muted`, `--color-primary-soft`, `--color-on-primary-soft`,
 `--color-on-primary-muted`, `--color-accent-soft`, `--color-accent-deep`,
-`--color-success`, `--color-warning`, `--color-danger`, plus `--focus-ring`.
+`--color-check-border`, the `--color-slate-*` set, `--color-success`,
+`--color-warning`, `--color-danger`, plus `--focus-ring`.
 
 ### Decorative gradients
 
 Retired in v2 — `body` is flat `var(--bg)` at every breakpoint.
 
 There is **no dark mode** and no `prefers-color-scheme` query. The one dark
-surface is the Cook takeover (`.cook-mode`), which uses its own scoped
-`--color-cook-*` tokens rather than a theme switch.
+surface is the Cook takeover (`.cook-mode`), which uses the scoped
+`--color-slate-*` tokens rather than a theme switch.
 
 ---
 
@@ -117,7 +122,6 @@ plain CSS tokens in `globals.css :root`.
 | --- | --- | --- |
 | Body (`body`) | `--font-body` | `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif` |
 | Headings (`h1`–`h4`) | `--font-heading` | `var(--font-body)` (no decorative serif) |
-| Cook takeover | `--font-cook` | `var(--font-body)` |
 
 - Body: `font-size: 16px`, `line-height: 1.6`, antialiased.
 - Headings: `line-height: 1.25`, `letter-spacing: -0.015em`, weight 700.
@@ -223,7 +227,7 @@ Shared base across `.primary-btn`, `.secondary-btn`, `.danger-btn`, `.ghost-btn`
 ### Today components
 
 `app/page.tsx` + the `.today-*` / `.tonight-*` selectors, from the reflow
-mockup. Content column capped at `640px` (`.today-col`) — the mockup only
+mockup. Content column capped at `640px` (`.page-col`) — the mockup only
 specifies the phone layout.
 
 - `.tonight-card`: the hero — `--brand` surface, `--surface` text, radius
@@ -240,16 +244,34 @@ specifies the phone layout.
 - Navigation: 4-tab reflow bar (Today / Plan / Shop / Recipes); Settings is
   the gear in the Today header (`.today-settings`).
 
+### Shop components
+
+`app/grocery/page.tsx` + the `.shop-*` selectors, from the mockup's chunky
+direction, over the unchanged `use-grocery-list` data layer. Column capped by
+`.page-col`.
+
+- `.shop-orderbar`: pinned deadline bar — `--color-slate` surface, "Order
+  today/tomorrow/{Day}" + pickup `small`, big amber `tabular-nums` unchecked
+  count (`.shop-count`).
+- `.shop-section-head`: sticky uppercase section labels ("Groceries",
+  "Pantry check", "On hand (N)") with small check-all/uncheck-all text
+  actions.
+- `.shop-item`: hairline-separated rows — 30px `.shop-check` button
+  (`--color-check-border` rest state; checked = `--brand` fill, white ✓),
+  `1.02rem` name (checked = muted + strikethrough), `tabular-nums` amount,
+  small muted per-row move actions (have this / move to groceries / move
+  back).
+
 ### Cook-mode takeover
 
 `components/cook-mode.tsx` + the `.cook-*` selectors. A `position: fixed;
 inset: 0` full-screen dialog at `z-index: 30` (above the mobile tabbar's 20),
-styled entirely from the `--color-cook-*` tokens and `--font-cook`:
+styled entirely from the `--color-slate-*` tokens and the global amber:
 
 - One step at a time: amber uppercase step label, step body at `1.7rem`/700
   with `text-wrap: balance`, that step's ingredients as chips (`999px` pills on
-  `--color-cook-surface`, `tabular-nums` amounts).
-- Progress: flexed 4px bars (`.cook-dots`), filled with `--color-cook-amber`
+  `--color-slate-2`, `tabular-nums` amounts).
+- Progress: flexed 4px bars (`.cook-dots`), filled with `--brand-2`
   up to the current step; decorative (`aria-hidden`).
 - Nav: giant amber Next (`flex: 1`, radius `16px`, `1.25rem` padding) beside a
   30%-width slate Back (visibility-hidden on step 1 to keep layout stable);

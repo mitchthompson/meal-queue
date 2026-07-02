@@ -13,8 +13,13 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Today reflow judgment calls (settings gear, plan-less state, amber hover, desktop width)
 - **Where it's used:** `app/page.tsx`, `components/app-shell.tsx`, `app/globals.css`
-- **What's needed:** Owner sign-off on four defaults chosen while building Today (the mockup doesn't specify them): (1) **Settings access** moved off the tabbar (mockup shows a 4-tab bar with no settings entry) to a gear icon in the Today header — confirm placement; (2) **plan-less Today** (first run / gap weeks — the brief's open question) renders a teal hero "Plan your week to get started" → `/plans` plus a recipes pointer card; (3) `--brand-2` (link hover) now resolves to the v2 **amber** `#e8a13d` since terracotta retired — hover may want to stay teal instead; (4) desktop Today constrains the column to **640px** (`.today-col`).
+- **What's needed:** Owner sign-off on four defaults chosen while building Today (the mockup doesn't specify them): (1) **Settings access** moved off the tabbar (mockup shows a 4-tab bar with no settings entry) to a gear icon in the Today header — confirm placement; (2) **plan-less Today** (first run / gap weeks — the brief's open question) renders a teal hero "Plan your week to get started" → `/plans` plus a recipes pointer card; (3) `--brand-2` (link hover) now resolves to the v2 **amber** `#e8a13d` since terracotta retired — hover may want to stay teal instead; (4) desktop Today constrains the column to **640px** (`.page-col`).
 - **Source:** Session 2026-07-02 (reflow Today build); [redesign-brief.md](redesign-brief.md) open questions
+
+### Shop reflow judgment calls (Regenerate button kept, on-hand collapsed)
+- **Where it's used:** `app/grocery/page.tsx`
+- **What's needed:** Owner sign-off on two defaults from the Shop reflow: (1) the brief's open question "keep manual Regenerate, or trust staleness entirely?" — the **Regenerate button was kept** (small ghost button in the header) since auto-regeneration already runs on staleness and the button is the manual escape hatch; drop it once trusted. (2) The **On hand** section now defaults to collapsed (previously expanded) — it's post-purchase bookkeeping, not shopping. Also: the old always-visible plan sidebar became a compact plan picker shown only when more than one active/future plan exists.
+- **Source:** Session 2026-07-02 (reflow Shop build); [redesign-brief.md](redesign-brief.md) open questions
 
 ### Plan version bumps fire for grocery-irrelevant changes (over-triggered regeneration)
 - **Where it's used:** `app/plans/page.tsx` / `app/grocery/page.tsx`
@@ -53,7 +58,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Thin empty states, no dark mode (wake-lock resolved)
 - **Where it's used:** New-user empty states across routes; global theming in [`app/globals.css`](../app/globals.css)
-- **What's needed:** Update (2026-07-02): the wake-lock half is done — Cook mode (`components/cook-mode.tsx`, reflow screen 1) holds a screen wake-lock while active, re-acquired on `visibilitychange`. Still open: richer empty states for new users, and dark-mode support beyond the Cook takeover (deferred per the brief; Cook's `--color-cook-*` palette is a head start).
+- **What's needed:** Update (2026-07-02): the wake-lock half is done — Cook mode (`components/cook-mode.tsx`, reflow screen 1) holds a screen wake-lock while active, re-acquired on `visibilitychange`. Still open: richer empty states for new users, and dark-mode support beyond the Cook takeover (deferred per the brief; the v2 `--color-slate-*` set is a head start).
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 15); also [roadmap](roadmap.md) Deferred Fixes (UI audit); [redesign-brief.md](redesign-brief.md)
 
 ### Cook mode: per-step ingredient chips use a name-match heuristic

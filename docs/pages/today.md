@@ -69,5 +69,5 @@ on `/plans` and `/grocery`.
 ## Known flags
 
 - Settings gear placement (header vs tabbar) — owner to confirm.
-- Desktop presentation constrains the column to 640px (`.today-col`); the
+- Desktop presentation constrains the column to 640px (`.page-col`); the
   mockup only specifies the phone layout.

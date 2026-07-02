@@ -5,6 +5,7 @@ import {
   formatDayName,
   formatDisplayDate,
   formatLongDate,
+  formatRelativeDay,
   createDefaultsFromStart,
   dateRange,
   findNextAvailableStartDate,
@@ -86,5 +87,11 @@ describe("display formatting", () => {
     expect(formatDayName("2026-07-02")).toBe("Thursday");
     expect(formatDayAbbrev("2026-07-02")).toBe("Thu");
     expect(formatLongDate("2026-07-02")).toBe("Thu, Jul 2");
+  });
+
+  it("formats deadline days relative to today", () => {
+    expect(formatRelativeDay("2026-07-02", "2026-07-02")).toBe("today");
+    expect(formatRelativeDay("2026-07-03", "2026-07-02")).toBe("tomorrow");
+    expect(formatRelativeDay("2026-07-05", "2026-07-02")).toBe("Sun, Jul 5");
   });
 });

@@ -12,6 +12,8 @@ export type GroceryPlan = {
   id: string;
   start_date: string;
   end_date: string;
+  order_date: string | null;
+  pickup_date: string | null;
   version: number;
   groceries_version: number | null;
 };
@@ -77,7 +79,7 @@ export function useGroceryList() {
     const todayYmd = toYmd(new Date());
     const { data, error: plansError } = await supabase
       .from("meal_plans")
-      .select("id, start_date, end_date, version, groceries_version")
+      .select("id, start_date, end_date, order_date, pickup_date, version, groceries_version")
       .gte("end_date", todayYmd);
 
     if (plansError) {
