@@ -473,3 +473,164 @@ grant execute on function public.save_recipe(uuid, text, numeric, text, jsonb, j
   to authenticated, service_role;
 
 
+
+-- Plan integrity (added by migration 20260702001350_plan_integrity.sql).
+-- Trigger-based, grocery-scoped version bumps (replaces the client's racy
+-- read-then-write sequence) and cross-row validation that CHECK constraints
+-- cannot express: plan_date within the plan range, same-owner recipe refs,
+-- same-plan cook-sourced leftover links, protected cook items, and plan
+-- ranges that cannot shrink past existing items.
+-- Cross-row / cross-table validation for meal-plan items.
+create or replace function public.validate_meal_plan_item()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_plan   public.meal_plans%rowtype;
+  v_source public.meal_plan_items%rowtype;
+  v_recipe_owner uuid;
+begin
+  -- Lock the plan row (FOR NO KEY UPDATE) while validating: without it, an
+  -- item insert racing a concurrent range-shrink could validate against the
+  -- old range while the shrink's count cannot see the uncommitted item (write
+  -- skew) — both would commit and strand the item. The FK alone only takes
+  -- FOR KEY SHARE, which does not conflict with a non-key UPDATE. NOT FOR
+  -- SHARE: the later bump UPDATE would be a lock upgrade and could deadlock.
+  select * into v_plan from public.meal_plans
+   where id = new.meal_plan_id
+   for no key update;
+  if not found then
+    -- Under RLS an invisible plan reads as missing; FK would reject it anyway.
+    raise exception 'meal plan % not found or not owned by the caller', new.meal_plan_id;
+  end if;
+
+  if new.plan_date < v_plan.start_date or new.plan_date > v_plan.end_date then
+    raise exception 'plan_date % is outside the plan range % to %',
+      new.plan_date, v_plan.start_date, v_plan.end_date;
+  end if;
+
+  if new.recipe_id is not null then
+    select user_id into v_recipe_owner from public.recipes where id = new.recipe_id;
+    if v_recipe_owner is null or v_recipe_owner <> v_plan.user_id then
+      raise exception 'recipe % not found or not owned by the plan owner', new.recipe_id;
+    end if;
+  end if;
+
+  if new.slot_type = 'leftover' and new.leftover_from_item_id is not null then
+    -- FOR SHARE: serializes against a concurrent slot_type change on the
+    -- source row (safe here — this transaction never writes the source, so no
+    -- lock upgrade follows).
+    select * into v_source from public.meal_plan_items
+     where id = new.leftover_from_item_id
+     for share;
+    if not found then
+      raise exception 'leftover source item % not found', new.leftover_from_item_id;
+    end if;
+    if v_source.slot_type <> 'cook' then
+      raise exception 'leftover must reference a cooked item (source % is %)',
+        v_source.id, v_source.slot_type;
+    end if;
+    if v_source.meal_plan_id <> new.meal_plan_id then
+      raise exception 'leftover must reference an item in the same plan';
+    end if;
+  end if;
+
+  -- A cook item that other items reference as their leftover source can
+  -- neither stop being a cook item NOR move to another plan (a move would
+  -- strand its dependents with cross-plan links). Deleting it remains
+  -- allowed: the FK nulls the dependents' links, which is established, valid
+  -- history.
+  if tg_op = 'UPDATE' and old.slot_type = 'cook'
+     and (new.slot_type <> 'cook' or new.meal_plan_id is distinct from old.meal_plan_id) then
+    if exists (select 1 from public.meal_plan_items d where d.leftover_from_item_id = old.id) then
+      raise exception 'item % is referenced by leftovers and must stay a cooked item in its plan', old.id;
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists validate_meal_plan_item on public.meal_plan_items;
+create trigger validate_meal_plan_item
+before insert or update on public.meal_plan_items
+for each row execute function public.validate_meal_plan_item();
+
+-- A plan's date range cannot shrink past its existing items.
+create or replace function public.protect_plan_range()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_stranded integer;
+begin
+  if new.start_date is distinct from old.start_date
+     or new.end_date is distinct from old.end_date then
+    select count(*) into v_stranded
+    from public.meal_plan_items i
+    where i.meal_plan_id = new.id
+      and (i.plan_date < new.start_date or i.plan_date > new.end_date);
+    if v_stranded > 0 then
+      raise exception 'new plan range % to % would strand % planned item(s)',
+        new.start_date, new.end_date, v_stranded;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_plan_range on public.meal_plans;
+create trigger protect_plan_range
+before update on public.meal_plans
+for each row execute function public.protect_plan_range();
+
+-- Scoped version bump: only grocery-relevant item changes advance the plan
+-- version. Grocery generation consumes slot_type='cook' rows (recipe_id,
+-- serving_multiplier); nothing else affects the list.
+create or replace function public.bump_plan_version_on_grocery_change()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_relevant boolean := false;
+begin
+  if tg_op = 'INSERT' then
+    v_relevant := new.slot_type = 'cook';
+    if v_relevant then
+      update public.meal_plans set version = version + 1 where id = new.meal_plan_id;
+    end if;
+    return new;
+  elsif tg_op = 'DELETE' then
+    v_relevant := old.slot_type = 'cook';
+    if v_relevant then
+      update public.meal_plans set version = version + 1 where id = old.meal_plan_id;
+    end if;
+    return old;
+  else -- UPDATE: relevant when the cook-facing shape of the row changed.
+    v_relevant :=
+      (old.slot_type = 'cook' or new.slot_type = 'cook')
+      and (old.slot_type is distinct from new.slot_type
+           or old.recipe_id is distinct from new.recipe_id
+           or old.serving_multiplier is distinct from new.serving_multiplier
+           or old.meal_plan_id is distinct from new.meal_plan_id);
+    if v_relevant then
+      update public.meal_plans set version = version + 1 where id = new.meal_plan_id;
+      if old.meal_plan_id is distinct from new.meal_plan_id then
+        update public.meal_plans set version = version + 1 where id = old.meal_plan_id;
+      end if;
+    end if;
+    return new;
+  end if;
+end;
+$$;
+
+drop trigger if exists bump_plan_version on public.meal_plan_items;
+create trigger bump_plan_version
+after insert or update or delete on public.meal_plan_items
+for each row execute function public.bump_plan_version_on_grocery_change();
