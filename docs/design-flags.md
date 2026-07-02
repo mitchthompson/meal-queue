@@ -63,7 +63,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Cook mode: per-step ingredient chips use a name-match heuristic
 - **Where it's used:** `components/cook-mode.tsx` (`matchesStep`)
-- **What's needed:** The schema has no step↔ingredient association (`recipe_steps` and `ingredients` are independent children of `recipes`), so the mockup's "that step's ingredients as chips" is implemented by matching ingredient names against the step text (case-insensitive substring, tolerating a trailing plural `s`/`es`). Works for the household's recipe style but will miss renames/paraphrases ("the chicken") and can over-match short names. Owner to judge on real recipes: keep the heuristic, tune it, or (bigger) add a step↔ingredient link to the schema (schema change — needs its own approval and migration).
+- **What's needed:** The schema has no step↔ingredient association (`recipe_steps` and `ingredients` are independent children of `recipes`), so the mockup's "that step's ingredients as chips" is implemented by matching ingredient names against the step text (case-insensitive substring, tolerating a trailing plural `s`/`es`). Works for the household's recipe style but will miss renames/paraphrases ("the chicken") and can over-match short names. Owner to judge on real recipes: keep the heuristic, tune it, or (bigger) add a step↔ingredient link to the schema (schema change — needs its own approval and migration). Update (2026-07-02 review, round 1): owner verdict — the heuristic stays; the chips take too much space and restyle smaller/quieter (CSS-only, `app/globals.css`). Two mocked variants on the review board: A compact outlined pills, B one muted text line — owner to pick.
 - **Source:** Session 2026-07-02 (reflow Cook build); [redesign-brief.md](redesign-brief.md) Cook section
 
 ### Cook mode: "Done — mark cooked" writes nothing
@@ -85,6 +85,21 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Where it's used:** dependency tree (reported by `npm ci`)
 - **What's needed:** `npm ci` reports 1 high-severity vulnerability; the reliability foundation (2026-06-11) had brought `npm audit` to zero, so this was likely disclosed since. Triage and patch within the major version (no dependency upgrade without owner approval). Untouched this session.
 - **Source:** Session 2026-06-27 baseline verification
+
+### Plan: drop the lunch/dinner division (owner request)
+- **Where it's used:** `app/plans/page.tsx`, `components/plan-slot-cell.tsx`, `lib/hooks/use-plan.ts`, `lib/hooks/use-today.ts`
+- **What's needed:** Owner wants day cards to be a single flat "meals for the day" list — no lunch/dinner slots, just add-a-meal per day (multiple meals already supported). Proposed no-migration path: `meal_type` becomes vestigial (new rows written as `'dinner'`; the column and its check constraint stay untouched in the schema), and existing lunch rows simply render in their day's flat list in added order. Ripples to confirm with owner before building: Today's hero label becomes "Tonight" with a pick rule (proposed: first-added cook meal, "+N more" sub-line when a day has several), and the week peek drops its lunch/dinner sublabels. Dropping the column for real would be a separate later migration, deliberately out of scope. The quick-add rework below should land with or after this, since the add flow becomes per-day.
+- **Source:** Owner feedback, 2026-07-02 reflow review (round 1)
+
+### Plan quick-add: recipe search is weak on mobile (owner request)
+- **Where it's used:** `components/plan-slot-cell.tsx` (quick-add card), `lib/hooks/use-plan.ts` (match logic)
+- **What's needed:** The cook search renders small `text-btn` rows with no memory and a desktop-only "Shift+Enter" hint. Owner wants recipe selection improved for phone use. Proposal awaiting go-ahead: ≥44px tap rows, most-recently-planned recipes listed before any typing, serves-count per row, keyboard hints hidden on touch devices. Same data machinery underneath.
+- **Source:** Owner feedback, 2026-07-02 reflow review (round 1)
+
+### Recipes: editor stacks below the full list on mobile (owner request)
+- **Where it's used:** `app/recipes/page.tsx` (`recipes-layout` split), `app/globals.css`
+- **What's needed:** On mobile, "Edit recipe" opens the editor below the entire recipe list, forcing a scroll-hunt past every recipe not picked. Proposal awaiting go-ahead: on mobile the editor becomes the screen (list hidden behind "Back to list"); desktop keeps the side-by-side split. Subsumes the deferred mini-M5 "scroll-into-view when the editor opens" item.
+- **Source:** Owner feedback, 2026-07-02 reflow review (round 1)
 
 ## Resolved
 
