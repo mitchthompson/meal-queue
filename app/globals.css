@@ -101,9 +101,18 @@ textarea:focus-visible {
   margin-bottom: 0.5rem;
 }
 
-.recipe-title-row h1 {
-  margin: 0;
-  font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+/* .recipe-title-row h1 sizing lives in the shared page-head group with
+   .settings-head h1 (v2 detail pass, RD3 — round-4 board 2026-07-02). */
+
+/* Quiet breadcrumb back to the library — the tabbar is the primary way
+   back (RD5, round-4 board 2026-07-02). */
+.recipe-back-link {
+  display: inline-block;
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: none;
+  margin-bottom: 0.15rem;
 }
 
 .recipe-danger-menu {
@@ -141,9 +150,14 @@ textarea:focus-visible {
 }
 
 .servings-input-row .secondary-btn {
-  min-width: 2.5rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   padding-left: 0.65rem;
   padding-right: 0.65rem;
+}
+
+.servings-input-row input {
+  min-height: 2.75rem;
 }
 
 .grid {
@@ -802,10 +816,7 @@ textarea {
   gap: 0.75rem;
 }
 
-.recipe-overview-panel h2,
-.recipe-view-section h2 {
-  margin: 0;
-}
+/* Overview/Ingredients/Steps h2s carry .recipes-card-label (v2 detail pass). */
 
 .recipe-overview-meta {
   border: 1px solid var(--line);
@@ -828,24 +839,24 @@ textarea {
   background: var(--surface);
 }
 
-.recipe-view-section h2 {
-  margin-bottom: 0.35rem;
-}
-
+/* Flat hairline rows for ingredients and steps (owner verdict RD1: B,
+   round-4 board 2026-07-02 — with the chunky Start cooking bar, RD2, and
+   the .recipe-amount split that un-quirks the pantry badge, RD4). */
 .recipe-ingredient-list {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.55rem;
+  gap: 0;
   margin-top: 0.4rem;
+  border-top: 1px solid var(--line);
 }
 
 .recipe-meta {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.6rem 0.7rem;
-  background: var(--surface);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0.6rem 0.1rem;
+  background: transparent;
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
@@ -863,15 +874,11 @@ textarea {
   font-size: 1rem;
 }
 
-.recipe-meta span {
+.recipe-amount {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 600;
   text-align: right;
-}
-
-.recipe-amount {
-  color: var(--muted);
 }
 
 .pantry-badge {
@@ -909,14 +916,15 @@ textarea {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.55rem;
+  gap: 0;
+  border-top: 1px solid var(--line);
 }
 
 .recipe-step-item {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  padding: 0.65rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 0.65rem 0.1rem;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.65rem;
@@ -1335,7 +1343,8 @@ textarea {
 
 .settings-head h1,
 .recipes-head h1,
-.recipes-editor-title {
+.recipes-editor-title,
+.recipe-title-row h1 {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 800;
@@ -1384,7 +1393,8 @@ textarea {
 }
 
 .settings-save,
-.recipes-save {
+.recipes-save,
+.recipe-cook-btn {
   display: block;
   width: 100%;
   margin-top: 0.85rem;
@@ -1398,6 +1408,12 @@ textarea {
   background: var(--brand);
   color: var(--surface);
   cursor: pointer;
+}
+
+/* The cook bar sits under the STEPS label, above the step rows — tighter
+   than the save bars' top margin. */
+.recipe-cook-btn {
+  margin: 0.15rem 0 0.35rem;
 }
 
 .cook-mode {
@@ -1700,7 +1716,7 @@ textarea {
     align-items: flex-start;
   }
 
-  .recipe-meta span {
+  .recipe-amount {
     text-align: left;
   }
 
@@ -1714,13 +1730,10 @@ textarea {
     gap: 0.5rem;
   }
 
-  .recipe-title-row .section-actions .ghost-btn,
+  /* Edit + More share one row (RD5) — the back breadcrumb sits above the
+     title, so the actions are a single 2-up row. */
   .recipe-title-row .section-actions .secondary-btn {
     width: 100%;
-  }
-
-  .recipe-title-row .section-actions .recipe-danger-menu {
-    grid-column: 1 / -1;
   }
 
   .recipe-danger-menu summary,
