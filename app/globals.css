@@ -120,7 +120,7 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
 }
 
@@ -230,7 +230,7 @@ textarea:focus-visible {
 
 .pill.active {
   background: var(--brand);
-  color: #fff;
+  color: var(--surface);
   border-color: var(--brand);
 }
 
@@ -273,7 +273,7 @@ textarea {
   border-radius: 10px;
   border: 1px solid var(--line);
   padding: 0.55rem 0.6rem;
-  background: #ffffff;
+  background: var(--surface);
   color: var(--ink);
 }
 
@@ -299,13 +299,13 @@ textarea {
   font-weight: 600;
   font-size: 0.92rem;
   cursor: pointer;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
 }
 
 .primary-btn {
   background: var(--brand);
-  color: #fff;
+  color: var(--surface);
   border-color: var(--brand);
 }
 
@@ -314,13 +314,13 @@ textarea {
 }
 
 .ghost-btn {
-  background: #fff;
+  background: var(--surface);
   color: var(--brand);
 }
 
 .danger-btn {
   background: var(--color-danger);
-  color: #fff;
+  color: var(--surface);
   border-color: var(--color-danger);
 }
 
@@ -389,7 +389,7 @@ textarea {
   display: grid;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
   padding: 0.6rem;
   cursor: pointer;
 }
@@ -442,7 +442,7 @@ textarea {
 .chip {
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   padding: 0.25rem 0.55rem;
 }
 
@@ -714,7 +714,7 @@ textarea {
   gap: 0.75rem;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
   padding: 0.55rem 0.65rem;
 }
 
@@ -797,7 +797,7 @@ textarea {
 
 .recipe-view-section {
   padding: 1rem 1.05rem;
-  border-color: #c9bba6;
+  border-color: var(--line);
   background: var(--surface);
 }
 
@@ -818,7 +818,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.6rem 0.7rem;
-  background: #fffefb;
+  background: var(--surface);
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
@@ -837,7 +837,7 @@ textarea {
 }
 
 .recipe-meta span {
-  color: #3d443d;
+  color: var(--muted);
   font-size: 0.9rem;
   font-weight: 600;
   text-align: right;
@@ -848,10 +848,10 @@ textarea {
 }
 
 .pantry-badge {
-  border: 1px solid #c9bba6;
+  border: 1px solid var(--color-accent);
   border-radius: 999px;
-  background: #f3eadc;
-  color: #5e513d;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-deep);
   padding: 0.1rem 0.45rem;
   font-size: 0.74rem;
   font-weight: 700;
@@ -888,7 +888,7 @@ textarea {
 .recipe-step-item {
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fffefb;
+  background: var(--surface);
   padding: 0.65rem 0.75rem;
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1510,9 +1510,9 @@ textarea {
 
   .panel {
     margin-top: 0.75rem;
-    border: 1px solid #e4d8c6;
+    border: 1px solid var(--line);
     border-radius: 12px;
-    background: rgba(255, 253, 248, 0.92);
+    background: var(--surface);
     box-shadow: 0 4px 12px rgba(31, 35, 31, 0.04);
     padding: 0.75rem 0.85rem;
   }
@@ -1573,7 +1573,7 @@ textarea {
   .mobile-tab.active {
     background: var(--brand);
     border-color: var(--brand);
-    color: #fff;
+    color: var(--surface);
   }
 
   .ingredient-row {
