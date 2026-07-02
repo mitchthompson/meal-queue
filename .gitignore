@@ -10,7 +10,10 @@ coverage/
 supabase/.temp/
 supabase/.branches/
 tsconfig.tsbuildinfo
-.claude/
+# .claude/ is machine-local (settings, worktrees) EXCEPT the tracked session
+# skills, which are project rituals and travel with the repo.
+.claude/*
+!.claude/skills/
 .codex/
 .mcp.json
 recipe-export.json
