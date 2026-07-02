@@ -106,15 +106,13 @@ Acceptance:
 
 ### 3. Plan Integrity
 
-**Status (2026-07-02):** implemented on `codex/plan-integrity`, adversarially
-reviewed (24 findings triaged: 4 code hardenings applied incl. two
-write-skew row-lock fixes, +17 pgTAP assertions), and proven locally —
-83/83 pgTAP on a fresh PG17 stack. Version bumps are **trigger-based and
-grocery-scoped** (cook-item changes only), which also resolves the
-"over-triggered regeneration" flag. Pending: PR → green CI → prod apply
-(migration BEFORE client merge, per the migration's APPLY ORDER header).
-
-Branch: `codex/plan-integrity`
+Done: PR #4 (`6d086f2`), 2026-07-02. First-try green CI (83/83 pgTAP);
+adversarially reviewed (24 findings triaged; two write-skew row-lock fixes,
+cross-plan-move guard, +17 assertions); prod applied migration-first with a
+rolled-back live smoke test (bump 9→10, out-of-range rejection). Version bumps
+are trigger-based and **grocery-scoped**, which also resolved the
+"over-triggered regeneration" flag's scoping half and cut two round trips per
+plan mutation.
 
 - Move plan version increments to database triggers on `meal_plan_items`
   insert, update, and delete.

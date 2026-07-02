@@ -22,9 +22,12 @@ proven end to end — PR #3 produced the first fully green run (app checks +
 33/33 pgTAP against a fresh PG17 stack, 1m02s). The local Colima stack makes DB
 changes provable before prod, and prod DB access (backup/preflight/apply/verify
 runbooks) is agent-executable with owner approval per operation.
-**Next up: milestone 3 — plan integrity** on `codex/plan-integrity`. Existing
-household data is live and must stay compatible throughout. See
-[roadmap.md](roadmap.md).
+**Milestone 3 (plan integrity) shipped 2026-07-02** (PR #4, prod-applied
+migration-first, smoke-verified): version bumps are trigger-based and
+grocery-scoped, plan invariants are DB-enforced under concurrency.
+**Next up: milestone 4 — grocery state preservation** on
+`codex/grocery-state-preservation`. Existing household data is live and must
+stay compatible throughout. See [roadmap.md](roadmap.md).
 
 ## Stable Baseline
 
@@ -55,19 +58,15 @@ household data is live and must stay compatible throughout. See
 
 ## Active Handoff
 
-- **In progress:** Milestone 3 (plan integrity) implemented on
-  `codex/plan-integrity` (uncommitted at last doc update; committing this
-  session): migration `20260702001350_plan_integrity.sql` (validation +
-  range-protection + grocery-scoped version-bump triggers, write-skew row
-  locks), client `bumpPlanVersion` removed (2 round trips saved per mutation),
-  unsaved-dates guard added, pgTAP grown to 83 assertions across two suites.
-  Adversarially reviewed; proven locally (83/83, typecheck, vitest, build).
-- **Next action:** (1) push + PR → green CI; (2) on the owner's word, apply the
-  M3 migration to prod (backup-first runbook; **migration BEFORE client merge**
-  per its APPLY ORDER header — reverse order silently stops grocery
-  invalidation); (3) merge; (4) UI sanity check on plans page; (5) milestone 4.
-  The owner's recipe-save UI check from milestone 2 was confirmed 2026-07-01
-  (verified in prod data: RPC fingerprints on the edited recipe).
+- **In progress:** Nothing. Milestone 3 shipped end to end on 2026-07-02: PR #4
+  green on first CI run (83/83 pgTAP), prod applied **migration-first** per the
+  APPLY ORDER rule (backup `~/meal-queue-backup-2026-07-01-1927.dump`;
+  preflights clean; 3 triggers registered; rolled-back live smoke: bump 9→10 +
+  out-of-range rejection, zero residue), then merged (`6d086f2`).
+- **Next action:** Start milestone 4 (grocery state preservation) on
+  `codex/grocery-state-preservation` — same rails. A quick owner UI sanity
+  check of the plans page (add/remove a meal, edit a note — the note edit
+  should no longer reset the grocery checklist) is a nice-to-have confirmation.
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -114,6 +113,7 @@ From [roadmap.md](roadmap.md). Reliability is the current priority.
 | 1 | Reliability Foundation | — | Done (`7cfbab2`, 2026-06-11) |
 | 1.5 | CI + Test Harness | — | Done (PR #3, `240b508`, 2026-07-01) — first green CI: 33/33 pgTAP in 1m02s |
 | 2 | Atomic Recipe Saves | — | Done (PR #2, `061f541`; prod migrations applied + verified 2026-07-01) |
+| 3 | Plan Integrity | — | Done (PR #4, `6d086f2`, 2026-07-02; prod applied migration-first + smoke-verified) |
 | 3 | Plan Integrity | `codex/plan-integrity` | Planned |
 | 4 | Grocery State Preservation | `codex/grocery-state-preservation` | Planned |
 | 5 | UI Feedback and Ergonomics | `codex/ui-feedback-ergonomics` | Planned (after reliability core) |
