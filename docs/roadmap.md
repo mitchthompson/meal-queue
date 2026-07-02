@@ -190,13 +190,16 @@ Acceptance:
 
 ### 6. Component Hardening
 
-**Status (2026-07-02): in progress** on `codex/component-hardening`, as the
-foundation for the reflow ([redesign-brief.md](redesign-brief.md)). Slice 1
-(shared date formatters) merged in PR #7; slice 2 (`useGroceryList` hook) on
-the branch. Remaining: plans hook (the big one), recipes hook, shared
-components. Each slice behavior-neutral and CI-guarded.
+**Status (2026-07-02): slices 1–3 merged**, as the foundation for the reflow
+([redesign-brief.md](redesign-brief.md)): slice 1 (shared date formatters,
+PR #7), slice 2 (`useGroceryList` hook, PR #9), slice 3 (`usePlan` hook,
+PR #10 — plans page 1,091 → 571 lines). Remaining (slice 4): recipes hook,
+shared components (the duplicated lunch/dinner slot cells), settings-defaults
+single source of truth. Each slice behavior-neutral and CI-guarded, one PR
+per slice.
 
-Planned branch: `codex/component-hardening`
+Branches: `codex/component-hardening` (slices 1–2), `codex/plans-data-hook`
+(slice 3); slice 4 goes on a fresh branch from `main`.
 
 - Split oversized recipe, planning, and grocery route components.
 - Centralize shared date and Supabase data-access logic.

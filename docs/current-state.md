@@ -14,46 +14,52 @@ smoke tests at each prod apply. A **larger redesign is approved and briefed**
 ([redesign-brief.md](redesign-brief.md)): a reflow around the household's
 weekly cycle (Plan → Shop → Cook, with a Today home screen and a full-screen
 dark cooking mode), on a calm-utility look with bold treatment where hands are
-busy. **Milestone 6 (component hardening) is in progress** on
-`codex/component-hardening` as the redesign's foundation. Existing household
-data is live and must stay compatible throughout. See [roadmap.md](roadmap.md).
+busy. **Milestone 6 (component hardening) is nearly done** as the redesign's
+foundation: slices 1–3 are merged and deployed (shared date formatters,
+`useGroceryList`, `usePlan`); slice 4 (recipes hook + shared components)
+remains. Existing household data is live and must stay compatible throughout.
+See [roadmap.md](roadmap.md).
 
 ## Stable Baseline
 
-- **`main`:** mini-M5 merged (PR #6, `abbf3b2`, 2026-07-02) and deployed on
-  Vercel (merge to `main` auto-deploys — confirmed).
+- **`main`:** M6 slice 3 merged (PR #10, `a9c08a9`, 2026-07-02) and deployed
+  on Vercel (merge to `main` auto-deploys — confirmed).
 - **Prod database:** all four migrations in `supabase/migrations/` are applied
   and verified (`save_recipe`, Data API grants, plan-integrity triggers,
   grocery state preservation). `supabase/schema.sql` is canonical and in sync;
   the timestamped baseline copy is CI/local-only.
 - **CI:** GitHub Actions on every PR — app checks (typecheck / vitest / build)
   and DB tests (ephemeral Supabase stack, 108 pgTAP assertions across three
-  suites), CLI pinned 2.109.0, NOTESTS guard. Six PRs merged, six first-try
-  green runs.
+  suites), CLI pinned 2.109.0, NOTESTS guard. Ten PRs merged; every PR's
+  first CI run has been green (latest: app checks 48s, db tests 1m02s).
 - **Latest verification:** 2026-07-02 — typecheck clean, vitest 15/15,
-  `next build` green (11 routes), pgTAP 108/108 local + CI.
+  `next build` green (11 routes); pgTAP 108/108 in CI (PRs #9/#10 — the DB
+  layer was untouched this session).
 - **Remote:** `origin` = `https://github.com/mitchthompson/meal-queue.git`.
 - **Backups:** manual `pg_dump` runbook (libpq 18.4); latest snapshots in
   `~/meal-queue-backup-2026-07-01-*.dump` (98K/113K, 10-table manifests).
 
 ## Active Handoff
 
-- **In progress:** Milestone 6 (component hardening) on
-  `codex/component-hardening` (pushed), as the redesign foundation.
-  **Slice 1 done + merged** (PR #7): shared date formatters →
-  `lib/date-utils.ts`. **Slice 2 done, on the branch:** `useGroceryList` data
-  hook (`lib/hooks/use-grocery-list.ts`) — the grocery page dropped ~380 → 191
-  lines, presentation-only; behavior-neutral, verified. The redesign brief is
+- **In progress:** Milestone 6 (component hardening) as the redesign
+  foundation — slices 1–3 merged and live: shared date formatters (PR #7),
+  `useGroceryList` data hook (PR #9 — grocery page presentation-only over
+  `lib/hooks/use-grocery-list.ts`), and `usePlan` data hook (PR #10 —
+  `lib/hooks/use-plan.ts`; the plans page dropped 1,091 → 571 lines; the
+  quick-add state machine moved into the hook because the write flows mutate
+  it). **No work in flight; all branches merged.** The redesign brief is
   [redesign-brief.md](redesign-brief.md); the approved direction mockups are
   in-repo at [mockups/reflow-v1.html](mockups/reflow-v1.html).
-- **Next action:** M6 slice 3 — extract the **plans** data hook
-  (`lib/hooks/use-plan.ts`) from `app/plans/page.tsx` (~1,050 lines; the
-  hardest one: plan CRUD, slot upserts, leftover linking, quick-add state).
-  Follow the `use-grocery-list.ts` pattern: move data logic verbatim,
-  behavior-neutral, page keeps presentation. Then slice 4: recipes hook +
-  shared components (the ~330-line duplicated lunch/dinner columns). Then PR →
-  green CI → owner merge. After M6: the reflow, screen by screen (suggested
-  order: Cook, Today, Shop, Plan), per the brief.
+- **Next action:** M6 slice 4, on a fresh `codex/...` branch cut from `main`:
+  (1) extract the **recipes** data hook (`lib/hooks/use-recipes.ts`) from
+  `app/recipes/page.tsx`, following the `lib/hooks/use-plan.ts` pattern (move
+  data logic verbatim, behavior-neutral, page keeps presentation); (2) extract
+  the duplicated lunch/dinner slot-cell markup in `app/plans/page.tsx` (~330
+  near-identical JSX lines) into a shared component. Settings-defaults single
+  source of truth is the other open M6 target
+  ([design-flags.md](design-flags.md)). Verify with typecheck / vitest /
+  build, then PR → green CI → owner merge. After M6: the reflow, screen by
+  screen (suggested order: Cook, Today, Shop, Plan), per the brief.
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -72,8 +78,8 @@ Routes confirmed against `app/`. Per-page intent lives in `docs/pages/<slug>.md`
 | Dashboard | `/` (`app/page.tsx`) | Working; known issue — loads items for only the 4 newest plans; slated to become **Today** in the reflow |
 | Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working; atomic `save_recipe` RPC live |
 | Recipe detail | `/recipes/[id]` (`app/recipes/[id]/page.tsx`) | Working; focus mode is the seed of the reflow's Cook mode |
-| Plans | `/plans` (`app/plans/page.tsx`) | Working; DB-enforced integrity, trigger-based scoped versioning |
-| Grocery | `/grocery` (`app/grocery/page.tsx`) | Working; transactional state-preserving regeneration (checked/on-hand/pantry-override survive) |
+| Plans | `/plans` (`app/plans/page.tsx`) | Working; DB-enforced integrity, trigger-based scoped versioning; data layer in `lib/hooks/use-plan.ts` |
+| Grocery | `/grocery` (`app/grocery/page.tsx`) | Working; transactional state-preserving regeneration (checked/on-hand/pantry-override survive); data layer in `lib/hooks/use-grocery-list.ts` |
 | Settings | `/settings` (`app/settings/page.tsx`) | Working; `ensureUserSettings` runs once per sign-in (defaults duplication still open) |
 
 Authentication is email/password through Supabase. The app installs to the
@@ -91,13 +97,14 @@ mini-M5).
 | 3 | Plan Integrity | Done (PR #4 + prod apply, 2026-07-02) |
 | 4 | Grocery State Preservation | Done (PR #5 + prod apply, 2026-07-02) |
 | 5 | UI Feedback and Ergonomics | Rescoped — mini-M5 done (PR #6, 2026-07-02); rest folds into the redesign |
-| 6 | Component Hardening | **In progress** (`codex/component-hardening`) — redesign foundation |
+| 6 | Component Hardening | **In progress** — slices 1–3 merged (PRs #7, #9, #10); slice 4 (recipes hook + shared components) remains |
 | — | The Reflow (redesign) | Briefed ([redesign-brief.md](redesign-brief.md)); follows M6 |
 
 ## Architecture snapshot
 
 - Next.js 15 App Router + React 19 on Vercel; client components query Supabase
-  directly (owner-based RLS, explicit Data API grants).
+  directly (owner-based RLS, explicit Data API grants), with per-page data
+  layers extracted to `lib/hooks/` (grocery, plans; recipes pending).
 - Aggregate writes are **database transactions**: `save_recipe`,
   `regenerate_grocery_list`, and plan-integrity triggers (scoped version
   bumps, cross-row validation with row locks). The browser no longer
