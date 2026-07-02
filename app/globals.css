@@ -453,91 +453,217 @@ textarea {
   font-size: 0.85rem;
 }
 
-.plan-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(130px, 1fr));
-  gap: 0.6rem;
-}
 
-.plans-page-stack {
-  margin-top: 1rem;
-  display: grid;
-  gap: 1rem;
-}
 
-.plan-add-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(120px, 1fr));
-  gap: 0.6rem;
-  align-items: end;
-}
 
-.plan-grid {
-  display: grid;
-  grid-template-columns: 170px 1fr 1fr;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  overflow: hidden;
-}
 
-.plan-grid-head {
-  background: var(--color-surface-muted);
-  padding: 0.55rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  border-bottom: 1px solid var(--line);
-}
 
-.plan-grid-row {
-  display: contents;
-}
 
-.plan-day-cell,
-.plan-slot-cell {
-  border-bottom: 1px solid var(--line);
-  border-right: 1px solid var(--line);
-  padding: 0.55rem;
-}
 
-.plan-day-cell {
-  display: grid;
-  gap: 0.1rem;
-}
 
-.plan-day-primary {
-  font-weight: 700;
-  font-size: 0.92rem;
-}
 
-.plan-day-secondary {
-  color: var(--muted);
-  font-size: 0.78rem;
-}
 
-.slot-card {
-  display: grid;
-  gap: 0.2rem;
-}
 
-.slot-card span {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
 
 .quick-add-card {
   display: grid;
-  gap: 0.3rem;
-  margin-bottom: 0.5rem;
+  gap: 0.45rem;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 0.4rem;
-  background: #fff;
+  padding: 0.55rem;
+  background: var(--surface);
 }
 
 .quick-add-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+.plan-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.plan-head h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.plan-head-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.plan-range {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.plan-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.plan-picker-row select {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.plan-filter-row .pill {
+  min-height: 1.9rem;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.78rem;
+}
+
+.plan-sheet {
+  margin-top: 0.75rem;
+}
+
+.plan-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.plan-dayrow {
+  margin-top: 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.plan-dhead {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.65rem 0.9rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.plan-dayrow.today .plan-dhead {
+  color: var(--brand);
+}
+
+.plan-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.plan-slot-k {
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: var(--muted);
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.plan-slot-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.plan-slot-main .recipe-link {
+  font-weight: 600;
+}
+
+.plan-slot-sub {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.plan-slot-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.plan-slot-actions .text-btn {
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding: 0.15rem 0.2rem;
+}
+
+.plan-slot.empty {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.plan-slot-add {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--color-primary-soft);
+  color: var(--brand);
+  border: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.plan-slot-more {
+  border-top: 1px solid var(--line);
+  padding: 0.35rem 0.9rem 0.5rem;
+}
+
+.plan-slot-more .text-btn {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.plan-quick-wrap {
+  border-top: 1px solid var(--line);
+  padding: 0.6rem 0.9rem 0.75rem;
+  background: var(--bg);
+}
+
+.plan-generate {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.9rem;
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  text-decoration: none;
+  background: var(--brand);
+  color: var(--surface);
 }
 
 .serving-controls {
@@ -573,159 +699,31 @@ textarea {
   width: auto;
 }
 
-.home-grid {
-  margin-top: 0.9rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.8rem;
-}
 
-.home-today-card {
-  grid-column: 1 / -1;
-}
 
-.home-week-panel {
-  grid-column: 1 / -1;
-}
 
-.home-grocery-panel {
-  grid-column: 1 / -1;
-}
 
-.home-section-subtitle {
-  margin: 0.3rem 0 0.65rem;
-}
 
-.home-today-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(160px, 1fr));
-  gap: 0.8rem;
-}
 
-.home-today-slot {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.7rem;
-  background: #fff;
-  display: grid;
-  gap: 0.4rem;
-}
 
-.home-quick-add {
-  margin-top: 0.9rem;
-  border-top: 1px solid var(--line);
-  padding-top: 0.8rem;
-}
 
-.home-quick-add h3 {
-  margin: 0 0 0.45rem;
-}
 
-.home-quick-add-grid {
-  display: grid;
-  grid-template-columns: minmax(120px, 1fr) 120px minmax(180px, 1.8fr) auto;
-  gap: 0.65rem;
-  align-items: center;
-}
 
-.home-quick-search-results {
-  margin-top: 0.55rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
 
-.home-week-card {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 0.9rem;
-  background: #fff;
-}
 
-.home-week-grid {
-  margin-top: 0.6rem;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
-  gap: 0.65rem;
-}
 
-.home-day-block {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.55rem;
-  display: grid;
-  gap: 0.22rem;
-  min-height: 110px;
-}
 
-.home-day-head {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
 
-.home-day-block span {
-  color: var(--muted);
-  font-size: 0.83rem;
-}
 
-.home-next-wrap {
-  margin-top: 0.9rem;
-  display: grid;
-  gap: 0.45rem;
-}
 
-.home-next-wrap summary {
-  cursor: pointer;
-  font-weight: 600;
-}
 
-.home-next-wrap h3 {
-  margin: 0;
-}
 
-.home-grocery-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
 
-.home-grocery-split h3 {
-  margin: 0 0 0.45rem;
-}
 
-.home-plan-block {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
-  padding: 0.85rem;
-  display: grid;
-  gap: 0.55rem;
-}
 
-.home-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(90px, 1fr));
-  gap: 0.6rem;
-}
 
-.home-stat {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.55rem;
-  background: #fff;
-  display: grid;
-  gap: 0.15rem;
-}
 
-.home-stat strong {
-  font-size: 1.2rem;
-}
 
-.home-stat span {
-  color: var(--muted);
-  font-size: 0.82rem;
-}
 
 .recipe-view-layout {
   margin-top: 1rem;
@@ -1433,84 +1431,6 @@ textarea {
     flex-direction: column;
   }
 
-  .plan-meta-grid,
-  .plan-add-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .plan-grid {
-    grid-template-columns: 1fr;
-    border: none;
-    border-radius: 0;
-    gap: 0.75rem;
-    overflow: visible;
-  }
-
-  .plan-grid-head {
-    display: none;
-  }
-
-  .plan-grid-row {
-    display: grid;
-    grid-template-columns: 1fr;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    overflow: hidden;
-    background: #fff;
-  }
-
-  .plan-day-cell {
-    background: var(--color-surface-muted);
-  }
-
-  .plan-day-cell,
-  .plan-slot-cell {
-    border-right: none;
-  }
-
-  .plan-grid-row > .plan-slot-cell:nth-child(2)::before,
-  .plan-grid-row > .plan-slot-cell:nth-child(3)::before {
-    display: block;
-    font-size: 0.8rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: var(--muted);
-    margin-bottom: 0.4rem;
-  }
-
-  .plan-grid-row > .plan-slot-cell:nth-child(2)::before {
-    content: "Lunch";
-  }
-
-  .plan-grid-row > .plan-slot-cell:nth-child(3)::before {
-    content: "Dinner";
-  }
-
-  .home-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .home-week-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .home-today-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .home-quick-add-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .home-grocery-split {
-    grid-template-columns: 1fr;
-  }
-
-  .home-stats {
-    grid-template-columns: 1fr;
-  }
-
   .recipe-view-layout {
     grid-template-columns: 1fr;
   }
@@ -1541,10 +1461,7 @@ textarea {
   }
 
   .muted,
-  .plan-day-secondary,
-  .list-item span,
-  .home-day-block span,
-  .home-stat span {
+  .list-item span {
     font-size: 0.9rem;
     line-height: 1.45;
   }

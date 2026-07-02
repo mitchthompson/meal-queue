@@ -76,7 +76,8 @@ Cook).
    dashboard), Shop, Plan. Tabbar changes land with Today. **Cook shipped**
    (PR #13, 2026-07-02, `components/cook-mode.tsx`); **Today shipped**
    (2026-07-02, `codex/reflow-today`, with the 4-tab bar); **Shop shipped**
-   (2026-07-02, `codex/reflow-shop`).
+   (2026-07-02, `codex/reflow-shop`); **Plan shipped** (2026-07-02,
+   `codex/reflow-plan`) — **the reflow is complete**.
 3. Token set v2 lands with the first reflow screen; old screens keep working
    (they read the same semantic variables). Cook carried the scoped dark
    tranche; **Today carried the rest app-wide** (paper/teal/amber light
@@ -94,7 +95,9 @@ Cook).
 - Shop: Regenerate button **kept** for now as the manual escape hatch beside
   staleness-driven auto-regeneration (shipped default — drop it once trusted;
   see [design-flags.md](design-flags.md)).
-- Plan: multi-recipe slots and eat-out notes — chip UI details.
+- Plan: multi-recipe slots render as stacked slot rows + "+ add another";
+  eat-out notes show inline (shipped default — owner may refine; see
+  [design-flags.md](design-flags.md)).
 - Dark mode beyond Cook (deferred; Cook's palette is a head start).
 
 Living document — update as owner feedback lands per screen.

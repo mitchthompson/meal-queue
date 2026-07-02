@@ -1,29 +1,32 @@
 "use client";
 
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import clsx from "clsx";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { PlanSlotCell } from "@/components/plan-slot-cell";
-import { createDefaultsFromStart, dateRange, formatDisplayDate } from "@/lib/date-utils";
+import { createDefaultsFromStart, dateRange, formatDayAbbrev, formatDisplayDate, toYmd } from "@/lib/date-utils";
 import { StatusMessage } from "@/components/status-message";
 import { usePlan } from "@/lib/hooks/use-plan";
+import type { PlanListFilter } from "@/lib/hooks/use-plan";
 
-function formatWeekday(ymd: string) {
-  return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date(`${ymd}T00:00:00`));
-}
-
-function formatShortDate(ymd: string) {
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(`${ymd}T00:00:00`));
-}
+const FILTER_LABELS: Array<{ value: PlanListFilter; label: string }> = [
+  { value: "current", label: "Current" },
+  { value: "upcoming", label: "Upcoming" },
+  { value: "past", label: "Past" },
+  { value: "all", label: "All" },
+];
 
 export default function PlansPage() {
   return (
     <AuthGate>
-      {(session) => <PlansScreen userId={session.user.id} userEmail={session.user.email} />}
+      {(session) => <PlanScreen userId={session.user.id} userEmail={session.user.email} />}
     </AuthGate>
   );
 }
 
-function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string }) {
+function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string }) {
   const {
     visiblePlans,
     selectedPlan,
@@ -63,6 +66,17 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
     openQuickAdd,
     handleQuickAddKeyDown,
   } = usePlan(userId);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+
+  const today = toYmd(new Date());
+
+  // Close the sheets whenever the working plan changes — creating a plan
+  // selects it, so this also dismisses the create sheet on success.
+  useEffect(() => {
+    setShowCreate(false);
+    setShowEdit(false);
+  }, [selectedPlanId]);
 
   const slotCellShared = {
     itemById,
@@ -87,117 +101,126 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
 
   return (
     <AppShell userEmail={userEmail}>
-      <section className="plans-page-stack">
-        <section className="panel">
-          <h2>Create plan</h2>
-          <form className="stack" onSubmit={createPlan}>
-            <label>
-              Start date
-              <input
-                required
-                type="date"
-                value={createForm.start_date}
-                onChange={(event) => {
-                  const startDate = event.target.value;
-                  setCreateForm(createDefaultsFromStart(startDate, settingsDefaults));
+      <div className="page-col">
+        <section className="plan-head">
+          <h1>Plan</h1>
+          <div className="plan-head-meta">
+            {selectedPlan ? (
+              <span className="plan-range">
+                {formatDisplayDate(selectedPlan.start_date, { year: false })} – {formatDisplayDate(selectedPlan.end_date, { year: false })}
+              </span>
+            ) : null}
+            {selectedPlan ? (
+              <button
+                className="ghost-btn"
+                onClick={() => {
+                  setShowEdit((current) => !current);
+                  setShowCreate(false);
                 }}
-              />
-            </label>
-            <label>
-              End date
-              <input
-                required
-                type="date"
-                value={createForm.end_date}
-                onChange={(event) => setCreateForm((current) => ({ ...current, end_date: event.target.value }))}
-              />
-            </label>
-            <label>
-              Order date
-              <input
-                type="date"
-                value={createForm.order_date}
-                onChange={(event) => setCreateForm((current) => ({ ...current, order_date: event.target.value }))}
-              />
-            </label>
-            <label>
-              Pickup date
-              <input
-                type="date"
-                value={createForm.pickup_date}
-                onChange={(event) => setCreateForm((current) => ({ ...current, pickup_date: event.target.value }))}
-              />
-            </label>
-            <button className="primary-btn" disabled={saving} type="submit">
-              {saving ? "Saving..." : "Create meal plan"}
+                type="button"
+              >
+                {showEdit ? "Close" : "Edit"}
+              </button>
+            ) : null}
+            <button
+              className="ghost-btn"
+              onClick={() => {
+                setShowCreate((current) => !current);
+                setShowEdit(false);
+              }}
+              type="button"
+            >
+              {showCreate ? "Close" : "New plan"}
             </button>
-          </form>
+          </div>
         </section>
 
-        <section className="panel">
-          <div className="section-head">
-            <h3>Plans</h3>
-            <div className="section-actions">
-              <button
-                className={planFilter === "current" ? "pill active" : "pill"}
-                onClick={() => setPlanFilter("current")}
-                type="button"
-              >
-                Current
-              </button>
-              <button
-                className={planFilter === "upcoming" ? "pill active" : "pill"}
-                onClick={() => setPlanFilter("upcoming")}
-                type="button"
-              >
-                Upcoming
-              </button>
-              <button className={planFilter === "past" ? "pill active" : "pill"} onClick={() => setPlanFilter("past")} type="button">
-                Past
-              </button>
-              <button className={planFilter === "all" ? "pill active" : "pill"} onClick={() => setPlanFilter("all")} type="button">
-                All
-              </button>
-            </div>
-          </div>
-          {loading ? <p>Loading...</p> : null}
-          <div className="list">
-            {visiblePlans.map((plan) => (
-              <button
-                className={selectedPlanId === plan.id ? "list-item active" : "list-item"}
-                key={plan.id}
-                onClick={() => selectPlan(plan.id)}
-                type="button"
-              >
-                <strong>
+        <div className="plan-filter-row">
+          {FILTER_LABELS.map((filter) => (
+            <button
+              className={clsx("pill", planFilter === filter.value && "active")}
+              key={filter.value}
+              onClick={() => setPlanFilter(filter.value)}
+              type="button"
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
+        {visiblePlans.length > 1 ? (
+          <div className="plan-picker-row">
+            <select onChange={(event) => selectPlan(event.target.value)} value={selectedPlanId ?? ""}>
+              {visiblePlans.map((plan) => (
+                <option key={plan.id} value={plan.id}>
                   {formatDisplayDate(plan.start_date)} to {formatDisplayDate(plan.end_date)}
-                </strong>
-              </button>
-            ))}
-            {!loading && visiblePlans.length === 0 ? <p>No plans in this view yet.</p> : null}
+                </option>
+              ))}
+            </select>
           </div>
-        </section>
+        ) : null}
 
-        <section className="panel">
-          {!selectedPlan ? (
-            <p>Select or create a plan.</p>
-          ) : (
-            <div className="stack">
-              <div className="section-head">
-                <h2>
-                  Plan: {formatDisplayDate(selectedPlan.start_date)} to {formatDisplayDate(selectedPlan.end_date)}
-                </h2>
-                <div className="section-actions">
-                  <button className="secondary-btn" disabled={saving} onClick={savePlanMeta} type="button">
-                    Save dates
-                  </button>
-                  <button className="danger-btn" disabled={saving} onClick={deleteSelectedPlan} type="button">
-                    Delete plan
-                  </button>
-                </div>
+        <StatusMessage error={error} message={message} />
+        {loading ? <p className="muted">Loading...</p> : null}
+        {!loading && visiblePlans.length === 0 && !showCreate ? (
+          <p className="muted">No plans in this view yet — create one to start the week.</p>
+        ) : null}
+
+        {showCreate ? (
+          <section className="panel plan-sheet">
+            <h2>New plan</h2>
+            <form className="stack" onSubmit={createPlan}>
+              <div className="plan-sheet-grid">
+                <label>
+                  Start date
+                  <input
+                    required
+                    type="date"
+                    value={createForm.start_date}
+                    onChange={(event) => {
+                      const startDate = event.target.value;
+                      setCreateForm(createDefaultsFromStart(startDate, settingsDefaults));
+                    }}
+                  />
+                </label>
+                <label>
+                  End date
+                  <input
+                    required
+                    type="date"
+                    value={createForm.end_date}
+                    onChange={(event) => setCreateForm((current) => ({ ...current, end_date: event.target.value }))}
+                  />
+                </label>
+                <label>
+                  Order date
+                  <input
+                    type="date"
+                    value={createForm.order_date}
+                    onChange={(event) => setCreateForm((current) => ({ ...current, order_date: event.target.value }))}
+                  />
+                </label>
+                <label>
+                  Pickup date
+                  <input
+                    type="date"
+                    value={createForm.pickup_date}
+                    onChange={(event) => setCreateForm((current) => ({ ...current, pickup_date: event.target.value }))}
+                  />
+                </label>
               </div>
+              <button className="primary-btn" disabled={saving} type="submit">
+                {saving ? "Saving..." : "Create meal plan"}
+              </button>
+            </form>
+          </section>
+        ) : null}
 
-              <div className="plan-meta-grid">
+        {showEdit && selectedPlan ? (
+          <section className="panel plan-sheet">
+            <h2>Edit plan</h2>
+            <div className="stack">
+              <div className="plan-sheet-grid">
                 <label>
                   Start
                   <input
@@ -231,36 +254,45 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
                   />
                 </label>
               </div>
-
-              <p className="muted">
-                Quick add: choose mode (cook, leftovers, or eating out). For cook mode, type recipe and press `Enter`.
-                Use `Shift+Enter` to add and move to next day. `Backspace/Delete` on empty query clears the slot.
-              </p>
-
-              <div className="plan-grid">
-                <div className="plan-grid-head">Date</div>
-                <div className="plan-grid-head">Lunch</div>
-                <div className="plan-grid-head">Dinner</div>
-                {dateRange(selectedForm.start_date, selectedForm.end_date).map((day) => {
-                  const lunchItems = itemMap.get(`${day}:lunch`) ?? [];
-                  const dinnerItems = itemMap.get(`${day}:dinner`) ?? [];
-                  return (
-                    <div className="plan-grid-row" key={day}>
-                      <div className="plan-day-cell">
-                        <strong className="plan-day-primary">{formatWeekday(day)}</strong>
-                        <span className="plan-day-secondary">{formatShortDate(day)}</span>
-                      </div>
-                      <PlanSlotCell day={day} items={lunchItems} mealType="lunch" {...slotCellShared} />
-                      <PlanSlotCell day={day} items={dinnerItems} mealType="dinner" {...slotCellShared} />
-                    </div>
-                  );
-                })}
+              <div className="section-actions">
+                <button className="secondary-btn" disabled={saving} onClick={savePlanMeta} type="button">
+                  Save dates
+                </button>
+                <button className="danger-btn" disabled={saving} onClick={deleteSelectedPlan} type="button">
+                  Delete plan
+                </button>
               </div>
             </div>
-          )}
-          <StatusMessage error={error} message={message} />
-        </section>
-      </section>
+          </section>
+        ) : null}
+
+        {selectedPlan
+          ? dateRange(selectedForm.start_date, selectedForm.end_date).map((day) => {
+              const lunchItems = itemMap.get(`${day}:lunch`) ?? [];
+              const dinnerItems = itemMap.get(`${day}:dinner`) ?? [];
+              const isToday = day === today;
+              return (
+                <div className={clsx("plan-dayrow", isToday && "today")} key={day}>
+                  <div className="plan-dhead">
+                    <span>
+                      {formatDayAbbrev(day)}
+                      {isToday ? " · today" : ""}
+                    </span>
+                    <span>{formatDisplayDate(day, { year: false })}</span>
+                  </div>
+                  <PlanSlotCell day={day} items={lunchItems} mealType="lunch" {...slotCellShared} />
+                  <PlanSlotCell day={day} items={dinnerItems} mealType="dinner" {...slotCellShared} />
+                </div>
+              );
+            })
+          : null}
+
+        {selectedPlan ? (
+          <Link className="plan-generate" href="/grocery">
+            Generate grocery list
+          </Link>
+        ) : null}
+      </div>
     </AppShell>
   );
 }

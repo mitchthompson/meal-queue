@@ -51,10 +51,10 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Needs sign-up confirmation messaging, a password-reset flow, and friendlier auth error handling. Explicitly deferred (out of milestone 5 scope).
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Auth flow gaps, finding 6); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
 
-### Mobile Lunch/Dinner labels rely on nth-child CSS coupling
-- **Where it's used:** [`app/globals.css`](../app/globals.css) (nth-child `::before` label injection) coupled to the plan-grid row markup, now rendered by `components/plan-slot-cell.tsx` inside `app/plans/page.tsx`
-- **What's needed:** Mobile Lunch/Dinner labels are injected via nth-child `::before` pseudo-elements, coupling the stylesheet to markup child order (fragile if markup reorders). Needs the labels driven by markup/data rather than child-order CSS. Update (2026-07-02): deliberately left unchanged by M6 slice 4 (strict behavior neutrality, owner call); the markup now has a single edit site — `components/plan-slot-cell.tsx`, whose header documents the constraint. Candidate for the reflow's Plan screen.
-- **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 13); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
+### Plan reflow judgment calls (sheets, generate exit, filters kept)
+- **Where it's used:** `app/plans/page.tsx`, `components/plan-slot-cell.tsx`
+- **What's needed:** Owner sign-off on defaults from the Plan reflow: (1) the mockup's "edit sheet" is an inline collapsible panel toggled from the header (New plan / Edit plan), not a modal overlay; (2) "Generate grocery list" is a link to `/grocery` — Shop's staleness-driven regeneration does the actual generating on arrival; (3) the plan filter pills (Current/Upcoming/Past/All) and the compact plan picker were kept above the day rows (the mockup shows a single plan only); (4) multi-item slots (the brief's open question) render as stacked slot rows plus a small "+ add another" line, and eat-out chips show the note inline.
+- **Source:** Session 2026-07-02 (reflow Plan build); [redesign-brief.md](redesign-brief.md) open questions
 
 ### Thin empty states, no dark mode (wake-lock resolved)
 - **Where it's used:** New-user empty states across routes; global theming in [`app/globals.css`](../app/globals.css)
