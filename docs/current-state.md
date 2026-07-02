@@ -55,16 +55,19 @@ household data is live and must stay compatible throughout. See
 
 ## Active Handoff
 
-- **In progress:** Nothing. PR #3 (`240b508`) merged with the first fully green
-  CI run; the grants migration was applied to prod immediately after and proven
-  a no-op (210 grant rows byte-identical before/after). All migrations in
-  `supabase/migrations/` are applied to prod. Local and remote feature branches
-  are cleaned up.
-- **Next action:** Start milestone 3 (plan integrity) on `codex/plan-integrity`
-  — now on rails: pgTAP tests first, local Colima-stack proof, green CI, then
-  the approved prod runbook. One small outstanding confirmation: the owner's
-  10-second UI recipe-save check in the live app (everything below the UI is
-  verified).
+- **In progress:** Milestone 3 (plan integrity) implemented on
+  `codex/plan-integrity` (uncommitted at last doc update; committing this
+  session): migration `20260702001350_plan_integrity.sql` (validation +
+  range-protection + grocery-scoped version-bump triggers, write-skew row
+  locks), client `bumpPlanVersion` removed (2 round trips saved per mutation),
+  unsaved-dates guard added, pgTAP grown to 83 assertions across two suites.
+  Adversarially reviewed; proven locally (83/83, typecheck, vitest, build).
+- **Next action:** (1) push + PR → green CI; (2) on the owner's word, apply the
+  M3 migration to prod (backup-first runbook; **migration BEFORE client merge**
+  per its APPLY ORDER header — reverse order silently stops grocery
+  invalidation); (3) merge; (4) UI sanity check on plans page; (5) milestone 4.
+  The owner's recipe-save UI check from milestone 2 was confirmed 2026-07-01
+  (verified in prod data: RPC fingerprints on the edited recipe).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth

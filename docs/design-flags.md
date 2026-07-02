@@ -17,13 +17,13 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, notable); also [roadmap](roadmap.md) Deferred Fixes and [current-state](current-state.md) Known Reliability Risks
 
 ### Plan version bumps fire for grocery-irrelevant changes (over-triggered regeneration)
-- **Where it's used:** `app/plans/page.tsx` (`bumpPlanVersion` / plan mutations) and `app/grocery/page.tsx` (`loadGroceryItems`)
-- **What's needed:** Every plan mutation bumps the version, including changes with no grocery effect (eating-out notes, leftover servings). The grocery page detects the stale version on load and regenerates silently, wiping the shopping checklist on a minor tweak. Milestone 4 makes the wipe harmless to user state, but two open items remain: scope the version bumps so only grocery-affecting changes bump, and prompt the user before regenerating rather than regenerating silently on load.
-- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, notable); also [roadmap](roadmap.md) Deferred Fixes and [current-state](current-state.md) Known Reliability Risks
+- **Where it's used:** `app/plans/page.tsx` / `app/grocery/page.tsx`
+- **What's needed:** Update (2026-07-02): milestone 3 (on `codex/plan-integrity`) resolves the scoping half at the root — version bumps are now a database trigger scoped to grocery-relevant changes only (cook items added/removed; recipe or serving multiplier changed), so note/leftover/eat-out/date edits no longer invalidate the checklist. Remaining open (milestone 4/5 scope): the grocery page still regenerates silently on load rather than prompting.
+- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md); [roadmap](roadmap.md) milestone 3
 
 ### Five sequential round trips per plan mutation (no optimistic UI)
 - **Where it's used:** `app/plans/page.tsx` (plan mutation flow)
-- **What's needed:** Each plan mutation does insert, version read, version write, item reload, and plan reload sequentially, making planning sluggish on iPhone Safari (a primary target). Milestone 3's trigger-based versioning removes two of these round trips, but optimistic updates remain deferred. Needs optimistic UI updates so mutations feel responsive on mobile.
+- **What's needed:** Each plan mutation did insert, version read, version write, item reload, and plan reload sequentially, making planning sluggish on iPhone Safari (a primary target). Update (2026-07-02): milestone 3's trigger-based versioning removed the two version round trips (now insert + item reload + plan reload). Optimistic UI updates remain deferred (milestone 5).
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes ("No optimistic UI")
 
 ### ensureUserSettings runs twice per sign-in and default settings disagree across files

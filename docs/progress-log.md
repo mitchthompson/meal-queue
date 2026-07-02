@@ -3,6 +3,38 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-02 - Milestone 3 (Plan Integrity) Implemented and Locally Proven
+
+- On `codex/plan-integrity`, on the full rails: live-data preflights FIRST
+  (142 items: all clean except 2 legitimate orphan leftovers, which shaped the
+  design — NULL leftover links stay legal), then migration
+  `20260702001350_plan_integrity.sql`: `validate_meal_plan_item` (date range,
+  same-owner recipes, same-plan cook-sourced leftover links, protected cook
+  items), `protect_plan_range` (no shrinking past items), and
+  `bump_plan_version_on_grocery_change` — trigger-based, **grocery-scoped**
+  version bumps (atomic `version + 1`; note/leftover/eat-out/date edits no
+  longer wipe the grocery checklist). Client `bumpPlanVersion` and its 4 call
+  sites removed (2 round trips saved per mutation); unsaved-dates guard added.
+- Adversarial review (6 lenses, 24 findings; verifiers partially cut off by an
+  org spend limit, surviving findings hand-verified): applied two write-skew
+  row-lock fixes (`for no key update` on the plan read — FK `FOR KEY SHARE`
+  does not conflict with non-key UPDATEs, so validation could race a
+  range-shrink; `for share` on the leftover source read), extended the
+  referenced-cook guard to block cross-plan moves, added the APPLY ORDER
+  header (migration to prod BEFORE client merge — reverse creates a no-bump
+  window = silently stale grocery lists), and +17 pgTAP assertions (cascade
+  paths, hostile user, orphan re-touch, transitions). Refuted with evidence:
+  the claim that trigger errors get swallowed (`PostgrestError` extends
+  `Error`). Documented accepted non-issues: multi-plan deadlock surface,
+  `updated_at` semantics, TRUNCATE bypass.
+- The harness caught a real cross-milestone interaction on the first run: the
+  new triggers changed the M2 suite's version arithmetic (its fixtures insert
+  cook items) — 5 expectations updated with M3-aware values.
+- **Verification:** fresh-from-migrations local stack → pgTAP **83/83**
+  (plan_integrity 50, save_recipe 33); typecheck, vitest 13/13, build green.
+- Remaining: PR → green CI → owner-gated prod apply (backup-first, migration
+  before merge) → merge → milestone 4.
+
 ## 2026-07-01 (evening) - PR #3 Merged: First Green CI; Grants No-Op Applied; Milestones 1.5 + 2 Complete
 
 - `gh` set up with both accounts (`2a-webteam` active machine-wide,
