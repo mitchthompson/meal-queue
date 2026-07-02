@@ -480,6 +480,45 @@ textarea {
   gap: 0.35rem;
 }
 
+.quick-add-results {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.quick-add-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.quick-add-row:hover {
+  border-color: var(--brand);
+}
+
+.quick-add-row .muted {
+  font-size: 0.78rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* Keyboard shortcuts mean nothing to a thumb. */
+@media (hover: none) {
+  .quick-add-hint {
+    display: none;
+  }
+}
+
 .plan-head {
   display: flex;
   justify-content: space-between;
@@ -575,14 +614,6 @@ textarea {
   border-top: 1px solid var(--line);
   font-size: 0.9rem;
   font-weight: 600;
-}
-
-.plan-slot-k {
-  font-size: 0.66rem;
-  font-weight: 800;
-  color: var(--muted);
-  width: 16px;
-  flex-shrink: 0;
 }
 
 .plan-slot-main {

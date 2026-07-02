@@ -28,6 +28,8 @@ function TodayScreen({ userEmail }: { userEmail?: string }) {
     currentPlan,
     nextPlan,
     heroItem,
+    alsoTonight,
+    tonightMoreCount,
     heroStepCount,
     weekRows,
     uncheckedCount,
@@ -68,7 +70,7 @@ function TodayScreen({ userEmail }: { userEmail?: string }) {
         <>
           {heroItem ? (
             <article className="tonight-card">
-              <span className="tonight-label">Tonight · Dinner</span>
+              <span className="tonight-label">Tonight</span>
               <h2>{itemLabel(heroItem)}</h2>
               <span className="tonight-meta">
                 {heroServes ? `Serves ${heroServes}` : null}
@@ -77,6 +79,12 @@ function TodayScreen({ userEmail }: { userEmail?: string }) {
                 {(heroServes || heroStepCount) && currentPlan ? " · " : null}
                 {`planned ${formatDisplayDate(currentPlan.start_date, { year: false })} – ${formatDisplayDate(currentPlan.end_date, { year: false })}`}
               </span>
+              {alsoTonight ? (
+                <span className="tonight-meta">
+                  Also tonight: {itemLabel(alsoTonight)}
+                  {tonightMoreCount > 0 ? ` · +${tonightMoreCount} more` : ""}
+                </span>
+              ) : null}
               {heroItem.slot_type === "cook" && heroItem.recipe ? (
                 <Link className="tonight-btn" href={`/recipes/${heroItem.recipe.id}?cook=1`}>
                   Start cooking →
@@ -90,7 +98,7 @@ function TodayScreen({ userEmail }: { userEmail?: string }) {
             </article>
           ) : (
             <article className="tonight-card tonight-card-empty">
-              <span className="tonight-label">Tonight · Dinner</span>
+              <span className="tonight-label">Tonight</span>
               <h2>Nothing planned tonight</h2>
               <Link className="tonight-btn" href="/plans">
                 Open the plan
@@ -132,7 +140,6 @@ function TodayScreen({ userEmail }: { userEmail?: string }) {
                       <span className="today-week-item" key={item.id}>
                         {itemLabel(item)}
                         {item.slot_type === "leftover" ? <span className="today-pill today-pill-warm">leftover</span> : null}
-                        <small>{item.meal_type}</small>
                       </span>
                     ))}
                   </span>
