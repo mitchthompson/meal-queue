@@ -370,17 +370,8 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
     }
   }
 
-  async function bumpPlanVersion(planId: string) {
-    const { data, error: versionReadError } = await supabase.from("meal_plans").select("version").eq("id", planId).single();
-    if (versionReadError) throw versionReadError;
-
-    const { error: bumpError } = await supabase
-      .from("meal_plans")
-      .update({ version: Number(data.version) + 1 })
-      .eq("id", planId);
-    if (bumpError) throw bumpError;
-  }
-
+  // Plan version bumps are handled by the bump_plan_version database trigger
+  // (grocery-relevant item changes only) — no client-side version writes.
   async function upsertPlanSlot(
     day: string,
     mealType: "lunch" | "dinner",
@@ -399,6 +390,13 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
     setMessage(null);
 
     try {
+      // The grid renders from the (possibly unsaved) date form; the database
+      // validates against the SAVED range. Catch the mismatch with a clear
+      // message instead of a raw trigger error.
+      if (day < selectedPlan.start_date || day > selectedPlan.end_date) {
+        throw new Error("This day is outside the plan's saved dates. Save the plan dates first, then add meals.");
+      }
+
       const slotType = options.slotType;
       const servingMultiplier = options.servingMultiplier ?? 1;
       const recipeId = options.recipeId ?? null;
@@ -417,7 +415,6 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       });
       if (insertError) throw insertError;
 
-      await bumpPlanVersion(selectedPlan.id);
       await loadPlanItems(selectedPlan.id);
       await refreshPlansAndKeepSelection(selectedPlan.id);
       if (slotType === "leftover") {
@@ -454,7 +451,6 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       const { error: deleteError } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
       if (deleteError) throw deleteError;
 
-      await bumpPlanVersion(selectedPlan.id);
       await loadPlanItems(selectedPlan.id);
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Meal removed.");
@@ -500,7 +496,6 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
       const ids = currentItems.map((item) => item.id);
       const { error: deleteError } = await supabase.from("meal_plan_items").delete().in("id", ids);
       if (deleteError) throw deleteError;
-      await bumpPlanVersion(selectedPlan.id);
       await loadPlanItems(selectedPlan.id);
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Meal slot cleared.");
@@ -525,7 +520,6 @@ function PlansScreen({ userId, userEmail }: { userId: string; userEmail?: string
         .eq("id", item.id);
       if (updateError) throw updateError;
 
-      await bumpPlanVersion(selectedPlan.id);
       await loadPlanItems(selectedPlan.id);
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Serving updated.");
