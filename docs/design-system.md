@@ -18,11 +18,12 @@ prefix is used**. The CSS-variable token system in `app/globals.css` *is* the na
   from [design flags](design-flags.md) — or, if you cannot add it now, flag the gap in
   [design flags](design-flags.md). Never inline a one-off value.
 
-> Honesty note: the current stylesheet itself does **not** fully honor this rule. Several
-> components hardcode `#fff`, `#fffefb`, and border colors `#c9bba6` / `#e4d8c6`, and the
-> pantry badge uses a one-off palette. These are pre-existing inconsistencies, tracked in
-> [design flags](design-flags.md) — match the token rule in *new* work; do not copy the
-> hardcoded values.
+> Status: the stylesheet honors this rule as of the v2 sweep part 1 (milestone 7,
+> `codex/v2-token-sweep`). Every pre-v2 literal — `#fff`/`#ffffff`/`#fffefb`
+> backgrounds, the cream borders `#c9bba6`/`#e4d8c6`, the pantry-badge one-off
+> palette, the old meta ink `#3d443d` — was replaced with its v2 token.
+> `grep -E '#[0-9a-fA-F]{3,8}' app/globals.css` must hit only the `:root` token
+> definitions; keep it that way.
 
 ---
 
@@ -153,7 +154,7 @@ Design is **desktop-first** with two `max-width` overrides; there are no `min-wi
 | Query | Target | What changes |
 | --- | --- | --- |
 | `@media (max-width: 900px)` | tablet / landscape | Multi-column grids collapse to one column (`split-layout`, `recipe-view-layout`); `ingredient-row` → 2 cols; `recipe-overview-panel` goes static; `section-head` stacks; section-action buttons bump to `min-height: 2.75rem`; small muted text bumps to `0.9rem`/`1.45`. |
-| `@media (max-width: 700px)` | mobile / phone | `.shell` adds safe-area + ~6rem bottom space; `.panel` gains shadow, translucent bg `rgba(255,253,248,0.92)`, border `#e4d8c6`, radius `12px` (pre-v2 literals — flagged); `.nav-pills` hidden and `.mobile-tabbar` shown (fixed bottom, 4-col icon+label, `blur(6px)`, `z-index: 20`); rows stack to one column; recipe-title actions → 2-col grid; pills `min-height: 2.5rem`, font `0.92rem`. |
+| `@media (max-width: 700px)` | mobile / phone | `.shell` adds safe-area + ~6rem bottom space; `.panel` gains a soft shadow and radius `12px` (skin stays `var(--surface)`/`var(--line)` — the cream literals retired in the v2 sweep); `.nav-pills` hidden and `.mobile-tabbar` shown (fixed bottom, 4-col icon+label, `blur(6px)`, `z-index: 20`); rows stack to one column; recipe-title actions → 2-col grid; pills `min-height: 2.5rem`, font `0.92rem`. |
 
 ---
 
@@ -182,45 +183,47 @@ new ad-hoc numbers when one of these fits.
   `1rem 1rem 1.1rem`. `h2` `1.05rem`; `p` uses `--muted` at `0.94rem`/`1.5`; links
   `--brand` bold, hover `--brand-2`.
 - `.panel`: like a card, radius `16px`, padding `1rem 1.05rem`, `margin-top: 1rem`. On
-  mobile gains a shadow + translucent background.
+  mobile the radius drops to `12px` and it gains a soft shadow (same
+  `var(--surface)`/`var(--line)` skin as desktop since the v2 sweep).
 
 ### Surfaces (inner blocks)
 
-Most inner blocks (`.list-item`, `.chip`, `.grocery-row`, `.quick-add-card`, `home-*`
-blocks, `.recipe-step-item`, `.recipe-meta`) use a literal `#fff` (or `#fffefb`)
-background + `1px solid var(--line)` + radius `10–12px` — **not** the `--surface` token
-directly. This is a known inconsistency (see [design flags](design-flags.md)); for new
-components, prefer `var(--surface)`.
+Most inner blocks (`.list-item`, `.chip`, `.grocery-row`, `.quick-add-card`,
+`.recipe-step-item`, `.recipe-meta`) use `var(--surface)` + `1px solid var(--line)` +
+radius `10–12px`. (Their pre-v2 literal `#fff`/`#fffefb` backgrounds were tokenized
+in the v2 sweep part 1.)
 
 ### Buttons
 
 Shared base across `.primary-btn`, `.secondary-btn`, `.danger-btn`, `.ghost-btn`,
 `.text-btn`: radius `10px`, `1px solid var(--line)`, `min-height: 2.5rem`, padding
-`0.5rem 0.85rem`, inline-flex centered, `gap 0.35rem`, weight 600, `0.92rem`, base bg `#fff`.
+`0.5rem 0.85rem`, inline-flex centered, `gap 0.35rem`, weight 600, `0.92rem`, base bg `var(--surface)`.
 
 | Variant | Background | Border | Text |
 | --- | --- | --- | --- |
-| `.primary-btn` | `var(--brand)` | `var(--brand)` | `#fff` |
+| `.primary-btn` | `var(--brand)` | `var(--brand)` | `var(--surface)` |
 | `.secondary-btn` | `var(--color-surface-muted)` | `var(--line)` | `var(--ink)` |
-| `.ghost-btn` | `#fff` | `var(--line)` | `var(--brand)` |
-| `.danger-btn` | `var(--color-danger)` | `var(--color-danger)` | `#fff` |
+| `.ghost-btn` | `var(--surface)` | `var(--line)` | `var(--brand)` |
+| `.danger-btn` | `var(--color-danger)` | `var(--color-danger)` | `var(--surface)` |
 | `.text-btn` | transparent | none | `var(--brand)` — no min-height, `0.88rem` |
 
 ### Pills, chips, badges
 
 - `.pill`: radius `999px`, `1px var(--line)`, `bg var(--surface)`, padding `0.45rem 0.8rem`,
-  `0.88rem`/600. `.pill.active` → bg+border `var(--brand)`, `#fff` text.
-- `.chip`: radius `999px`, `var(--line)` border, `bg #fff`. `.chip.active` → border
+  `0.88rem`/600. `.pill.active` → bg+border `var(--brand)`, `var(--surface)` text.
+- `.chip`: radius `999px`, `var(--line)` border, `bg var(--surface)`. `.chip.active` → border
   `var(--brand)` + bg `var(--color-primary-soft)`.
 - `.recipe-step-index`: `1.7rem` circle, `999px`, `var(--line)` border,
   `bg var(--color-surface-muted)`, bold centered number.
-- `.pantry-badge`: one-off palette — border `#c9bba6`, bg `#f3eadc`, text `#5e513d`
-  (not tokenized; flagged).
+- `.pantry-badge`: the warm amber badge — border `var(--color-accent)`,
+  bg `var(--color-accent-soft)`, text `var(--color-accent-deep)`. Tokenized in the
+  v2 sweep part 1, mirroring `.chip.active`'s strong-border-on-soft-tint pattern on
+  the amber side (the leftover pill's palette).
 
 ### Form controls
 
 - `input, select, textarea`: full-width, radius `10px`, `1px var(--line)`, padding
-  `0.55rem 0.6rem`, explicit `bg #ffffff`, `color var(--ink)`; `textarea` resizes vertical.
+  `0.55rem 0.6rem`, explicit `bg var(--surface)`, `color var(--ink)`; `textarea` resizes vertical.
 - `label`: grid with `0.25rem` gap, `0.88rem`, `--muted`.
 - Inline checkboxes (`.inline-check`, `.grocery-check`) reset `width: auto` on the input.
 
