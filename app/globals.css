@@ -359,6 +359,33 @@ textarea {
   gap: 0.5rem;
 }
 
+/* Recipes v2 pass (owner verdicts, round-3 board 2026-07-02 — RC1: A cards,
+   RC2: header language + teal links, RC4: A stacked editor, RC5: full-width
+   save). The head/label/save styles are shared with Settings via the grouped
+   .settings-* / .recipes-* selectors below. */
+.recipes-layout input:not([type="checkbox"]),
+.recipes-layout select {
+  min-height: 2.75rem;
+}
+
+.recipes-layout .secondary-btn {
+  min-height: 2.75rem;
+}
+
+.list-item .section-actions a {
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.list-item .section-actions a,
+.list-item .section-actions .text-btn {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+
 .section-head {
   display: flex;
   justify-content: space-between;
@@ -390,13 +417,13 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface);
-  padding: 0.6rem;
+  padding: 0.8rem 0.85rem;
   cursor: pointer;
 }
 
-.list-item span {
-  color: var(--muted);
-  font-size: 0.85rem;
+.list-item strong {
+  font-size: 1rem;
+  letter-spacing: -0.01em;
 }
 
 .list-item.active {
@@ -1298,21 +1325,25 @@ textarea {
   padding: 0.5rem 0.15rem;
 }
 
-.settings-head {
+.settings-head,
+.recipes-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   margin-top: 0.5rem;
 }
 
-.settings-head h1 {
+.settings-head h1,
+.recipes-head h1,
+.recipes-editor-title {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
-.settings-card-label {
+.settings-card-label,
+.recipes-card-label {
   margin: 0 0 0.6rem;
   font-size: 0.72rem;
   font-weight: 800;
@@ -1352,7 +1383,8 @@ textarea {
   min-height: 2.75rem;
 }
 
-.settings-save {
+.settings-save,
+.recipes-save {
   display: block;
   width: 100%;
   margin-top: 0.85rem;
@@ -1566,8 +1598,7 @@ textarea {
     min-height: 2.75rem;
   }
 
-  .muted,
-  .list-item span {
+  .muted {
     font-size: 0.9rem;
     line-height: 1.45;
   }
@@ -1703,8 +1734,10 @@ textarea {
   }
 
   /* On phones the open editor IS the screen — the list would otherwise
-     stack above it and force a scroll-hunt (owner request 2026-07-02). */
-  .recipes-layout.editor-open aside.panel {
+     stack above it and force a scroll-hunt (owner request 2026-07-02). The
+     page head hides with it so the editor title leads. */
+  .recipes-layout.editor-open aside.panel,
+  .recipes-screen.editor-open .recipes-head {
     display: none;
   }
 

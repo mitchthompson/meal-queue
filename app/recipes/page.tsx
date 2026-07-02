@@ -27,7 +27,6 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
     setForm,
     loading,
     saving,
-    seeding,
     error,
     message,
     query,
@@ -41,7 +40,6 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
     selectRecipe,
     saveRecipe,
     deleteRecipe,
-    loadSampleData,
   } = useRecipes(userId, editRecipeId);
   const [tagDraft, setTagDraft] = useState("");
 
@@ -53,14 +51,15 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
 
   return (
     <AppShell userEmail={userEmail}>
+      <div className={showEditor ? "recipes-screen editor-open" : "recipes-screen"}>
+      <section className="recipes-head">
+        <h1>Recipes</h1>
+      </section>
       <section className={showEditor ? "split-layout recipes-layout editor-open" : "recipes-layout"}>
         <aside className="panel">
           <div className="section-head">
-            <h2>Your recipes</h2>
+            <h2 className="recipes-card-label">Your recipes</h2>
             <div className="section-actions">
-              <button className="secondary-btn" disabled={seeding} onClick={loadSampleData} type="button">
-                {seeding ? "Loading..." : "Load sample data"}
-              </button>
               <button
                 className="secondary-btn"
                 onClick={() => {
@@ -96,7 +95,6 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
             {visibleRecipes.map((recipe) => (
               <div className={form.id === recipe.id ? "list-item active" : "list-item"} key={recipe.id}>
                 <strong>{recipe.name}</strong>
-                <span>Serves {recipe.base_servings}</span>
                 <div className="section-actions">
                   <button
                     className="text-btn"
@@ -122,7 +120,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
           <section className="panel">
           <form className="stack" onSubmit={saveRecipe}>
             <div className="section-head">
-              <h2>{form.id ? "Edit recipe" : "New recipe"}</h2>
+              <h2 className="recipes-editor-title">{form.id ? "Edit recipe" : "New recipe"}</h2>
               <div className="section-actions">
                 <button className="text-btn" onClick={() => setShowEditor(false)} type="button">
                   <span className="editor-close-desktop">Close</span>
@@ -159,7 +157,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
 
             <div className="stack">
               <div className="section-head">
-                <h3>Ingredients</h3>
+                <h3 className="recipes-card-label">Ingredients</h3>
                 <button
                   className="secondary-btn"
                   onClick={() =>
@@ -251,7 +249,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
 
             <div className="stack">
               <div className="section-head">
-                <h3>Steps</h3>
+                <h3 className="recipes-card-label">Steps</h3>
                 <button
                   className="secondary-btn"
                   onClick={() => setForm((current) => ({ ...current, steps: [...current.steps, blankStep()] }))}
@@ -304,7 +302,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
             </label>
 
             <div className="stack">
-              <h3>Tags</h3>
+              <h3 className="recipes-card-label">Tags</h3>
               <div className="inline-form">
                 <input
                   placeholder="Add a tag"
@@ -355,7 +353,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
               </div>
             </div>
 
-            <button className="primary-btn" disabled={saving} type="submit">
+            <button className="recipes-save" disabled={saving} type="submit">
               {saving ? "Saving..." : "Save recipe"}
             </button>
           </form>
@@ -363,6 +361,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
           </section>
         ) : null}
       </section>
+      </div>
     </AppShell>
   );
 }
