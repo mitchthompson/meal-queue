@@ -17,3 +17,6 @@ tsconfig.tsbuildinfo
 .codex/
 .mcp.json
 recipe-export.json
+# review-board generated outputs (scripts + seed are tracked; shots/boards are not)
+scripts/review-board/shots*/
+scripts/review-board/review-board*.html
