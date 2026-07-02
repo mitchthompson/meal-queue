@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addDays,
+  formatDayAbbrev,
   formatDayName,
   formatDisplayDate,
   formatLongDate,
@@ -83,6 +84,7 @@ describe("display formatting", () => {
 
   it("formats day names and long dates from local calendar fields", () => {
     expect(formatDayName("2026-07-02")).toBe("Thursday");
+    expect(formatDayAbbrev("2026-07-02")).toBe("Thu");
     expect(formatLongDate("2026-07-02")).toBe("Thu, Jul 2");
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
@@ -41,7 +41,11 @@ export default function RecipeDetailPage() {
 function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const recipeId = params.id;
+  // Today's "Start cooking" deep-links here with ?cook=1 to open the takeover
+  // as soon as the steps have loaded.
+  const autoCook = searchParams.get("cook") === "1";
 
   const [recipe, setRecipe] = useState<RecipeRecord | null>(null);
   const [ingredients, setIngredients] = useState<IngredientRecord[]>([]);
@@ -116,7 +120,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
     setUnitLabelByCode(
       Object.fromEntries(((unitsRes.data ?? []) as Array<{ code: string; label: string }>).map((unit) => [unit.code, unit.label])),
     );
-    setCooking(false);
+    setCooking(autoCook && ((stepsRes.data ?? []) as StepRecord[]).length > 0);
 
     setLoading(false);
   }

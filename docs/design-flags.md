@@ -7,14 +7,14 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 ## Open
 
 ### Per-page docs are stubs
-- **Where it's used:** [docs/pages/*.md](pages/) — [dashboard](pages/dashboard.md), [recipes](pages/recipes.md), [plans](pages/plans.md), [grocery](pages/grocery.md), [settings](pages/settings.md)
+- **Where it's used:** [docs/pages/*.md](pages/) — [today](pages/today.md), [recipes](pages/recipes.md), [plans](pages/plans.md), [grocery](pages/grocery.md), [settings](pages/settings.md)
 - **What's needed:** These are skeletons; flesh out during milestone 5 (UI feedback & ergonomics) as each page is worked.
 - **Source:** Session decision (canonical context)
 
-### Dashboard can render an empty current week
-- **Where it's used:** `app/page.tsx` (`loadDashboard`)
-- **What's needed:** Meal items and grocery previews load only for the 4 plans with the newest `start_date`. With 4 or more future plans, the current plan falls outside that window and the dashboard silently shows nothing. Fix the query to always include the current/active plan (e.g., select by date range covering today rather than top-4-by-`start_date`), or load the current week independently of the upcoming-plans window.
-- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, notable); also [roadmap](roadmap.md) Deferred Fixes and [current-state](current-state.md) Known Reliability Risks
+### Today reflow judgment calls (settings gear, plan-less state, amber hover, desktop width)
+- **Where it's used:** `app/page.tsx`, `components/app-shell.tsx`, `app/globals.css`
+- **What's needed:** Owner sign-off on four defaults chosen while building Today (the mockup doesn't specify them): (1) **Settings access** moved off the tabbar (mockup shows a 4-tab bar with no settings entry) to a gear icon in the Today header — confirm placement; (2) **plan-less Today** (first run / gap weeks — the brief's open question) renders a teal hero "Plan your week to get started" → `/plans` plus a recipes pointer card; (3) `--brand-2` (link hover) now resolves to the v2 **amber** `#e8a13d` since terracotta retired — hover may want to stay teal instead; (4) desktop Today constrains the column to **640px** (`.today-col`).
+- **Source:** Session 2026-07-02 (reflow Today build); [redesign-brief.md](redesign-brief.md) open questions
 
 ### Plan version bumps fire for grocery-irrelevant changes (over-triggered regeneration)
 - **Where it's used:** `app/plans/page.tsx` / `app/grocery/page.tsx`
@@ -82,6 +82,14 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** Session 2026-06-27 baseline verification
 
 ## Resolved
+
+### Dashboard can render an empty current week
+- **Resolution (2026-07-02):** Fixed by the reflow's Today screen
+  (`lib/hooks/use-today.ts`): items load for the date-relevant current plan
+  (active by date range, else soonest upcoming) and its successor — never a
+  "newest 4" window — so the active week can no longer be silently excluded.
+  A past-only history now intentionally renders the plan-less state rather
+  than resurrecting a finished plan.
 
 ### Duplicated code: formatDisplayDate and lunch/dinner columns
 - **Resolution (2026-07-02):** Both halves done. `formatDisplayDate`

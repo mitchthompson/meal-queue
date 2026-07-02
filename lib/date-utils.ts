@@ -106,6 +106,10 @@ export function formatDayName(ymd: string) {
   return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date(`${ymd}T00:00:00`));
 }
 
+export function formatDayAbbrev(ymd: string) {
+  return new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date(`${ymd}T00:00:00`));
+}
+
 export function formatLongDate(ymd: string) {
   return new Intl.DateTimeFormat("en-US", {
     weekday: "short",
