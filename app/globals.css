@@ -15,6 +15,7 @@
   --color-accent-soft: #f6e8cf;
   --color-accent-deep: #7a5a17;
   --color-border: #e4e6e1;
+  --color-check-border: #c6ccc6;
   --color-success: #1e7b4f;
   --color-warning: #a3661f;
   --color-danger: #a13c3c;
@@ -22,17 +23,15 @@
   --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   --font-heading: var(--font-body);
 
-  /* Token set v2 (docs/redesign-brief.md) — Cook-mode dark takeover palette.
-     Introduced with the Cook screen; remaining v2 values land per reflow screen. */
-  --color-cook-bg: #131a18;
-  --color-cook-surface: #1d2724;
-  --color-cook-text: #f3f6f4;
-  --color-cook-text-soft: #cbd8d3;
-  --color-cook-text-muted: #9fb0aa;
-  --color-cook-text-dim: #5e6b67;
-  --color-cook-border: #2a3733;
-  --color-cook-amber: #e8a13d;
-  --font-cook: var(--font-body);
+  /* Token set v2 dark slate set — shared by the Cook takeover and Shop's
+     pinned order bar. */
+  --color-slate: #131a18;
+  --color-slate-2: #1d2724;
+  --color-slate-text: #f3f6f4;
+  --color-slate-text-soft: #cbd8d3;
+  --color-slate-text-muted: #9fb0aa;
+  --color-slate-text-dim: #5e6b67;
+  --color-slate-border: #2a3733;
 
   --bg: var(--color-bg);
   --surface: var(--color-surface);
@@ -882,7 +881,7 @@ textarea {
   font-weight: 700;
 }
 
-.today-col {
+.page-col {
   max-width: 640px;
 }
 
@@ -1102,6 +1101,170 @@ textarea {
   flex-shrink: 0;
 }
 
+.shop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.shop-head h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.shop-head-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.shop-range {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.shop-plan-picker {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.shop-orderbar {
+  margin-top: 0.75rem;
+  background: var(--color-slate);
+  color: var(--color-slate-text);
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.shop-orderbar small {
+  display: block;
+  color: var(--color-slate-text-muted);
+  font-weight: 500;
+  font-size: 0.72rem;
+}
+
+.shop-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--brand-2);
+}
+
+.shop-section-head {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.9rem 0.15rem 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.shop-section-actions {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.shop-section-actions .text-btn {
+  font-size: 0.72rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.8rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-check {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 2.5px solid var(--color-check-border);
+  background: var(--surface);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 1.05rem;
+  font-weight: 900;
+  padding: 0;
+  transition: all 0.12s;
+}
+
+.shop-item.done .shop-check {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--surface);
+}
+
+.shop-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-name {
+  font-size: 1.02rem;
+  font-weight: 600;
+  display: block;
+}
+
+.shop-item.done .shop-name {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.shop-item-actions {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.shop-item-actions .text-btn {
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 0;
+}
+
+.shop-amt {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.shop-empty {
+  color: var(--muted);
+  font-size: 0.86rem;
+  padding: 0.5rem 0.15rem;
+}
+
 .cook-mode {
   position: fixed;
   inset: 0;
@@ -1110,14 +1273,13 @@ textarea {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  background: var(--color-cook-bg);
-  color: var(--color-cook-text);
-  font-family: var(--font-cook);
+  background: var(--color-slate);
+  color: var(--color-slate-text);
   -webkit-font-smoothing: antialiased;
 }
 
 .cook-mode button:focus-visible {
-  outline-color: var(--color-cook-amber);
+  outline-color: var(--brand-2);
 }
 
 .cook-head {
@@ -1130,7 +1292,7 @@ textarea {
 .cook-exit {
   border: 0;
   background: transparent;
-  color: var(--color-cook-text-muted);
+  color: var(--color-slate-text-muted);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 700;
@@ -1141,7 +1303,7 @@ textarea {
 .cook-count {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--color-cook-text-muted);
+  color: var(--color-slate-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1164,11 +1326,11 @@ textarea {
   height: 4px;
   flex: 1;
   border-radius: 999px;
-  background: var(--color-cook-surface);
+  background: var(--color-slate-2);
 }
 
 .cook-dots i.done {
-  background: var(--color-cook-amber);
+  background: var(--brand-2);
 }
 
 .cook-step-label {
@@ -1177,7 +1339,7 @@ textarea {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-cook-amber);
+  color: var(--brand-2);
 }
 
 .cook-step-text {
@@ -1198,9 +1360,9 @@ textarea {
 }
 
 .cook-step-ings span {
-  background: var(--color-cook-surface);
-  border: 1px solid var(--color-cook-border);
-  color: var(--color-cook-text-soft);
+  background: var(--color-slate-2);
+  border: 1px solid var(--color-slate-border);
+  color: var(--color-slate-text-soft);
   font-size: 0.8rem;
   font-weight: 600;
   padding: 0.45rem 0.75rem;
@@ -1227,8 +1389,8 @@ textarea {
 }
 
 .cook-nav .cook-back {
-  background: var(--color-cook-surface);
-  color: var(--color-cook-text-muted);
+  background: var(--color-slate-2);
+  color: var(--color-slate-text-muted);
   flex: 0 0 30%;
 }
 
@@ -1237,12 +1399,12 @@ textarea {
 }
 
 .cook-nav .cook-next {
-  background: var(--color-cook-amber);
-  color: var(--color-cook-bg);
+  background: var(--brand-2);
+  color: var(--color-slate);
 }
 
 .cook-wake-note {
-  color: var(--color-cook-text-dim);
+  color: var(--color-slate-text-dim);
   text-align: center;
   font-size: 0.7rem;
   font-weight: 600;

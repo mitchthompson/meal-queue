@@ -3,7 +3,42 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-02 (late night, latest) - Reflow Screen 2: Today Replaces the Dashboard; Token Set v2 App-Wide
+## 2026-07-02 (late night, latest) - Reflow Screen 3: Shop
+
+- **Shop shipped** (branch `codex/reflow-shop`): `/grocery` restyled to the
+  mockup's chunky direction over the unchanged `use-grocery-list` data layer —
+  pinned slate order bar ("Order today/tomorrow/{Day}" + pickup, big amber
+  live unchecked count), sticky "Groceries" / "Pantry check" section heads
+  with check-all/uncheck-all, 30px checkbox buttons (teal fill +
+  strikethrough when done), tabular amounts, small muted per-row moves
+  (have this / move to groceries / move back). All previous functionality
+  preserved. `use-grocery-list` gained `order_date`/`pickup_date` in the plan
+  select (additive); `formatRelativeDay` promoted to `lib/date-utils`
+  (shared with Today, tested).
+- **Defaults flagged for owner** ([design-flags.md](design-flags.md)):
+  Regenerate button **kept** (the brief's open question — auto-regeneration
+  on staleness remains primary; the button is the escape hatch), On hand
+  section now defaults collapsed, and the plan sidebar became a compact
+  picker shown only with 2+ active plans.
+- **Token housekeeping:** the `--color-cook-*` set renamed to
+  `--color-slate-*` now that Shop's order bar shares it; amber usages
+  consolidated on `--brand-2`; `--font-cook` dropped (native stack is global
+  since Today); `.today-col` generalized to `.page-col`. Design-system tables
+  updated.
+- **Verification:** typecheck clean; vitest 16/16; `next build` green.
+  Driven end-to-end on the local stack (playwright-core, iPhone viewport):
+  seeded plan with 2 cook dinners → list auto-generated through the app →
+  order bar asserted ("Order today", count 12), check-off (count 12→11, teal
+  + strikethrough), **Regenerate preserved checked state** (M4 exercised at
+  the UI level), have-this/move-back and pantry→groceries moves with live
+  count updates, check-all; desktop capture; zero console errors.
+- **Next: Plan** (reflow screen 4, last) on `codex/reflow-plan` — day rows
+  with L/D chips, quick-add as primary action, today highlighted, "Generate
+  grocery list" as the exit, range/order/pickup editing behind an edit sheet;
+  candidate to finally fix the nth-child mobile-label coupling. Open
+  question: multi-recipe slots and eat-out chip details.
+
+## 2026-07-02 (late night, Today) - Reflow Screen 2: Today Replaces the Dashboard; Token Set v2 App-Wide
 
 - **Operating change (owner, this session):** commits, pushes, and merges are
   **pre-approved for the remainder of the reflow** on the usual rails

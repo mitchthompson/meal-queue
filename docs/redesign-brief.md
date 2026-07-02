@@ -75,7 +75,8 @@ Cook).
    suggested order — Cook mode (new, highest owner value), Today (replaces
    dashboard), Shop, Plan. Tabbar changes land with Today. **Cook shipped**
    (PR #13, 2026-07-02, `components/cook-mode.tsx`); **Today shipped**
-   (2026-07-02, `codex/reflow-today`, with the 4-tab bar).
+   (2026-07-02, `codex/reflow-today`, with the 4-tab bar); **Shop shipped**
+   (2026-07-02, `codex/reflow-shop`).
 3. Token set v2 lands with the first reflow screen; old screens keep working
    (they read the same semantic variables). Cook carried the scoped dark
    tranche; **Today carried the rest app-wide** (paper/teal/amber light
@@ -90,7 +91,9 @@ Cook).
 - Today: plan-less shows a "Plan your week to get started" hero + recipes
   pointer (shipped default — owner may refine; see
   [design-flags.md](design-flags.md)).
-- Shop: keep manual "Regenerate" button, or trust staleness entirely?
+- Shop: Regenerate button **kept** for now as the manual escape hatch beside
+  staleness-driven auto-regeneration (shipped default — drop it once trusted;
+  see [design-flags.md](design-flags.md)).
 - Plan: multi-recipe slots and eat-out notes — chip UI details.
 - Dark mode beyond Cook (deferred; Cook's palette is a head start).
 

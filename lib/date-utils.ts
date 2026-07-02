@@ -117,3 +117,9 @@ export function formatLongDate(ymd: string) {
     day: "numeric",
   }).format(new Date(`${ymd}T00:00:00`));
 }
+
+export function formatRelativeDay(ymd: string, todayYmd: string) {
+  if (ymd === todayYmd) return "today";
+  if (ymd === addDays(todayYmd, 1)) return "tomorrow";
+  return formatLongDate(ymd);
+}
