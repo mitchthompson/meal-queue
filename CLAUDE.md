@@ -4,7 +4,13 @@ Single-household meal planning and grocery generation. Optimized for personal/ho
 
 ## Start here, every session
 
-**Read [docs/current-state.md](docs/current-state.md) first** — it is the always-current handoff (build phase, status, known risks, next concrete action). Then read [docs/roadmap.md](docs/roadmap.md) for approved upcoming work. Do this before touching anything.
+**Run the `/onboard` skill** (`.claude/skills/onboard/`) — it reads the canon,
+verifies repo/CI/env reality against the docs, runs a fast health baseline, and
+proposes the next action for approval. If skills are unavailable, do the same
+by hand: read [docs/current-state.md](docs/current-state.md) first — it is the
+always-current handoff (build phase, status, known risks, next concrete
+action) — then [docs/roadmap.md](docs/roadmap.md) for approved upcoming work.
+Do this before touching anything.
 
 ## Stack
 
@@ -77,6 +83,10 @@ Always confirm against these live files before building. Do **not** trust a plan
 - Pushing to `main` deploys to Vercel — a push is a release action and needs approval.
 
 ## End-of-session checklist
+
+**Run the `/wrap` skill** (`.claude/skills/wrap/`) — it executes this checklist
+(session inventory, doc updates with an anti-rot sweep, verification, proposed
+commits awaiting approval). The manual steps it encodes:
 
 1. Update [docs/current-state.md](docs/current-state.md) (build phase, status tables, known risks, next concrete action).
 2. Add a dated entry to [docs/progress-log.md](docs/progress-log.md) (what was done, key decisions, flags raised).
