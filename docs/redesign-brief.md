@@ -83,21 +83,38 @@ Cook).
    tranche; **Today carried the rest app-wide** (paper/teal/amber light
    palette, native type, gradients retired).
 
+## Review round 1 (owner feedback, 2026-07-02 — shipped same day)
+
+The owner's first review pass over the shipped reflow (pinned-screenshot
+board; PRs #17–#18) changed one organizing idea and two ergonomics:
+
+- **The lunch/dinner division is gone.** Plan days are one flat "meals for
+  the day" list (multiples stay; add is per-day). `meal_type` survives only
+  as a vestigial schema column. Today's hero shows up to two meals
+  ("Also tonight" + "+N more") — the owner's ask: most days one meal,
+  occasionally a main plus a side.
+- Cook's per-step ingredients shrank from pill chips to **one muted text
+  line** (the pills crowded the step text); the match heuristic is unchanged.
+- The recipe editor **takes over the screen on mobile** instead of stacking
+  below the list.
+
+Next look-and-feel round: the **v2 sweep** ([roadmap.md](roadmap.md)
+milestone 7) — kill the surviving pre-v2 hardcoded values, then per-screen
+passes over Settings / Recipes library + editor / recipe detail.
+
 ## Open questions (answer as screens are built)
 
 - Cook mode: timers per step? (Still deferred. Wake-lock shipped with Cook;
-  chips heuristic + "mark cooked" no-op flagged in
-  [design-flags.md](design-flags.md) — the write question resolves with
-  Today.)
+  the chips heuristic stays flagged in [design-flags.md](design-flags.md) —
+  judge on real recipes; the "mark cooked" write question remains open.)
 - Today: plan-less shows a "Plan your week to get started" hero + recipes
   pointer (shipped default — owner may refine; see
   [design-flags.md](design-flags.md)).
 - Shop: Regenerate button **kept** for now as the manual escape hatch beside
   staleness-driven auto-regeneration (shipped default — drop it once trusted;
   see [design-flags.md](design-flags.md)).
-- Plan: multi-recipe slots render as stacked slot rows + "+ add another";
-  eat-out notes show inline (shipped default — owner may refine; see
-  [design-flags.md](design-flags.md)).
+- ~~Plan: multi-recipe slot rendering~~ — superseded by review round 1's
+  flat day lists (every day is a stacked meal list + "+ add another meal").
 - Dark mode beyond Cook (deferred; Cook's palette is a head start).
 
 Living document — update as owner feedback lands per screen.

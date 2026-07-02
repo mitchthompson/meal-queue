@@ -10,9 +10,11 @@ replaced decisions as superseded rather than silently deleting them.
 
 - Meal Queue is optimized for personal or household use, not public-product
   scale.
-- Lunch and dinner are optional planning slots.
-- A meal slot may contain multiple recipes, a leftover reference, or an
-  eating-out note.
+- ~~Lunch and dinner are optional planning slots.~~ Superseded 2026-07-02:
+  days are flat meal lists (see **Flat Days** below).
+- A day may contain any number of meals — cooked recipes, leftover
+  references, or eating-out notes. (Reworded 2026-07-02 from "a meal slot
+  may contain multiple recipes…" when slots were removed.)
 - Meal plans use explicit `start_date` and `end_date` values rather than a
   fixed calendar week.
 - Order and pickup weekdays provide defaults, while each plan stores its actual
@@ -188,9 +190,10 @@ replaced decisions as superseded rather than silently deleting them.
   [design-flags.md](design-flags.md) and the roadmap's Deferred Fixes; not
   yet scheduled.
 - **Slice 4 held strict behavior neutrality** (owner call): the nth-child
-  mobile-label CSS coupling was preserved, not restructured. The shared cell
-  (`components/plan-slot-cell.tsx`) documents the constraint in its header;
-  the flag stays open as a candidate for the reflow's Plan screen.
+  mobile-label CSS coupling was preserved, not restructured. (The shared
+  cell was `components/plan-slot-cell.tsx` at the time; the reflow's Plan
+  screen later removed the coupling, and the flat-day rework renamed the
+  component to `plan-day-items.tsx`.)
 
 ### Reflow Release Rails (2026-07-02)
 
@@ -205,6 +208,29 @@ replaced decisions as superseded rather than silently deleting them.
 - **Previews are skipped for the reflow**: the owner is the app's only user
   and tests directly in production after each merge (Cook shipped this way:
   PR #13, on-device verification in prod).
+- **The pre-approval expired with the reflow's completion** (all four screens
+  merged 2026-07-02). Review round 1 (PRs #17–#18) ran on per-action owner
+  approval again: explicit go-ahead to build, explicit "good to merge".
+
+### Flat Days — no lunch/dinner division (2026-07-02, review round 1)
+
+- **The UI has no meal-type concept.** Each plan day is one flat list of
+  meals in added (`created_at`) order; quick-add is per-day; Today's hero
+  headlines the first cook meal and shows a second as "Also tonight" with a
+  "+N more" overflow (owner: most days one meal, occasionally a main plus a
+  side — show up to two).
+- **`meal_plan_items.meal_type` is vestigial, not dropped**: the NOT NULL
+  column and its check constraint stay in the schema; every new row writes
+  `'dinner'`; nothing reads it. Why: zero migration risk on live household
+  data, zero prod-apply ceremony, and the change stays fully reversible —
+  legacy lunch rows keep their value and simply render in their day's list.
+  Dropping the column is a possible future migration once the flat model has
+  lived a while; it is deliberately unscheduled.
+- **Review flow for design changes**: flagged defaults are reviewed on a
+  pinned-screenshot board (real local-stack captures; codes like T1/P4);
+  the owner answers by code in chat; visual tweaks get CSS-injected variant
+  mocks before any code is written (this picked chip variant B). Toolkit
+  preserved in `scripts/review-board/`.
 
 ## Superseded Decisions
 

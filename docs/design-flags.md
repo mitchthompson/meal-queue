@@ -52,8 +52,8 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Auth flow gaps, finding 6); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
 
 ### Plan reflow judgment calls (sheets, generate exit, filters kept)
-- **Where it's used:** `app/plans/page.tsx`, `components/plan-slot-cell.tsx`
-- **What's needed:** Owner sign-off on defaults from the Plan reflow: (1) the mockup's "edit sheet" is an inline collapsible panel toggled from the header (New plan / Edit plan), not a modal overlay; (2) "Generate grocery list" is a link to `/grocery` — Shop's staleness-driven regeneration does the actual generating on arrival; (3) the plan filter pills (Current/Upcoming/Past/All) and the compact plan picker were kept above the day rows (the mockup shows a single plan only); (4) multi-item slots (the brief's open question) render as stacked slot rows plus a small "+ add another" line, and eat-out chips show the note inline.
+- **Where it's used:** `app/plans/page.tsx`, `components/plan-day-items.tsx`
+- **What's needed:** Owner sign-off on defaults from the Plan reflow: (1) the mockup's "edit sheet" is an inline collapsible panel toggled from the header (New plan / Edit plan), not a modal overlay; (2) "Generate grocery list" is a link to `/grocery` — Shop's staleness-driven regeneration does the actual generating on arrival; (3) the plan filter pills (Current/Upcoming/Past/All) and the compact plan picker were kept above the day rows (the mockup shows a single plan only). Update (2026-07-02, round 1): the fourth question (multi-item slot rendering) was superseded by the owner-requested flat-day rework — every day is now a stacked meal list with one "+ add another meal" line (PR #18); pins P1–P3 remain open.
 - **Source:** Session 2026-07-02 (reflow Plan build); [redesign-brief.md](redesign-brief.md) open questions
 
 ### Thin empty states, no dark mode (wake-lock resolved)
@@ -63,7 +63,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Cook mode: per-step ingredient chips use a name-match heuristic
 - **Where it's used:** `components/cook-mode.tsx` (`matchesStep`)
-- **What's needed:** The schema has no step↔ingredient association (`recipe_steps` and `ingredients` are independent children of `recipes`), so the mockup's "that step's ingredients as chips" is implemented by matching ingredient names against the step text (case-insensitive substring, tolerating a trailing plural `s`/`es`). Works for the household's recipe style but will miss renames/paraphrases ("the chicken") and can over-match short names. Owner to judge on real recipes: keep the heuristic, tune it, or (bigger) add a step↔ingredient link to the schema (schema change — needs its own approval and migration). Update (2026-07-02 review, round 1): owner verdict — the heuristic stays; the chips take too much space and restyle smaller/quieter. Owner picked **variant B** (one muted text line) from the mocked pair; built on `codex/cook-chips-recipes-editor` (PR #17). The heuristic half of this flag stays open for judging on real recipes.
+- **What's needed:** The schema has no step↔ingredient association (`recipe_steps` and `ingredients` are independent children of `recipes`), so the mockup's "that step's ingredients as chips" is implemented by matching ingredient names against the step text (case-insensitive substring, tolerating a trailing plural `s`/`es`). Works for the household's recipe style but will miss renames/paraphrases ("the chicken") and can over-match short names. Owner to judge on real recipes: keep the heuristic, tune it, or (bigger) add a step↔ingredient link to the schema (schema change — needs its own approval and migration). Update (2026-07-02 review, round 1): owner verdict — the heuristic stays; the chips restyled to variant B (one muted text line), **shipped in PR #17**. Only the heuristic half of this flag remains open: judge match quality on real recipes over time (tune, or add a step↔ingredient link — schema change on the usual rails).
 - **Source:** Session 2026-07-02 (reflow Cook build); [redesign-brief.md](redesign-brief.md) Cook section
 
 ### Cook mode: "Done — mark cooked" writes nothing
@@ -86,22 +86,35 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** `npm ci` reports 1 high-severity vulnerability; the reliability foundation (2026-06-11) had brought `npm audit` to zero, so this was likely disclosed since. Triage and patch within the major version (no dependency upgrade without owner approval). Untouched this session.
 - **Source:** Session 2026-06-27 baseline verification
 
-### Plan: drop the lunch/dinner division (owner request)
-- **Where it's used:** `app/plans/page.tsx`, `components/plan-slot-cell.tsx`, `lib/hooks/use-plan.ts`, `lib/hooks/use-today.ts`
-- **What's needed:** Owner wants day cards to be a single flat "meals for the day" list — no lunch/dinner slots, just add-a-meal per day (multiple meals already supported). No-migration path: `meal_type` becomes vestigial (new rows written as `'dinner'`; the column and its check constraint stay untouched in the schema), and existing lunch rows simply render in their day's flat list in added order. Owner-confirmed ripples: Today's hero headlines the first cook meal and shows a second as "Also tonight" plus "+N more" (owner asked for up to two visible), and the week peek drops its lunch/dinner sublabels. Dropping the column for real would be a separate later migration, deliberately out of scope. **Approved and built same day** on `codex/plan-flat-days` (PR #18) — resolve this flag when it merges.
-- **Source:** Owner feedback, 2026-07-02 reflow review (round 1)
-
-### Plan quick-add: recipe search is weak on mobile (owner request)
-- **Where it's used:** `components/plan-slot-cell.tsx` (quick-add card), `lib/hooks/use-plan.ts` (match logic)
-- **What's needed:** The cook search renders small `text-btn` rows with no memory and a desktop-only "Shift+Enter" hint. Owner wants recipe selection improved for phone use: ≥44px tap rows, most-recently-planned recipes listed before any typing, serves-count per row, keyboard hints hidden on touch devices. **Approved and built same day** on `codex/plan-flat-days` (PR #18, with the flat-day rework it depends on) — resolve when it merges.
-- **Source:** Owner feedback, 2026-07-02 reflow review (round 1)
-
-### Recipes: editor stacks below the full list on mobile (owner request)
-- **Where it's used:** `app/recipes/page.tsx` (`recipes-layout` split), `app/globals.css`
-- **What's needed:** On mobile, "Edit recipe" opens the editor below the entire recipe list, forcing a scroll-hunt past every recipe not picked. On mobile the editor becomes the screen (list hidden behind "‹ Back to recipes"); desktop keeps the side-by-side split. Subsumes the deferred mini-M5 "scroll-into-view when the editor opens" item. **Approved and built same day** on `codex/cook-chips-recipes-editor` (PR #17) — resolve when it merges.
-- **Source:** Owner feedback, 2026-07-02 reflow review (round 1)
+### Pre-reflow remnants: hardcoded cream values and un-swept screens (owner question, 2026-07-02)
+- **Where it's used:** `app/globals.css` — the ≤700px `.panel` override (border `#e4d8c6`, background `rgba(255,253,248,.92)` — affects every mobile panel: Settings, the recipes list/editor, auth, plan sheets), `.recipe-view-section` (`#c9bba6`), `.recipe-meta` / `.recipe-step-item` (`#fffefb`), `.pantry-badge` (`#c9bba6`/`#f3eadc`/`#5e513d`), assorted literal `#fff`; plus the screens the reflow deliberately did not rebuild (Settings, Recipes library + editor, recipe detail, auth).
+- **What's needed:** Owner asked (2026-07-02) whether a full sweep to the v2 look is planned — it was not on the roadmap; the reflow scoped only the four cycle screens and token set v2 landed at the token level. **Owner approved the two-part plan the same day (now roadmap milestone 7, the next action):** (1) a quick mechanical PR replacing every hardcoded old-palette value with v2 tokens (this alone de-creams Settings and the editor on mobile — those literals bypass the tokens, violating the no-hardcoded-values rule); (2) a "v2 sweep" round of per-screen passes in the reflow rhythm (Settings → Recipes library/editor → recipe detail; auth folds into the deferred auth-flow work) to bring layout language, not just colors, in line.
+- **Source:** Owner question + approval, 2026-07-02 review session; hardcoded values confirmed by grep the same day
 
 ## Resolved
+
+### Plan: drop the lunch/dinner division (owner request, round 1)
+- **Resolution (2026-07-02):** Shipped in PR #18 (`codex/plan-flat-days`).
+  Every Plan day is one flat meal list in added order; quick-add is per-day.
+  `meal_type` remains in the schema as a vestigial NOT NULL column — new rows
+  write `'dinner'`, nothing reads it, no migration ran (see
+  [data-model.md](data-model.md)). Today's hero headlines the first cook
+  meal and shows a second as "Also tonight" with a "+N more" overflow; the
+  week peek dropped its meal-type sublabels. Dropping the column for real is
+  a possible future migration, deliberately not scheduled.
+
+### Plan quick-add: recipe search is weak on mobile (owner request, round 1)
+- **Resolution (2026-07-02):** Shipped in PR #18 with the flat-day rework:
+  44px tap rows with serves count, most-recently-planned recipes listed
+  before any typing (soft recency query over `meal_plan_items`, degrades to
+  name order on error), Enter/Shift+Enter kept for desktop with the hint
+  hidden on touch devices (`@media (hover: none)`).
+
+### Recipes: editor stacks below the full list on mobile (owner request, round 1)
+- **Resolution (2026-07-02):** Shipped in PR #17. On ≤700px the open editor
+  replaces the list ("‹ Back to recipes"; opening scrolls to the form top);
+  desktop keeps the side-by-side split. Subsumed the deferred mini-M5
+  "scroll-into-view when the editor opens" item.
 
 ### Dashboard can render an empty current week
 - **Resolution (2026-07-02):** Fixed by the reflow's Today screen

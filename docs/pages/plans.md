@@ -1,10 +1,10 @@
 # Plans page (`/plans`)
 
-> Per-page doc for the reflow's Plan screen (screen 4). Confirmed against `app/plans/page.tsx`, `components/plan-slot-cell.tsx`, and `lib/hooks/use-plan.ts`. Design intent: [redesign-brief.md](../redesign-brief.md) + the mockup.
+> Per-page doc for the reflow's Plan screen (screen 4). Confirmed against `app/plans/page.tsx`, `components/plan-day-items.tsx`, and `lib/hooks/use-plan.ts` (updated 2026-07-02 for the flat-day rework, PR #18). Design intent: [redesign-brief.md](../redesign-brief.md) + review round 1.
 
 ## Purpose
 
-The weekly planning ritual as thumb-first day rows: one card per plan day with L/D slots, quick-add (+) as the primary action (cook / leftover / eating-out modes, serving multipliers), today highlighted, New-plan/Edit-plan sheets behind the header, and "Generate grocery list" as the flow's exit (links to Shop, which regenerates from staleness). Reads/writes are scoped to the signed-in user by Row-Level Security.
+The weekly planning ritual as thumb-first day rows: one card per plan day holding a flat list of meals (no lunch/dinner division — owner decision 2026-07-02), quick-add (+) as the primary per-day action (cook / leftover / eating-out modes, serving multipliers), today highlighted, New-plan/Edit-plan sheets behind the header, and "Generate grocery list" as the flow's exit (links to Shop, which regenerates from staleness). Reads/writes are scoped to the signed-in user by Row-Level Security.
 
 ## Route(s)
 
@@ -17,7 +17,7 @@ The weekly planning ritual as thumb-first day rows: one card per plan day with L
 - `AuthGate` (`components/auth-gate.tsx`) — gates on a Supabase session.
 - `AppShell` (`components/app-shell.tsx`) — persistent nav + content frame; receives `userEmail`.
 - `PlanScreen` — presentation only; all state and writes live in `usePlan` (`lib/hooks/use-plan.ts`, M6 extraction).
-- `PlanSlotCell` (`components/plan-slot-cell.tsx`) — one meal's slot rows + inline quick-add inside a day card; L/D labels are explicit markup.
+- `PlanDayItems` (`components/plan-day-items.tsx`) — a day's flat meal rows + inline per-day quick-add (44px recipe rows, recents first); renamed from `PlanSlotCell` in the flat-day rework.
 - Date helpers from `lib/date-utils`: `createDefaultsFromStart`, `dateRange`, `findNextAvailableStartDate`, `nextDayInRange`, `toYmd`.
 - `next/link` to `/recipes/[id]` from cook/leftover slot cards (only when `recipe.id` is present).
 - In-page UI: header with range + Edit / New-plan sheet toggles; filter pills (`current` / `upcoming` / `past` / `all`); compact plan `<select>` (2+ plans); `.plan-dayrow` cards with `.plan-slot` rows, quick-add cards (cook search, leftover `<select>`, eat-out note input) and `serving-controls` steppers; `.plan-generate` exit link.
@@ -50,7 +50,7 @@ No live data or schema is touched by this doc. Schema/migration changes require 
 - **Empty filtered list** — `No plans in this view yet.`
 - **Quick-add open** — active slot shows mode pills; cook = recipe search + match list, leftover = `<select>` of prior cooked meals, eat_out = optional note input.
 - **No leftover source** — `No prior cooked meals` option; Add leftovers button disabled.
-- **Empty slot vs filled slot** — empty shows `Add lunch` / `Add dinner` + the (+) button; filled shows slot rows plus a small `+ add another {meal} item` line.
+- **Empty day vs filled day** — an empty day shows `Nothing planned` + the (+) button; a day with meals shows its rows plus a small `+ add another meal` line.
 - **Delete confirm** — `window.confirm("Delete this meal plan and all its planned items?")`.
 
 Keyboard quick-add (cook input / eat-out input): `Enter` adds the top match; `Shift+Enter` adds and advances to the same meal on the next day in range; `Backspace`/`Delete` on an empty cook query clears the slot; `Escape` cancels the active slot.

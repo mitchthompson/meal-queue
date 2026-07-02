@@ -160,9 +160,11 @@ Cook, including an elevated cooking mode), so milestone 5 was split:
 theme-color, per-page titles, friendly error mapping (`lib/errors.ts`),
 `aria-live` `StatusMessage` adopted on all screens, session-flash fix, and the
 `ensureUserSettings` duplicate-call fix. The page-specific ergonomics
-(tap-target retrofits, plans-grid reorder, scroll-into-view) are deferred into
-the redesign, which follows milestone 6 (component hardening) as its
-foundation. "Keep data between tabs" moves to milestone 6's data-hook
+(tap-target retrofits, plans-grid reorder, scroll-into-view) were deferred into
+the redesign — the plans-grid reorder and scroll-into-view items were both
+closed by the reflow + review round 1 (flat day rows; the recipe editor now
+takes over the mobile screen, PR #17, 2026-07-02). "Keep data between tabs"
+moved to milestone 6's data-hook
 extraction.
 
 Planned branch: `codex/ui-feedback-ergonomics`
@@ -213,6 +215,39 @@ Acceptance:
 
 - User-visible behavior remains compatible.
 - Shared logic has focused automated coverage.
+
+### 7. V2 Sweep (reflow round 2)
+
+**Status: approved by the owner 2026-07-02 — the next action.** The reflow
+rebuilt only the four cycle screens; token set v2 landed at the token level,
+but hardcoded old-palette values survive in `app/globals.css` and the
+non-cycle screens kept their pre-reflow layout language. The owner asked for
+a full sweep (2026-07-02 review session); exact offenders are catalogued in
+the "Pre-reflow remnants" flag in [design-flags.md](design-flags.md).
+
+Suggested branch: `codex/v2-token-sweep` for part 1, then one branch per
+screen pass.
+
+- [ ] **Part 1 — token fix (mechanical, first):** replace every hardcoded
+  old-palette value with token-set-v2 variables — the ≤700px `.panel` cream
+  override (skins every mobile panel: Settings, recipes list/editor, auth,
+  plan sheets), `.recipe-view-section`, `.recipe-meta`, `.recipe-step-item`,
+  `.pantry-badge`, stray `#fff` literals. No layout changes.
+- [ ] **Part 2 — per-screen passes** in the reflow rhythm (branch/PR each,
+  review-board shots for owner sign-off): Settings → Recipes library +
+  editor → recipe detail. Bring layout language (card labels, spacing,
+  thumb targets) in line with the four cycle screens.
+- Auth screen intentionally excluded — it folds into the deferred auth-flow
+  work (sign-up confirmation, password reset) whenever that is scheduled.
+
+Acceptance:
+
+- No hardcoded palette values outside the `:root` token definitions
+  (`grep -E '#[0-9a-fA-F]{3,8}' app/globals.css` hits tokens and true
+  one-offs only, each justified by a comment).
+- Settings, Recipes library/editor, and recipe detail read as token-set-v2
+  screens on a 390px viewport, owner-verified from review-board shots.
+- Behavior neutral throughout — this is a look-and-feel round only.
 
 ## Deferred Fixes (from the 2026-06-11 audit)
 

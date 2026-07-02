@@ -39,7 +39,7 @@ No native Postgres `ENUM` types or `DOMAIN`s are declared. All enumerations are 
 | Where | Allowed values |
 | --- | --- |
 | `units.unit_type` | `volume` &#124; `weight` &#124; `count` &#124; `other` |
-| `meal_plan_items.meal_type` | `lunch` &#124; `dinner` |
+| `meal_plan_items.meal_type` | `lunch` &#124; `dinner` — vestigial since 2026-07-02; new rows always `'dinner'` |
 | `meal_plan_items.slot_type` | `cook` &#124; `leftover` &#124; `eat_out` |
 
 ## Functions and triggers
@@ -241,17 +241,20 @@ counter. Parent of `meal_plan_items` and `grocery_list_items`.
 
 ## `public.meal_plan_items`
 
-An entry in a meal plan: a specific date + meal type (lunch/dinner) + slot type
-(cook/leftover/eat_out), optionally referencing a recipe, optionally linking to the source item it
-is a leftover of, with a serving multiplier and free-text note. Self-referencing via
-`leftover_from_item_id`.
+An entry in a meal plan: a specific date + slot type (cook/leftover/eat_out),
+optionally referencing a recipe, optionally linking to the source item it is a
+leftover of, with a serving multiplier and free-text note. Self-referencing via
+`leftover_from_item_id`. Since the flat-day rework (PR #18, 2026-07-02) the UI
+treats each day as one flat meal list ordered by `created_at` — `meal_type` is
+**vestigial**: the column and its check remain, every new row writes
+`'dinner'`, and nothing reads it (dropping it would be a future migration).
 
 | Column | Type | Null | Default | Notes |
 | --- | --- | --- | --- | --- |
 | `id` | `uuid` | no | `gen_random_uuid()` | Primary key. |
 | `meal_plan_id` | `uuid` | no | — | FK -> `public.meal_plans(id)` `ON DELETE CASCADE`. |
 | `plan_date` | `date` | no | — | |
-| `meal_type` | `text` | no | — | `CHECK (meal_type in ('lunch','dinner'))`. |
+| `meal_type` | `text` | no | — | `CHECK (meal_type in ('lunch','dinner'))`. **Vestigial since 2026-07-02** (flat-day rework): new rows always `'dinner'`, never read. |
 | `slot_type` | `text` | no | `'cook'` | `CHECK (slot_type in ('cook','leftover','eat_out'))`. |
 | `recipe_id` | `uuid` | yes | — | FK -> `public.recipes(id)` `ON DELETE CASCADE`. Originally `NOT NULL`, altered to drop it. Required/forbidden by slot (see slot/recipe check). |
 | `leftover_from_item_id` | `uuid` | yes | — | Self FK -> `public.meal_plan_items(id)` `ON DELETE SET NULL`. Constrained by leftover-link check. |

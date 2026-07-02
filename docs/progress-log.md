@@ -3,7 +3,58 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-02 (late night, latest) - Reflow Screen 4: Plan — THE REFLOW IS COMPLETE
+## 2026-07-02 (morning/afternoon, latest) - Reflow Review Round 1: flat days, quiet chips, mobile editor
+
+- **Review method that worked:** built a pinned-screenshot review board (a
+  private claude.ai artifact) — the 12 flagged reflow defaults pinned by code
+  (T1–T4, P1–P4, S1–S2, C1–C2) on real screenshots captured on the local
+  stack with seeded sample data. The owner replies in chat by pin code; two
+  chip-restyle variants were mocked via CSS injection on the live local app
+  before any code was written. Capture/generation toolkit preserved in
+  `scripts/review-board/` for the next round.
+- **Owner verdicts (round 1):** C1 — chips keep the name-match heuristic but
+  shrink to variant B (one muted text line). Plus three new requests: drop
+  the lunch/dinner division entirely (flat "meals for the day", multiples
+  stay, hero shows up to two); improve the quick-add recipe list on mobile;
+  stop the recipe editor from stacking below the full list on mobile.
+- **Shipped (both merged + deployed 2026-07-02 ~09:00 PDT):**
+  - **PR #17** (`codex/cook-chips-recipes-editor`): cook-step ingredients as
+    one quiet `--color-slate-text-muted` line; on ≤700px the recipe editor
+    replaces the list ("‹ Back to recipes", scroll-to-top on open). Also
+    carried the review-round flag-register updates.
+  - **PR #18** (`codex/plan-flat-days`): flat day lists — `meal_type` is now
+    **vestigial** (NOT NULL column stays; every new row writes `'dinner'`;
+    nothing reads it; **no migration**). Existing lunch rows render in their
+    day's list in `created_at` order. Quick-add is per-day and mobile-first:
+    44px rows with serves count, most-recently-planned recipes before typing
+    (soft query over `meal_plan_items`, degrades to name order), keyboard
+    hints hidden on touch. Today: hero label "Tonight", headlines the first
+    cook meal, "Also tonight: …" + "+N more"; week peek drops meal-type
+    sublabels. `PlanSlotCell` → `PlanDayItems`; `clearSlot`/backspace-clear
+    retired with the slot concept.
+- **Verification:** typecheck clean, vitest 16/16, `next build` green on both
+  branches; Playwright drives with assertions on the local stack (chip
+  computed styles; editor scrollY=0/list-hidden/back-label; zero L/D spans;
+  legacy lunch row in its flat day list; quick-add row height ≥44 + serves
+  count; leftover labels carry no meal type; tap-add and Enter-add; the
+  two-meal hero) — zero console errors. All four CI runs (2 PRs + 2 merge
+  pushes) first-try green.
+- **Gotchas recorded:** (1) running `next build` (which reads `.env.local`'s
+  prod URLs) while the env-overridden dev server shares `.next` breaks the
+  dev bundle's Supabase target — fix: `rm -rf .next`, restart dev with the
+  local-stack env. (2) `meal_plan_items_slot_recipe_check` requires leftover
+  rows to carry the source `recipe_id` (cook/leftover ⇒ recipe NOT NULL).
+- **Also:** the owner pushed `cde7c1e` (`npm run dev:phone`) to `main`
+  himself mid-session. New flag raised and **owner-approved as next work**:
+  "Pre-reflow remnants" — hardcoded old-palette values in `globals.css`
+  (the ≤700px `.panel` cream override skins every mobile panel) plus the
+  un-swept screens; plan is milestone 7 (V2 Sweep): token-fix PR first,
+  then per-screen passes (Settings → Recipes library/editor → recipe
+  detail).
+- Remaining: v2 sweep part 1 (next action), 11 open board pins, standing
+  follow-ups (settings defaults, ESLint, npm audit, Actions bump).
+
+## 2026-07-02 (late night) - Reflow Screen 4: Plan — THE REFLOW IS COMPLETE
 
 - **Plan shipped** (branch `codex/reflow-plan`) — the fourth and final reflow
   screen: `/plans` rebuilt as the mockup's day rows over the unchanged

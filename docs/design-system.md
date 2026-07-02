@@ -246,19 +246,24 @@ specifies the phone layout.
 
 ### Plan components
 
-`app/plans/page.tsx` + `components/plan-slot-cell.tsx` + the `.plan-*`
-selectors, from the mockup's day-row direction, over the unchanged `use-plan`
-data layer. Column capped by `.page-col`.
+`app/plans/page.tsx` + `components/plan-day-items.tsx` + the `.plan-*`
+selectors, from the mockup's day-row direction, over the `use-plan` data
+layer. Since review round 1 (PR #18, 2026-07-02) each day card is one flat
+meal list — no L/D sub-slots; `.plan-slot` now styles a meal row and
+`.quick-add-row` the 44px recipe results. Column capped by `.page-col`.
 
 - `.plan-dayrow`: one card per plan day — uppercase `.plan-dhead`
   (day abbreviation + date; teal + "· today" on today's row), then one
-  `.plan-slot` row per item with an explicit **L/D `.plan-slot-k` label in
-  the markup** (the old nth-child `::before` label injection is gone).
-- Slot rows: recipe link (or eat-out note), `.plan-slot-sub` for leftover
-  provenance, compact `−/×N/+` serving controls, small `remove`.
-- Empty slots: "Add lunch/dinner" + the 30px `.plan-slot-add` (+) button —
+  `.plan-slot` row per meal in added order (no meal-type labels; the
+  `.plan-slot-k` L/D key retired with the flat-day rework).
+- Meal rows: recipe link (or eat-out note), `.plan-slot-sub` for leftover
+  provenance, compact `−/×N/+` serving controls, small `remove`; days with
+  meals end in a `.plan-slot-more` "+ add another meal" line.
+- Empty days: "Nothing planned" + the 30px `.plan-slot-add` (+) button —
   quick-add (mode pills: Cook / Leftovers / Eating out) opens inline in a
-  `.plan-quick-wrap` band under the slot.
+  `.plan-quick-wrap` band under the day; recipe results are
+  `.quick-add-row` buttons (≥44px, name + serves count, recently-planned
+  first) and the keyboard hint hides on touch (`.quick-add-hint`).
 - `.plan-sheet`: the New-plan / Edit-plan panels (2-col date grid), toggled
   from the header; sheets auto-close when the working plan changes.
 - `.plan-generate`: the flow's exit — full-width teal link to `/grocery`
