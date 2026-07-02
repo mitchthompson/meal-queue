@@ -148,6 +148,22 @@ replaced decisions as superseded rather than silently deleting them.
   apply DB migrations to prod *before* merging dependent client code, because
   merging to `main` auto-deploys production on Vercel.
 
+### Plan Integrity Mechanics (2026-07-02)
+
+- Plan version bumps are **database triggers scoped to grocery-relevant
+  changes** (cook items added/removed; recipe_id or serving_multiplier
+  changed) — extending the diff-based philosophy from milestone 2. The client
+  performs no version writes.
+- Cross-row invariants are BEFORE-trigger validations with **row locks**
+  (`for no key update` on the parent plan; `for share` on a leftover source)
+  so the invariants hold under concurrency, not just sequentially. NULL
+  leftover links remain legal (orphans from deleted cook items are valid
+  history).
+- **Apply order rule for trigger/behavior migrations:** apply to prod BEFORE
+  merging the dependent client change. For M3 specifically, the
+  migration-first window double-bumps harmlessly; client-first would silently
+  stop grocery invalidation.
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)

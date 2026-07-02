@@ -294,11 +294,12 @@ begin
 end;
 $$;
 
--- current version baseline
+-- current version baseline. The plan_integrity trigger (milestone 3) bumps on
+-- the cook-item fixture insert above, so the plan starts at 2 here.
 select is(
   (select version from public.meal_plans where id = current_setting('test.plan_id')::uuid),
-  1,
-  'plan version starts at 1'
+  2,
+  'plan version is 2 after the cook-item fixture (trigger bump)'
 );
 
 -- changing an ingredient amount is a grocery-relevant change -> bump
@@ -318,8 +319,8 @@ select lives_ok(
 set local role postgres;
 select is(
   (select version from public.meal_plans where id = current_setting('test.plan_id')::uuid),
-  2,
-  'changing an ingredient amount bumps the referencing plan version (1 -> 2)'
+  3,
+  'changing an ingredient amount bumps the referencing plan version (2 -> 3)'
 );
 
 -- NO-OP resave: identical ingredient set -> NO bump
@@ -339,8 +340,8 @@ select lives_ok(
 set local role postgres;
 select is(
   (select version from public.meal_plans where id = current_setting('test.plan_id')::uuid),
-  2,
-  'no-op resave does NOT bump the plan version (stays 2)'
+  3,
+  'no-op resave does NOT bump the plan version (stays 3)'
 );
 
 -- =====================================================================
@@ -399,8 +400,8 @@ select is(
 );
 select is(
   (select version from public.meal_plans where id = current_setting('test.b_plan_id')::uuid),
-  1,
-  'B''s plan version untouched by A''s rejected save (owner-scoped)'
+  2,
+  'B''s plan version (2 after its cook fixture) untouched by A''s rejected save'
 );
 
 -- Service-role / p_user_id branch: no JWT sub, pass p_user_id = B. This is the
@@ -463,8 +464,8 @@ select is(
 );
 select is(
   (select version from public.meal_plans where id = current_setting('test.plan_id')::uuid),
-  2,
-  'service-role path: A''s unrelated plan untouched (stays 2)'
+  3,
+  'service-role path: A''s unrelated plan untouched (stays 3)'
 );
 
 select * from finish();
