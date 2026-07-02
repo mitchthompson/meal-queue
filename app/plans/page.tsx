@@ -8,6 +8,7 @@ import {
   createDefaultsFromStart,
   dateRange,
   findNextAvailableStartDate,
+  formatDisplayDate,
   nextDayInRange,
   toYmd,
 } from "@/lib/date-utils";
@@ -71,12 +72,6 @@ type LeftoverOption = {
   recipe_id: string;
   recipe_name: string;
 };
-
-function formatDisplayDate(ymd: string) {
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
-    new Date(`${ymd}T00:00:00`),
-  );
-}
 
 function formatWeekday(ymd: string) {
   return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date(`${ymd}T00:00:00`));

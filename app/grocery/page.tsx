@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
-import { toYmd } from "@/lib/date-utils";
+import { toYmd, formatDisplayDate } from "@/lib/date-utils";
 import { formatAmount } from "@/lib/grocery";
 import { toErrorMessage } from "@/lib/errors";
 import { StatusMessage } from "@/components/status-message";
@@ -27,12 +27,6 @@ type GroceryItem = {
   is_checked: boolean;
   source_key: string;
 };
-
-function formatDisplayDate(ymd: string) {
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
-    new Date(`${ymd}T00:00:00`),
-  );
-}
 
 export default function GroceryPage() {
   return (

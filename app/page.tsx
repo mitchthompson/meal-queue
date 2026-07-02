@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
-import { dateRange, toYmd } from "@/lib/date-utils";
+import { dateRange, toYmd, formatDayName, formatDisplayDate, formatLongDate } from "@/lib/date-utils";
 import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
@@ -35,23 +35,6 @@ type GroceryPreviewItem = {
 
 function ymdToday() {
   return toYmd(new Date());
-}
-
-function formatDisplayDate(ymd: string) {
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(`${ymd}T00:00:00`));
-}
-
-function formatDayName(ymd: string) {
-  return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date(`${ymd}T00:00:00`));
-}
-
-function formatLongDate(ymd: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(`${ymd}T00:00:00`));
 }
 
 function planDays(plan: MealPlan) {
@@ -254,7 +237,7 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
       <div className="home-week-card">
         <div className="section-head">
           <h3>
-            {formatDisplayDate(plan.start_date)} to {formatDisplayDate(plan.end_date)}
+            {formatDisplayDate(plan.start_date, { year: false })} to {formatDisplayDate(plan.end_date, { year: false })}
           </h3>
           <Link className="ghost-btn" href="/plans">
             Open plan
@@ -275,7 +258,7 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
                 <div className="home-day-head">
                   <strong>{formatDayName(day)}</strong>
                 </div>
-                <span className="muted">{formatDisplayDate(day)}</span>
+                <span className="muted">{formatDisplayDate(day, { year: false })}</span>
                 {lunchRecipes.length > 0 ? (
                   <span>
                     Lunch:{" "}
@@ -411,14 +394,14 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
                   <div className="section-head">
                     <h3>Current grocery</h3>
                     <span className="muted">
-                      {currentPlan ? `${formatDisplayDate(currentPlan.start_date)} to ${formatDisplayDate(currentPlan.end_date)}` : "None"}
+                      {currentPlan ? `${formatDisplayDate(currentPlan.start_date, { year: false })} to ${formatDisplayDate(currentPlan.end_date, { year: false })}` : "None"}
                     </span>
                   </div>
                   {currentPlan ? (
                     <p className="muted">
-                      {currentPlan.order_date ? `Order ${formatDisplayDate(currentPlan.order_date)}` : "No order date"}
+                      {currentPlan.order_date ? `Order ${formatDisplayDate(currentPlan.order_date, { year: false })}` : "No order date"}
                       {" | "}
-                      {currentPlan.pickup_date ? `Pickup ${formatDisplayDate(currentPlan.pickup_date)}` : "No pickup date"}
+                      {currentPlan.pickup_date ? `Pickup ${formatDisplayDate(currentPlan.pickup_date, { year: false })}` : "No pickup date"}
                     </p>
                   ) : null}
                   {needToBuyPreview.length === 0 ? (
@@ -442,7 +425,7 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
                 </div>
                 {nextPlan ? (
                   <p className="muted">
-                    {formatDisplayDate(nextPlan.start_date)} to {formatDisplayDate(nextPlan.end_date)}
+                    {formatDisplayDate(nextPlan.start_date, { year: false })} to {formatDisplayDate(nextPlan.end_date, { year: false })}
                   </p>
                 ) : (
                   <p className="muted">No next plan yet.</p>
@@ -450,9 +433,9 @@ function HomeDashboard({ userEmail }: { userEmail?: string }) {
                 {nextPlan ? (
                   <>
                     <p className="muted">
-                      {nextPlan.order_date ? `Order ${formatDisplayDate(nextPlan.order_date)}` : "No order date"}
+                      {nextPlan.order_date ? `Order ${formatDisplayDate(nextPlan.order_date, { year: false })}` : "No order date"}
                       {" | "}
-                      {nextPlan.pickup_date ? `Pickup ${formatDisplayDate(nextPlan.pickup_date)}` : "No pickup date"}
+                      {nextPlan.pickup_date ? `Pickup ${formatDisplayDate(nextPlan.pickup_date, { year: false })}` : "No pickup date"}
                     </p>
                     {nextNeedToBuyPreview.length === 0 ? (
                       <p className="muted">No generated list yet for next plan.</p>

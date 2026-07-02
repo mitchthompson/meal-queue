@@ -89,3 +89,27 @@ export function nextDayInRange(day: string, endDate: string) {
   const next = addDays(day, 1);
   return next <= endDate ? next : null;
 }
+
+// --- Display formatting (shared by dashboard, plans, grocery) -------------
+// All parse local calendar fields via `${ymd}T00:00:00` so labels never shift
+// across timezones (see decisions.md, Dates and Migrations).
+
+export function formatDisplayDate(ymd: string, { year = true }: { year?: boolean } = {}) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(year ? { year: "numeric" as const } : {}),
+  }).format(new Date(`${ymd}T00:00:00`));
+}
+
+export function formatDayName(ymd: string) {
+  return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date(`${ymd}T00:00:00`));
+}
+
+export function formatLongDate(ymd: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${ymd}T00:00:00`));
+}
