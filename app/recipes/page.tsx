@@ -45,6 +45,12 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
   } = useRecipes(userId, editRecipeId);
   const [tagDraft, setTagDraft] = useState("");
 
+  // On phones the editor replaces the list (it stacks below it on desktop
+  // widths), so land the viewport on the form instead of mid-list.
+  function jumpToEditorOnMobile() {
+    if (window.matchMedia("(max-width: 700px)").matches) window.scrollTo(0, 0);
+  }
+
   return (
     <AppShell userEmail={userEmail}>
       <section className={showEditor ? "split-layout recipes-layout editor-open" : "recipes-layout"}>
@@ -60,6 +66,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
                 onClick={() => {
                   setForm(blankForm());
                   setShowEditor(true);
+                  jumpToEditorOnMobile();
                 }}
                 type="button"
               >
@@ -96,6 +103,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
                     onClick={() => {
                       setShowEditor(true);
                       selectRecipe(recipe.id);
+                      jumpToEditorOnMobile();
                     }}
                     type="button"
                   >
@@ -117,7 +125,8 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
               <h2>{form.id ? "Edit recipe" : "New recipe"}</h2>
               <div className="section-actions">
                 <button className="text-btn" onClick={() => setShowEditor(false)} type="button">
-                  Close
+                  <span className="editor-close-desktop">Close</span>
+                  <span className="editor-close-mobile">‹ Back to recipes</span>
                 </button>
                 {form.id ? (
                   <button className="danger-btn" onClick={deleteRecipe} type="button">

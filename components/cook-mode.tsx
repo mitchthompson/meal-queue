@@ -140,7 +140,7 @@ export function CookMode({ recipeName, steps, ingredients, onExit }: CookModePro
         <div className="cook-step-ings">
           {stepIngredients.map((ingredient) => (
             <span key={ingredient.id}>
-              {ingredient.name} · {ingredient.amount}
+              {ingredient.name} {ingredient.amount}
             </span>
           ))}
         </div>
