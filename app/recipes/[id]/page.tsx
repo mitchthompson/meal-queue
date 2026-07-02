@@ -177,7 +177,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
       {recipe ? (
         <section className="recipe-view-layout">
           <aside className="panel recipe-overview-panel">
-            <h2>Overview</h2>
+            <h2 className="recipes-card-label">Overview</h2>
             <div className="recipe-overview-meta">
               <span>Base servings</span>
               <strong>{recipe.base_servings}</strong>
@@ -217,7 +217,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
           <div className="stack recipe-view-content">
             <article className="panel recipe-view-section">
               <div className="section-head">
-                <h2>Ingredients</h2>
+                <h2 className="recipes-card-label">Ingredients</h2>
                 {pantryCount > 0 ? <span className="muted">{pantryCount} pantry staple{pantryCount === 1 ? "" : "s"}</span> : null}
               </div>
               {ingredients.length === 0 ? <p className="muted">No ingredients.</p> : null}
@@ -240,14 +240,12 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
             </article>
 
             <article className="panel recipe-view-section">
-              <div className="section-head">
-                <h2>Steps</h2>
-                {steps.length > 0 ? (
-                  <button className="primary-btn" onClick={() => setCooking(true)} type="button">
-                    Start cooking
-                  </button>
-                ) : null}
-              </div>
+              <h2 className="recipes-card-label">Steps</h2>
+              {steps.length > 0 ? (
+                <button className="recipe-cook-btn" onClick={() => setCooking(true)} type="button">
+                  Start cooking
+                </button>
+              ) : null}
               {steps.length === 0 ? <p className="muted">No steps.</p> : null}
               <ol className="recipe-step-list">
                 {steps.map((step) => (
