@@ -51,10 +51,20 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** Mobile Lunch/Dinner labels are injected via nth-child `::before` pseudo-elements, coupling the stylesheet to markup child order (fragile if markup reorders). Needs the labels driven by markup/data rather than child-order CSS. Update (2026-07-02): deliberately left unchanged by M6 slice 4 (strict behavior neutrality, owner call); the markup now has a single edit site — `components/plan-slot-cell.tsx`, whose header documents the constraint. Candidate for the reflow's Plan screen.
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 13); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
 
-### No screen wake-lock during cooking focus mode, thin empty states, no dark mode
-- **Where it's used:** Recipe detail focus mode and new-user empty states across routes; global theming in [`app/globals.css`](../app/globals.css)
-- **What's needed:** Nice-to-have polish that is deferred: acquire a screen wake-lock while the cooking step-by-step focus mode is active, provide richer empty states for new users, and add dark-mode support. Needs implementation when prioritized.
-- **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 15); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
+### Thin empty states, no dark mode (wake-lock resolved)
+- **Where it's used:** New-user empty states across routes; global theming in [`app/globals.css`](../app/globals.css)
+- **What's needed:** Update (2026-07-02): the wake-lock half is done — Cook mode (`components/cook-mode.tsx`, reflow screen 1) holds a screen wake-lock while active, re-acquired on `visibilitychange`. Still open: richer empty states for new users, and dark-mode support beyond the Cook takeover (deferred per the brief; Cook's `--color-cook-*` palette is a head start).
+- **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 15); also [roadmap](roadmap.md) Deferred Fixes (UI audit); [redesign-brief.md](redesign-brief.md)
+
+### Cook mode: per-step ingredient chips use a name-match heuristic
+- **Where it's used:** `components/cook-mode.tsx` (`matchesStep`)
+- **What's needed:** The schema has no step↔ingredient association (`recipe_steps` and `ingredients` are independent children of `recipes`), so the mockup's "that step's ingredients as chips" is implemented by matching ingredient names against the step text (case-insensitive substring, tolerating a trailing plural `s`/`es`). Works for the household's recipe style but will miss renames/paraphrases ("the chicken") and can over-match short names. Owner to judge on real recipes: keep the heuristic, tune it, or (bigger) add a step↔ingredient link to the schema (schema change — needs its own approval and migration).
+- **Source:** Session 2026-07-02 (reflow Cook build); [redesign-brief.md](redesign-brief.md) Cook section
+
+### Cook mode: "Done — mark cooked" writes nothing
+- **Where it's used:** `components/cook-mode.tsx` (last-step primary action)
+- **What's needed:** The brief's open question "any data write behind mark cooked?" is unanswered: no cooked/`cooked_at` state exists anywhere in [`supabase/schema.sql`](../supabase/schema.sql), so the button currently just exits the takeover. If the owner wants cooked state (e.g. for Today's "tonight" logic or leftover suggestions), that is a schema change + migration on the usual rails. Decide when Today is built, since Today is the consumer.
+- **Source:** Session 2026-07-02 (reflow Cook build); [redesign-brief.md](redesign-brief.md) open questions
 
 ### No automated coverage for Supabase write flows or UI interactions
 - **Where it's used:** Test suite (Vitest); writes in `app/plans/page.tsx`, `app/recipes/page.tsx`, `app/grocery/page.tsx`

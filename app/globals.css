@@ -13,6 +13,18 @@
   --color-danger: #a13c3c;
   --focus-ring: #1f6d63;
 
+  /* Token set v2 (docs/redesign-brief.md) — Cook-mode dark takeover palette.
+     Introduced with the Cook screen; remaining v2 values land per reflow screen. */
+  --color-cook-bg: #131a18;
+  --color-cook-surface: #1d2724;
+  --color-cook-text: #f3f6f4;
+  --color-cook-text-soft: #cbd8d3;
+  --color-cook-text-muted: #9fb0aa;
+  --color-cook-text-dim: #5e6b67;
+  --color-cook-border: #2a3733;
+  --color-cook-amber: #e8a13d;
+  --font-cook: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+
   --bg: var(--color-bg);
   --surface: var(--color-surface);
   --ink: var(--color-text);
@@ -849,14 +861,6 @@ textarea {
   line-height: 1.6;
 }
 
-.recipe-focus-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
 .recipe-step-index {
   width: 1.7rem;
   height: 1.7rem;
@@ -868,6 +872,154 @@ textarea {
   justify-content: center;
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+.cook-mode {
+  position: fixed;
+  inset: 0;
+  /* Above the fixed .mobile-tabbar (z-index: 20) — this is a full takeover. */
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--color-cook-bg);
+  color: var(--color-cook-text);
+  font-family: var(--font-cook);
+  -webkit-font-smoothing: antialiased;
+}
+
+.cook-mode button:focus-visible {
+  outline-color: var(--color-cook-amber);
+}
+
+.cook-head {
+  padding: calc(1.4rem + env(safe-area-inset-top)) 1.25rem 0.4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cook-exit {
+  border: 0;
+  background: transparent;
+  color: var(--color-cook-text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.4rem 0;
+}
+
+.cook-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-cook-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cook-recipe {
+  margin: 0;
+  padding: 0 1.25rem;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.cook-dots {
+  display: flex;
+  gap: 6px;
+  padding: 0.9rem 1.25rem;
+}
+
+.cook-dots i {
+  height: 4px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--color-cook-surface);
+}
+
+.cook-dots i.done {
+  background: var(--color-cook-amber);
+}
+
+.cook-step-label {
+  padding: 1.1rem 1.25rem 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-cook-amber);
+}
+
+.cook-step-text {
+  margin: 0;
+  padding: 0.6rem 1.25rem;
+  font-size: 1.7rem;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.cook-step-ings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+}
+
+.cook-step-ings span {
+  background: var(--color-cook-surface);
+  border: 1px solid var(--color-cook-border);
+  color: var(--color-cook-text-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cook-nav {
+  margin-top: auto;
+  display: flex;
+  gap: 0.6rem;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.cook-nav button {
+  flex: 1;
+  border: 0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cook-nav .cook-back {
+  background: var(--color-cook-surface);
+  color: var(--color-cook-text-muted);
+  flex: 0 0 30%;
+}
+
+.cook-nav .cook-back.hidden {
+  visibility: hidden;
+}
+
+.cook-nav .cook-next {
+  background: var(--color-cook-amber);
+  color: var(--color-cook-bg);
+}
+
+.cook-wake-note {
+  color: var(--color-cook-text-dim);
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  min-height: 1.5rem;
 }
 
 .error-text {
