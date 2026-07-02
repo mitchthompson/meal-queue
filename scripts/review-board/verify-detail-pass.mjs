@@ -90,6 +90,13 @@ const run = async () => {
   check("Start cooking full-width teal (RD2)", cookBtn, "full|rgb(18, 105, 94)|>=44");
   const stepBtnH = await page.locator(".servings-input-row .secondary-btn").first().evaluate((el) => el.getBoundingClientRect().height);
   check("servings stepper >= 44px (RD3)", stepBtnH >= 44 ? "yes" : `no (${stepBtnH}px)`, "yes");
+  const backLink = await page.locator(".recipe-back-link").evaluate((el) => {
+    const s = getComputedStyle(el);
+    return `${el.textContent.trim()}|${s.color}|${s.borderTopWidth}`;
+  });
+  check("back breadcrumb quiet teal (RD5)", backLink, "‹ Recipes|rgb(18, 105, 94)|0px");
+  const actionsH = await page.locator(".recipe-title-row .section-actions").evaluate((el) => el.getBoundingClientRect().height);
+  check("Edit + More share one row (RD5)", actionsH < 60 ? "one row" : `stacked (${actionsH}px)`, "one row");
 
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: path.join(OUT, "AB-detail.jpg"), type: "jpeg", quality: 85 });

@@ -154,11 +154,13 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
       {loading ? <h1>Loading recipe...</h1> : null}
       {recipe ? (
         <section className="section-head recipe-title-row">
-          <h1>{recipe.name}</h1>
-          <div className="section-actions">
-            <Link className="ghost-btn" href="/recipes">
-              Back
+          <div>
+            <Link className="recipe-back-link" href="/recipes">
+              ‹ Recipes
             </Link>
+            <h1>{recipe.name}</h1>
+          </div>
+          <div className="section-actions">
             <Link className="secondary-btn" href={`/recipes?edit=${recipe.id}`}>
               Edit recipe
             </Link>

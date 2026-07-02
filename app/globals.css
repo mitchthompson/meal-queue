@@ -104,6 +104,17 @@ textarea:focus-visible {
 /* .recipe-title-row h1 sizing lives in the shared page-head group with
    .settings-head h1 (v2 detail pass, RD3 — round-4 board 2026-07-02). */
 
+/* Quiet breadcrumb back to the library — the tabbar is the primary way
+   back (RD5, round-4 board 2026-07-02). */
+.recipe-back-link {
+  display: inline-block;
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: none;
+  margin-bottom: 0.15rem;
+}
+
 .recipe-danger-menu {
   position: relative;
 }
@@ -1719,13 +1730,10 @@ textarea {
     gap: 0.5rem;
   }
 
-  .recipe-title-row .section-actions .ghost-btn,
+  /* Edit + More share one row (RD5) — the back breadcrumb sits above the
+     title, so the actions are a single 2-up row. */
   .recipe-title-row .section-actions .secondary-btn {
     width: 100%;
-  }
-
-  .recipe-title-row .section-actions .recipe-danger-menu {
-    grid-column: 1 / -1;
   }
 
   .recipe-danger-menu summary,

@@ -73,18 +73,18 @@ const html = `<title>Meal Queue — Reflow Review Board</title>
 <header class="top">
   <div class="eyebrow">Meal Queue · V2 Sweep · 2 Jul 2026</div>
   <h1>Review board — round 4: recipe detail, the sweep finale</h1>
-  <p class="sub">Round-4 verdict is in (2 Jul: “variant B for both”). <strong>The pass is built and sitting on <code>codex/v2-recipe-detail</code> with the as-built shots below — awaiting your merge word.</strong> One pin stayed open: <strong>RD5</strong> (the tighter title row) wasn't mocked and wasn't called, so the title row is untouched — say <code>RD5: yes</code> and it rides along before merge. Merging closes milestone 7.</p>
+  <p class="sub">All round-4 verdicts are in (2 Jul: “variant B for both”, then RD5: yes). <strong>The pass is built — including the tighter RD5 title row — merged as PR #22, and deployed. Milestone 7 is complete.</strong> The full sweep record lives below.</p>
 </header>
 
 <div class="howto">
-  <p><strong>How to give feedback:</strong> reply in chat using the pin codes — anything here can still be overturned before (or after) merge.</p>
-  <p class="reply"><code>RD: merge it · optionally RD5: yes · or e.g. “rows: more padding”</code></p>
-  <p><strong>What happens next:</strong> your merge word ships the pass and closes milestone 7; behind it sit the ten open round-1 pins and the standing follow-ups.</p>
+  <p><strong>How to give feedback:</strong> reply in chat using the pin codes — shipped work can still be revisited any time.</p>
+  <p class="reply"><code>e.g. “RD1: revert steps to cards” / “T2: let's talk plan-less Today”</code></p>
+  <p><strong>What's next:</strong> the ten open round-1 pins (T1–T4, P1–P3, S1–S2, C2), then the standing follow-ups (settings-defaults source of truth, ESLint + CI lint, npm-audit triage, Actions Node-20 bump).</p>
 </div>
 
 <section class="screen-sec round">
-  <h2>Recipe detail — as built (codex/v2-recipe-detail, awaiting merge)</h2>
-  <p class="lede">The real branch on the local stack — RD1: B flat rows for ingredients and steps, RD2 chunky Start cooking, RD3 header language + 44px stepper, RD4 badge un-quirked (the amount styling moved to its own class, so the badge's amber finally applies). Verified 13/13 assertions plus behavior checks: the stepper still rescales amounts, Start cooking still opens the Cook takeover, and Today's <code>?cook=1</code> deep link still auto-opens — zero console errors.</p>
+  <h2>Recipe detail — as built (PR #22, merged &amp; deployed)</h2>
+  <p class="lede">RD1: B flat rows for ingredients and steps, RD2 chunky Start cooking, RD3 header language + 44px stepper, RD4 badge un-quirked (the amount styling moved to its own class, so the badge's amber finally applies), and RD5's tighter title row — “‹ Recipes” breadcrumb with Edit + More sharing one row, which pulls Start cooking above the fold. Verified 15/15 assertions plus behavior checks: the stepper still rescales amounts, Start cooking still opens the Cook takeover, and Today's <code>?cook=1</code> deep link still auto-opens — zero console errors.</p>
   <div class="shots">${phone("AB-detail.jpg", "Detail as built — 390px")}${phone("AB-detail-steps.jpg", "Steps + Start cooking as built")}${phone("AB-detail-cook.jpg", "Cook takeover — unchanged, still fed by this screen")}${phone("AB-detail-desktop.jpg", "Desktop two-column as built — 1280px", { wide: true })}</div>
 </section>
 
@@ -113,7 +113,7 @@ const html = `<title>Meal Queue — Reflow Review Board</title>
     ${card("RD5", "Title-row actions (not mocked — a question)",
       "today Back / Edit recipe / More stack as three full-width bars eating the top third of the screen. Proposal: “‹ Recipes” becomes a quiet text link (the tabbar already gets you back) and Edit + More share one row — same actions, half the height.",
       "<code>RD5: yes</code> · <code>RD5: keep</code>.",
-      `<p class="verdict" style="background:var(--amber-soft);color:#7a5a17">Still open — not answered in round 4; the title row is untouched. Say RD5: yes and it rides before merge.</p>`)}
+      `<p class="verdict">Verdict, 2 Jul: yes. Built — “‹ Recipes” breadcrumb, Edit + More on one row.</p>`)}
   </div>
 </section>
 
@@ -130,7 +130,7 @@ const html = `<title>Meal Queue — Reflow Review Board</title>
     <tr class="dim"><td>RD2</td><td>Full-width teal Start cooking — verdict: yes (built)</td></tr>
     <tr class="dim"><td>RD3</td><td>Header language + 44px stepper — verdict: yes (built)</td></tr>
     <tr class="dim"><td>RD4</td><td>Pantry badge amber text — verdict: yes (built, closes V1 quirk)</td></tr>
-    <tr><td>RD5</td><td>Tighter title-row actions — STILL OPEN, unanswered</td></tr>
+    <tr class="dim"><td>RD5</td><td>Tighter title-row actions — verdict: yes (built)</td></tr>
     <tr class="dim"><td>RC1–RC5</td><td>Round 3, resolved: A cards no serves line · header language · sample data removed · A editor · full-width save (merged, PR #21)</td></tr>
     <tr class="dim"><td>ST1–ST3 · V1–V2</td><td>Round 2, resolved (shipped, PRs #19–#20)</td></tr>
     <tr class="dim"><td>T1–T4</td><td>Still open from round 1: settings gear · plan-less Today · amber link hover · 640px desktop column</td></tr>
@@ -140,7 +140,7 @@ const html = `<title>Meal Queue — Reflow Review Board</title>
   </table>
 </div>
 
-<p class="foot">After this pass, milestone 7 is done; next in line are the ten open round-1 pins above, then the standing follow-ups (settings-defaults source of truth, ESLint + CI lint, npm-audit triage, Actions Node-20 bump). Shots captured on the local Supabase stack with sample data — your household data was not touched. For the real thumb feel: <code>npm run dev:phone</code> on your iPhone. No code changes until you reply.</p>
+<p class="foot">Milestone 7 — the v2 sweep — is complete: token fix (PR #19), Settings (PR #20), Recipes library + editor (PR #21), recipe detail (PR #22). Shots captured on the local Supabase stack with sample data — your household data was not touched. For the real thumb feel: <code>npm run dev:phone</code> on your iPhone.</p>
 </div>
 `;
 
