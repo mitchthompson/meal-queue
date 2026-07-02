@@ -3,7 +3,40 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-02 (late night, latest) - Reflow Screen 3: Shop
+## 2026-07-02 (late night, latest) - Reflow Screen 4: Plan — THE REFLOW IS COMPLETE
+
+- **Plan shipped** (branch `codex/reflow-plan`) — the fourth and final reflow
+  screen: `/plans` rebuilt as the mockup's day rows over the unchanged
+  `use-plan` data layer. One card per day (uppercase day head, teal "· today"
+  highlight), slot rows with explicit L/D markup labels, quick-add (+) as the
+  primary action (Cook search / Leftovers select / Eating-out note — same
+  machinery, restyled), compact −/×N/+ serving controls, New-plan and
+  Edit-plan sheets toggled from the header (auto-close on plan switch), plan
+  filter pills + compact picker, and "Generate grocery list" as the flow's
+  exit (links to Shop; staleness regeneration does the generating).
+- **Flag fixed at the root: the nth-child mobile-label coupling** — the
+  `::before` Lunch/Dinner injection is deleted; labels are real markup in
+  `plan-slot-cell.tsx`. Also swept the CSS of the dead dashboard styles
+  (`.home-*`, old `.plan-grid` family) left behind by the Today swap.
+- **Defaults flagged for owner** ([design-flags.md](design-flags.md)): inline
+  sheets rather than a modal, generate-as-link, filters/picker kept above the
+  day rows, multi-item slots as stacked rows + "+ add another".
+- **Verification:** typecheck clean; vitest 16/16; `next build` green.
+  Driven end-to-end on the local stack (playwright-core, iPhone viewport):
+  plan created through the new sheet (7 day rows, today highlighted), cook
+  quick-add via match click AND via Enter-adds-first-match, serving ×1→×1.25,
+  leftovers (provenance sub-line), eat-out with note, remove, edit sheet
+  end-date −1 (7→6 rows), **Generate → Shop built the list (7 items) → Today
+  hero showed tonight's dinner** — the full weekly cycle through all four new
+  screens; zero console errors.
+- **The reflow (Cook → Today+v2 → Shop → Plan) is complete**: four screens in
+  four PRs (#13, #14, #15, this one), all first-try green CI, shipped same
+  day under the pre-approved rails. Remaining owner decisions live in
+  [design-flags.md](design-flags.md); deferred follow-ups (settings-defaults
+  SSOT, ESLint, npm audit, Actions version bump) are unchanged in the
+  roadmap.
+
+## 2026-07-02 (late night, Shop) - Reflow Screen 3: Shop
 
 - **Shop shipped** (branch `codex/reflow-shop`): `/grocery` restyled to the
   mockup's chunky direction over the unchanged `use-grocery-list` data layer —

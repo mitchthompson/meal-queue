@@ -41,7 +41,7 @@ attention. The cream/terracotta v1 values are retired.
 | --- | --- | --- |
 | `--color-bg` | `#fafaf8` | Base page background (paper, faint warm bias). No decorative gradients (retired in v2). |
 | `--color-surface` | `#ffffff` | Default raised surface. Cards, panels, pills, mobile tabbar, tonight-card button. |
-| `--color-surface-muted` | `#edeeea` | Muted/inset surface tint. Secondary button, plan-grid header, step-index badge, mobile day cell. |
+| `--color-surface-muted` | `#edeeea` | Muted/inset surface tint. Secondary button, step-index badge. |
 | `--color-text` | `#16211e` | Primary body/ink text (deep green-black). |
 | `--color-text-muted` | `#5e6b67` | Secondary/muted text — labels, captions, meta, descriptions. |
 | `--color-primary` | `#12695e` | Brand primary (sharpened teal) — the single accent. Links, primary button, active states, tonight hero, focus-ring source. |
@@ -152,7 +152,7 @@ Design is **desktop-first** with two `max-width` overrides; there are no `min-wi
 
 | Query | Target | What changes |
 | --- | --- | --- |
-| `@media (max-width: 900px)` | tablet / landscape | Multi-column grids collapse to one column (`split-layout`, `plan-meta-grid`, `plan-add-grid`, home grids, `recipe-view-layout`, today/week grids); `ingredient-row` → 2 cols; `plan-grid` becomes stacked labeled card rows (Lunch/Dinner labels injected); `recipe-overview-panel` goes static; `section-head` stacks; section-action buttons bump to `min-height: 2.75rem`; small muted text bumps to `0.9rem`/`1.45`. |
+| `@media (max-width: 900px)` | tablet / landscape | Multi-column grids collapse to one column (`split-layout`, `recipe-view-layout`); `ingredient-row` → 2 cols; `recipe-overview-panel` goes static; `section-head` stacks; section-action buttons bump to `min-height: 2.75rem`; small muted text bumps to `0.9rem`/`1.45`. |
 | `@media (max-width: 700px)` | mobile / phone | `.shell` adds safe-area + ~6rem bottom space; `.panel` gains shadow, translucent bg `rgba(255,253,248,0.92)`, border `#e4d8c6`, radius `12px` (pre-v2 literals — flagged); `.nav-pills` hidden and `.mobile-tabbar` shown (fixed bottom, 4-col icon+label, `blur(6px)`, `z-index: 20`); rows stack to one column; recipe-title actions → 2-col grid; pills `min-height: 2.5rem`, font `0.92rem`. |
 
 ---
@@ -164,7 +164,7 @@ selector. The recurring, observed values below are the conventions to match; do 
 new ad-hoc numbers when one of these fits.
 
 - **Radius:** `16px` for cards/panels; `12px` for list items and inner card blocks
-  (`plan-grid`, `home-week-card`, `home-plan-block`); `10px` for buttons, inputs,
+  (`plan-dayrow`/`plan-sheet` inner blocks); `10px` for buttons, inputs,
   small inner blocks (`grocery-row`, `quick-add-card`, `home-stat`, recipe meta/step);
   `999px` for pills, chips, badges, and the circular step index.
 - **Layout shell:** `.shell` is `max-width: 960px`, centered, padding `1.75rem 1rem 3rem`.
@@ -243,6 +243,26 @@ specifies the phone layout.
   `.today-next-btn` (primary-soft) on the right.
 - Navigation: 4-tab reflow bar (Today / Plan / Shop / Recipes); Settings is
   the gear in the Today header (`.today-settings`).
+
+### Plan components
+
+`app/plans/page.tsx` + `components/plan-slot-cell.tsx` + the `.plan-*`
+selectors, from the mockup's day-row direction, over the unchanged `use-plan`
+data layer. Column capped by `.page-col`.
+
+- `.plan-dayrow`: one card per plan day — uppercase `.plan-dhead`
+  (day abbreviation + date; teal + "· today" on today's row), then one
+  `.plan-slot` row per item with an explicit **L/D `.plan-slot-k` label in
+  the markup** (the old nth-child `::before` label injection is gone).
+- Slot rows: recipe link (or eat-out note), `.plan-slot-sub` for leftover
+  provenance, compact `−/×N/+` serving controls, small `remove`.
+- Empty slots: "Add lunch/dinner" + the 30px `.plan-slot-add` (+) button —
+  quick-add (mode pills: Cook / Leftovers / Eating out) opens inline in a
+  `.plan-quick-wrap` band under the slot.
+- `.plan-sheet`: the New-plan / Edit-plan panels (2-col date grid), toggled
+  from the header; sheets auto-close when the working plan changes.
+- `.plan-generate`: the flow's exit — full-width teal link to `/grocery`
+  (Shop regenerates from staleness on load).
 
 ### Shop components
 

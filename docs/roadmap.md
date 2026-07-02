@@ -243,9 +243,9 @@ Details in [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 
 - Auth flow completion: sign-up confirmation messaging, password reset,
   friendlier auth errors.
-- Mobile Lunch/Dinner labels rely on `nth-child` CSS coupling (M6 kept it
-  unchanged — strict behavior neutrality; the markup now renders from
-  `components/plan-slot-cell.tsx`; candidate for the reflow's Plan screen).
+- ~~Mobile Lunch/Dinner labels rely on `nth-child` CSS coupling~~ — fixed by
+  the reflow's Plan screen (2026-07-02): day rows carry explicit L/D labels
+  in the markup; the `::before` injection was removed.
 - Screen wake-lock shipped with the reflow's Cook mode (PR #13, 2026-07-02);
   richer empty states and dark mode beyond the Cook takeover remain open.
 
