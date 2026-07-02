@@ -31,23 +31,31 @@ prefix is used**. The CSS-variable token system in `app/globals.css` *is* the na
 Defined in `:root` (lines 1–23 of `app/globals.css`). Two layers: raw `--color-*` tokens,
 then short semantic aliases pointing at the common ones.
 
-### Raw tokens
+### Raw tokens (token set v2, 2026-07-02)
+
+Token set v2 landed with the reflow ([redesign-brief.md](redesign-brief.md)):
+paper ground, deep green-black ink, one sharpened-teal accent, warm amber for
+attention. The cream/terracotta v1 values are retired.
 
 | Variable | Value | Role |
 | --- | --- | --- |
-| `--color-bg` | `#f7f3ea` | Base page background (warm cream/parchment). Layered under two radial gradients on `body`. |
-| `--color-surface` | `#fffdf8` | Default raised surface (near-white warm). Cards, panels, pills, mobile tabbar. |
-| `--color-surface-muted` | `#f1e8d9` | Muted/inset surface tint. Secondary button, plan-grid header, step-index badge, mobile day cell. |
-| `--color-text` | `#1f231f` | Primary body/ink text (near-black warm green-grey). |
-| `--color-text-muted` | `#5f665e` | Secondary/muted text — labels, captions, meta, descriptions. |
-| `--color-primary` | `#1f6d63` | Brand primary (deep teal/pine). Eyebrow, links, primary button, active states, focus-ring source. |
-| `--color-primary-soft` | `#d8eee7` | Soft tint of primary. Background for active chip. |
-| `--color-accent` | `#d06a2f` | Secondary brand accent (burnt orange/terracotta). Link hover (`--brand-2`). |
-| `--color-border` | `#d5c7b2` | Default border/divider (warm tan). Aliased to `--line`; used on nearly all bordered elements. |
+| `--color-bg` | `#fafaf8` | Base page background (paper, faint warm bias). No decorative gradients (retired in v2). |
+| `--color-surface` | `#ffffff` | Default raised surface. Cards, panels, pills, mobile tabbar, tonight-card button. |
+| `--color-surface-muted` | `#edeeea` | Muted/inset surface tint. Secondary button, plan-grid header, step-index badge, mobile day cell. |
+| `--color-text` | `#16211e` | Primary body/ink text (deep green-black). |
+| `--color-text-muted` | `#5e6b67` | Secondary/muted text — labels, captions, meta, descriptions. |
+| `--color-primary` | `#12695e` | Brand primary (sharpened teal) — the single accent. Links, primary button, active states, tonight hero, focus-ring source. |
+| `--color-primary-soft` | `#e3eeeb` | Soft tint of primary. Active chips, ghost/nudge buttons, `plan →` pill. |
+| `--color-on-primary-soft` | `#cfe2dd` | Meta text on a `--color-primary` surface (tonight-card meta). |
+| `--color-on-primary-muted` | `#bfd9d3` | Label text on a `--color-primary` surface (tonight-card label). |
+| `--color-accent` | `#e8a13d` | Warm amber attention accent (v2 single warm; terracotta retired). Context-strip dot; aliased to `--brand-2` (link hover). |
+| `--color-accent-soft` | `#f6e8cf` | Amber-tinted soft surface — leftover pill background. |
+| `--color-accent-deep` | `#7a5a17` | Deep amber-brown — leftover pill text. |
+| `--color-border` | `#e4e6e1` | Default border/divider (hairline). Aliased to `--line`; used on nearly all bordered elements. |
 | `--color-success` | `#1e7b4f` | Success state (green). Used by `.success-text`. |
 | `--color-warning` | `#a3661f` | Warning state (amber/brown). **Defined but currently unused** — no selector references it. |
 | `--color-danger` | `#a13c3c` | Danger/error (muted red). Danger button bg/border, `.error-text`. |
-| `--focus-ring` | `#1f6d63` | Focus outline color (identical value to `--color-primary`). Used in `:focus-visible`. |
+| `--focus-ring` | `#12695e` | Focus outline color (identical value to `--color-primary`). Used in `:focus-visible`. |
 
 ### Cook-mode tokens (token set v2)
 
@@ -75,24 +83,22 @@ Short names for the most common raw tokens. **Prefer the alias** where one exist
 
 | Alias | Resolves to | Use |
 | --- | --- | --- |
-| `--bg` | `var(--color-bg)` → `#f7f3ea` | Page background |
-| `--surface` | `var(--color-surface)` → `#fffdf8` | Cards, panels, pills |
-| `--ink` | `var(--color-text)` → `#1f231f` | Primary text |
-| `--muted` | `var(--color-text-muted)` → `#5f665e` | Secondary text |
-| `--brand` | `var(--color-primary)` → `#1f6d63` | Links, primary button, active state |
-| `--brand-2` | `var(--color-accent)` → `#d06a2f` | Link hover |
-| `--line` | `var(--color-border)` → `#d5c7b2` | Borders and dividers |
+| `--bg` | `var(--color-bg)` → `#fafaf8` | Page background |
+| `--surface` | `var(--color-surface)` → `#ffffff` | Cards, panels, pills |
+| `--ink` | `var(--color-text)` → `#16211e` | Primary text |
+| `--muted` | `var(--color-text-muted)` → `#5e6b67` | Secondary text |
+| `--brand` | `var(--color-primary)` → `#12695e` | Links, primary button, active state |
+| `--brand-2` | `var(--color-accent)` → `#e8a13d` | Link hover, context-strip dot |
+| `--line` | `var(--color-border)` → `#e4e6e1` | Borders and dividers |
 
 These raw tokens have **no alias** and are referenced by their full `--color-*` name:
-`--color-surface-muted`, `--color-primary-soft`, `--color-success`, `--color-warning`,
-`--color-danger`, plus `--focus-ring`.
+`--color-surface-muted`, `--color-primary-soft`, `--color-on-primary-soft`,
+`--color-on-primary-muted`, `--color-accent-soft`, `--color-accent-deep`,
+`--color-success`, `--color-warning`, `--color-danger`, plus `--focus-ring`.
 
-### Decorative gradients (not tokenized)
+### Decorative gradients
 
-Used only in the `body` background; do not reuse these as component colors:
-
-- Desktop radials: `#f6d9c7` (warm) and `#d8ece4` (cool).
-- Mobile (`max-width: 700px`) linear gradient: `#f9f5ed` → `#f4efe5`.
+Retired in v2 — `body` is flat `var(--bg)` at every breakpoint.
 
 There is **no dark mode** and no `prefers-color-scheme` query. The one dark
 surface is the Cook takeover (`.cook-mode`), which uses its own scoped
@@ -102,16 +108,20 @@ surface is the Cook takeover (`.cook-mode`), which uses its own scoped
 
 ## Typography
 
-Fonts are injected by `next/font` in [`app/layout.tsx`](../app/layout.tsx) and attached to
-`<body>` as CSS variables — they are **not** declared in `globals.css :root`.
+Token set v2: the native system stack everywhere — "installed-app feel is the
+thesis" ([redesign-brief.md](redesign-brief.md)). The Fraunces/Manrope Google
+fonts (and their `next/font` injection in `layout.tsx`) are retired; fonts are
+plain CSS tokens in `globals.css :root`.
 
-| Role | Variable | Family | Weights | Fallback |
-| --- | --- | --- | --- | --- |
-| Headings (`h1`–`h4`) | `--font-heading` | Fraunces (Google serif) | 600, 700 | `Georgia, serif` |
-| Body (`body`) | `--font-body` | Manrope (Google sans-serif) | 400, 500, 600, 700 | `"Segoe UI", sans-serif` |
+| Role | Variable | Value |
+| --- | --- | --- |
+| Body (`body`) | `--font-body` | `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif` |
+| Headings (`h1`–`h4`) | `--font-heading` | `var(--font-body)` (no decorative serif) |
+| Cook takeover | `--font-cook` | `var(--font-body)` |
 
-- Body: `font-size: 16px`, `line-height: 1.6`.
-- Headings: `line-height: 1.25`, `letter-spacing: -0.01em`.
+- Body: `font-size: 16px`, `line-height: 1.6`, antialiased.
+- Headings: `line-height: 1.25`, `letter-spacing: -0.015em`, weight 700.
+- `tabular-nums` on amounts (cook chips, shop counts) via `font-variant-numeric`.
 - Recipe title (`.recipe-title-row h1`) uses fluid sizing: `clamp(1.6rem, 2.4vw, 2.2rem)`.
 - Eyebrow (`.eyebrow`): uppercase, `letter-spacing: 0.08em`, `--brand`, weight 700, `0.8rem`.
 
@@ -124,7 +134,7 @@ One global treatment — no per-component overrides, no box-shadow ring:
 ```css
 a:focus-visible, button:focus-visible,
 input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--focus-ring); /* #1f6d63 */
+  outline: 2px solid var(--focus-ring); /* #12695e */
   outline-offset: 2px;
 }
 ```
@@ -139,7 +149,7 @@ Design is **desktop-first** with two `max-width` overrides; there are no `min-wi
 | Query | Target | What changes |
 | --- | --- | --- |
 | `@media (max-width: 900px)` | tablet / landscape | Multi-column grids collapse to one column (`split-layout`, `plan-meta-grid`, `plan-add-grid`, home grids, `recipe-view-layout`, today/week grids); `ingredient-row` → 2 cols; `plan-grid` becomes stacked labeled card rows (Lunch/Dinner labels injected); `recipe-overview-panel` goes static; `section-head` stacks; section-action buttons bump to `min-height: 2.75rem`; small muted text bumps to `0.9rem`/`1.45`. |
-| `@media (max-width: 700px)` | mobile / phone | `body` background switches to vertical linear gradient; `.shell` adds safe-area + ~6rem bottom space; `.panel` gains shadow, translucent bg `rgba(255,253,248,0.92)`, border `#e4d8c6`, radius `12px`; `.nav-pills` hidden and `.mobile-tabbar` shown (fixed bottom, 5-col, `blur(6px)`, `z-index: 20`); rows stack to one column; recipe-title actions → 2-col grid; pills `min-height: 2.5rem`, font `0.92rem`. |
+| `@media (max-width: 700px)` | mobile / phone | `.shell` adds safe-area + ~6rem bottom space; `.panel` gains shadow, translucent bg `rgba(255,253,248,0.92)`, border `#e4d8c6`, radius `12px` (pre-v2 literals — flagged); `.nav-pills` hidden and `.mobile-tabbar` shown (fixed bottom, 4-col icon+label, `blur(6px)`, `z-index: 20`); rows stack to one column; recipe-title actions → 2-col grid; pills `min-height: 2.5rem`, font `0.92rem`. |
 
 ---
 
@@ -210,6 +220,26 @@ Shared base across `.primary-btn`, `.secondary-btn`, `.danger-btn`, `.ghost-btn`
 - `label`: grid with `0.25rem` gap, `0.88rem`, `--muted`.
 - Inline checkboxes (`.inline-check`, `.grocery-check`) reset `width: auto` on the input.
 
+### Today components
+
+`app/page.tsx` + the `.today-*` / `.tonight-*` selectors, from the reflow
+mockup. Content column capped at `640px` (`.today-col`) — the mockup only
+specifies the phone layout.
+
+- `.tonight-card`: the hero — `--brand` surface, `--surface` text, radius
+  `18px`, big balanced title; label/meta use the on-primary tint tokens; the
+  white `.tonight-btn` deep-links into Cook mode (`?cook=1`).
+- `.today-strip`: deadline strip — surface card, 9px `--brand-2` dot, bold
+  line + muted `small`; whole strip is a link to `/grocery`.
+- `.today-week`: `.card` with hairline-separated rows — 44px uppercase day
+  abbreviation, weighted meal name, muted meal-type `small`; amber
+  `.today-pill-warm` for leftovers; `.today-pill` (`--color-primary-soft`)
+  as the `plan →` affordance on empty days.
+- `.today-next`: nudge card — label + line on the left,
+  `.today-next-btn` (primary-soft) on the right.
+- Navigation: 4-tab reflow bar (Today / Plan / Shop / Recipes); Settings is
+  the gear in the Today header (`.today-settings`).
+
 ### Cook-mode takeover
 
 `components/cook-mode.tsx` + the `.cook-*` selectors. A `position: fixed;
@@ -249,7 +279,7 @@ inputs you confirm *before* writing markup.
 
 1. **Read the page intent + tokens.** Open the relevant
    [page doc](pages/) — `docs/pages/<slug>.md` (e.g.
-   [dashboard](pages/dashboard.md), [recipes](pages/recipes.md),
+   [today](pages/today.md), [recipes](pages/recipes.md),
    [plans](pages/plans.md), [grocery](pages/grocery.md),
    [settings](pages/settings.md)) — for the intended states and copy, plus this
    document for the tokens/patterns. Confirm data shape against

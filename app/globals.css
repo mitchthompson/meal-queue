@@ -1,17 +1,26 @@
 :root {
-  --color-bg: #f7f3ea;
-  --color-surface: #fffdf8;
-  --color-surface-muted: #f1e8d9;
-  --color-text: #1f231f;
-  --color-text-muted: #5f665e;
-  --color-primary: #1f6d63;
-  --color-primary-soft: #d8eee7;
-  --color-accent: #d06a2f;
-  --color-border: #d5c7b2;
+  /* Token set v2 (docs/redesign-brief.md): paper ground, single sharpened-teal
+     accent, warm amber for attention. Landed with the Today screen; the old
+     cream/terracotta values are retired. */
+  --color-bg: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #edeeea;
+  --color-text: #16211e;
+  --color-text-muted: #5e6b67;
+  --color-primary: #12695e;
+  --color-primary-soft: #e3eeeb;
+  --color-on-primary-soft: #cfe2dd;
+  --color-on-primary-muted: #bfd9d3;
+  --color-accent: #e8a13d;
+  --color-accent-soft: #f6e8cf;
+  --color-accent-deep: #7a5a17;
+  --color-border: #e4e6e1;
   --color-success: #1e7b4f;
   --color-warning: #a3661f;
   --color-danger: #a13c3c;
-  --focus-ring: #1f6d63;
+  --focus-ring: #12695e;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-body);
 
   /* Token set v2 (docs/redesign-brief.md) — Cook-mode dark takeover palette.
      Introduced with the Cook screen; remaining v2 values land per reflow screen. */
@@ -23,7 +32,7 @@
   --color-cook-text-dim: #5e6b67;
   --color-cook-border: #2a3733;
   --color-cook-amber: #e8a13d;
-  --font-cook: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-cook: var(--font-body);
 
   --bg: var(--color-bg);
   --surface: var(--color-surface);
@@ -47,22 +56,21 @@ body {
 
 body {
   color: var(--ink);
-  background:
-    radial-gradient(circle at 10% 10%, #f6d9c7 0, transparent 42%),
-    radial-gradient(circle at 90% 15%, #d8ece4 0, transparent 36%),
-    var(--bg);
-  font-family: var(--font-body), "Segoe UI", sans-serif;
+  background: var(--bg);
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-heading), Georgia, serif;
+  font-family: var(--font-heading);
   line-height: 1.25;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  font-weight: 700;
 }
 
 a:focus-visible,
@@ -874,6 +882,226 @@ textarea {
   font-weight: 700;
 }
 
+.today-col {
+  max-width: 640px;
+}
+
+.today-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 0.5rem;
+}
+
+.today-head h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.today-head-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.today-date {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.today-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 10px;
+  color: var(--muted);
+}
+
+.tonight-card {
+  background: var(--brand);
+  color: var(--surface);
+  border-radius: 18px;
+  padding: 1.1rem;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tonight-card h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.tonight-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-on-primary-muted);
+}
+
+.tonight-meta {
+  font-size: 0.82rem;
+  color: var(--color-on-primary-soft);
+  font-weight: 500;
+}
+
+.tonight-btn {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.9rem;
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  text-decoration: none;
+  background: var(--surface);
+  color: var(--brand);
+}
+
+.today-strip {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin-top: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.today-strip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--brand-2);
+  flex-shrink: 0;
+}
+
+.today-strip small {
+  display: block;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.today-card-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.today-week {
+  margin-top: 0.75rem;
+}
+
+.today-week-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0.7rem 0.1rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.86rem;
+}
+
+.today-week-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0.2rem;
+}
+
+.today-week-day {
+  color: var(--muted);
+  font-weight: 700;
+  width: 44px;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.today-week-meal {
+  flex: 1;
+  font-weight: 600;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.today-week-item small {
+  display: block;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.74rem;
+}
+
+.today-week-empty {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.today-pill {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--brand);
+  background: var(--color-primary-soft);
+  padding: 3px 8px;
+  border-radius: 999px;
+  align-self: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.today-pill-warm {
+  color: var(--color-accent-deep);
+  background: var(--color-accent-soft);
+  margin-left: 0.45rem;
+  vertical-align: 0.1em;
+}
+
+.today-next {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.today-next-line {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding-top: 4px;
+}
+
+.today-next-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  background: var(--color-primary-soft);
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
 .cook-mode {
   position: fixed;
   inset: 0;
@@ -1161,10 +1389,6 @@ textarea {
 }
 
 @media (max-width: 700px) {
-  body {
-    background: linear-gradient(180deg, #f9f5ed 0%, #f4efe5 100%);
-  }
-
   .shell {
     padding: 1rem 0.7rem calc(6rem + env(safe-area-inset-bottom));
   }
@@ -1196,7 +1420,7 @@ textarea {
     right: 0;
     bottom: 0;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.35rem;
     padding: 0.5rem 0.6rem calc(0.5rem + env(safe-area-inset-bottom));
     border-top: 1px solid var(--line);
@@ -1208,14 +1432,22 @@ textarea {
   .mobile-tab {
     border: 1px solid var(--line);
     border-radius: 10px;
-    min-height: 3rem;
+    min-height: 3.2rem;
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.15rem;
     text-decoration: none;
     color: var(--ink);
-    background: #fff;
+    background: var(--surface);
     padding: 0.35rem;
+  }
+
+  .mobile-tab-label {
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1;
   }
 
   .mobile-tab-icon {

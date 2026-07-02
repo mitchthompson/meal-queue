@@ -12,22 +12,30 @@ type AppShellProps = {
 type NavLink = {
   href: string;
   label: string;
-  icon: "home" | "recipes" | "plans" | "grocery" | "settings";
+  icon: "today" | "recipes" | "plans" | "grocery" | "settings";
 };
 
+// The reflow tabbar (redesign-brief.md): the four cycle screens. Settings
+// moved off the bar to a gear in the Today header — see design-flags.md.
 const navLinks: NavLink[] = [
-  { href: "/", label: "Home", icon: "home" },
+  { href: "/", label: "Today", icon: "today" },
+  { href: "/plans", label: "Plan", icon: "plans" },
+  { href: "/grocery", label: "Shop", icon: "grocery" },
   { href: "/recipes", label: "Recipes", icon: "recipes" },
-  { href: "/plans", label: "Meal Plans", icon: "plans" },
-  { href: "/grocery", label: "Grocery", icon: "grocery" },
-  { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
-function NavIcon({ name }: { name: NavLink["icon"] }) {
-  if (name === "home") {
+export function NavIcon({ name }: { name: NavLink["icon"] }) {
+  if (name === "today") {
     return (
       <svg aria-hidden="true" className="mobile-tab-icon" viewBox="0 0 24 24">
-        <path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path
+          d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
       </svg>
     );
   }
@@ -97,6 +105,7 @@ export function AppShell({ children, userEmail }: AppShellProps) {
               title={link.label}
             >
               <NavIcon name={link.icon} />
+              <span className="mobile-tab-label">{link.label}</span>
             </Link>
           );
         })}

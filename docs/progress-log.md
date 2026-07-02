@@ -3,7 +3,57 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-02 (late night, latest) - Reflow Screen 1 Ships: Cook Mode Live in Prod
+## 2026-07-02 (late night, latest) - Reflow Screen 2: Today Replaces the Dashboard; Token Set v2 App-Wide
+
+- **Operating change (owner, this session):** commits, pushes, and merges are
+  **pre-approved for the remainder of the reflow** on the usual rails
+  (branch → PR → green CI → merge), with docs updated per screen; previews
+  are skipped — the owner tests in prod. Recorded in
+  [decisions.md](decisions.md) (Reflow Release Rails). Schema/dependency/
+  live-data actions still need explicit approval.
+- **Today shipped** (branch `codex/reflow-today`): `app/page.tsx` rebuilt as
+  the mockup's Today screen over a new `lib/hooks/use-today.ts` — Tonight
+  hero (recipe, "Serves N · M steps · planned range", **Start cooking →**
+  deep-linking to `/recipes/[id]?cook=1`, which now auto-opens the Cook
+  takeover), amber deadline strip with the live unchecked count (whole strip
+  links to Shop), remaining-week peek (leftover pill, eat-out notes, `plan →`
+  pill on empty days), next-week nudge. Plan-less state (the brief's open
+  question) defaults to a "Plan your week to get started" hero — flagged for
+  owner refinement.
+- **Bug fixed at the root:** the dashboard's 4-newest-plans window
+  (empty-current-week flag) — Today loads items for the date-relevant current
+  plan and its successor only; past-only history now renders the plan-less
+  state instead of resurrecting a finished plan. Flag moved to Resolved.
+- **Token set v2 landed app-wide** with this screen per the brief's
+  sequencing: paper `#fafaf8` ground, ink `#16211e`, sharpened teal
+  `#12695e`, hairline `#e4e6e1`, amber `#e8a13d` as the single warm accent
+  (terracotta retired), decorative body gradients removed, and the
+  **native system font stack replaces Fraunces/Manrope** (next/font Google
+  fonts removed from `layout.tsx`; `--font-body`/`--font-heading` are plain
+  tokens now). `lib/design-tokens.ts` mirrors updated (manifest/theme-color).
+  Old screens read the same semantic variables and restyled cleanly
+  (verified visually).
+- **Tabbar reflowed:** Today / Plan / Shop / Recipes with icon+label tabs
+  (4-col); Settings moved to a gear in the Today header — flagged for owner
+  confirmation along with the amber link-hover and the 640px desktop column.
+- **Verification:** typecheck clean; vitest 15/15 (new `formatDayAbbrev`
+  covered); `next build` green (11 routes). Driven end-to-end on the local
+  stack (playwright-core, iPhone viewport): fresh sign-up → sample recipes →
+  plan+items seeded in the local DB → grocery list generated through the real
+  app → Today asserted (hero text/meta, strip "due tomorrow · 7 unchecked",
+  week rows incl. leftover pill and eat-out, nudge), Start cooking →
+  takeover auto-open, settings gear → `/settings`, plan-less second user,
+  desktop + recipes-under-v2 screenshots — zero console errors.
+- Docs: `docs/pages/today.md` replaces `pages/dashboard.md`; routes.md,
+  README, design-system.md (v2 token tables, typography, Today/Cook
+  patterns) updated.
+- **Next: Shop** (reflow screen 3) on `codex/reflow-shop` — pinned order bar
+  with live unchecked count, 30px chunky checkboxes, groceries vs
+  pantry-check sections, checked = teal fill + strikethrough, over
+  `use-grocery-list`. Open question: keep the manual "Regenerate" button or
+  trust staleness.
+
+## 2026-07-02 (late night, Cook) - Reflow Screen 1 Ships: Cook Mode Live in Prod
 
 - **PR #13 merged (`50dd5ac`), first-try green CI (app checks 43s, db tests
   1m03s), Vercel production deploy confirmed.** Branch `codex/reflow-cook`,

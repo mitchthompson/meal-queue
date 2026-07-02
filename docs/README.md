@@ -63,7 +63,7 @@ At the start of a new session, read in this order:
 
 **Per-page intent** ([`pages/`](pages))
 
-- [`pages/dashboard.md`](pages/dashboard.md) — dashboard page intent.
+- [`pages/today.md`](pages/today.md) — Today (home screen) page intent.
 - [`pages/recipes.md`](pages/recipes.md) — recipes page intent.
 - [`pages/plans.md`](pages/plans.md) — meal-plans page intent.
 - [`pages/grocery.md`](pages/grocery.md) — grocery page intent.

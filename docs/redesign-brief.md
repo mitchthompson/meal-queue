@@ -74,10 +74,12 @@ Cook).
 2. **Reflow, screen by screen** (each its own branch/PR on the usual rails):
    suggested order — Cook mode (new, highest owner value), Today (replaces
    dashboard), Shop, Plan. Tabbar changes land with Today. **Cook shipped**
-   (PR #13, 2026-07-02, `components/cook-mode.tsx`).
+   (PR #13, 2026-07-02, `components/cook-mode.tsx`); **Today shipped**
+   (2026-07-02, `codex/reflow-today`, with the 4-tab bar).
 3. Token set v2 lands with the first reflow screen; old screens keep working
-   (they read the same semantic variables). First tranche (`--color-cook-*`,
-   `--font-cook`) landed with Cook, scoped to the takeover.
+   (they read the same semantic variables). Cook carried the scoped dark
+   tranche; **Today carried the rest app-wide** (paper/teal/amber light
+   palette, native type, gradients retired).
 
 ## Open questions (answer as screens are built)
 
@@ -85,7 +87,9 @@ Cook).
   chips heuristic + "mark cooked" no-op flagged in
   [design-flags.md](design-flags.md) — the write question resolves with
   Today.)
-- Today: what does it show plan-less (first run / gap weeks)?
+- Today: plan-less shows a "Plan your week to get started" hero + recipes
+  pointer (shipped default — owner may refine; see
+  [design-flags.md](design-flags.md)).
 - Shop: keep manual "Regenerate" button, or trust staleness entirely?
 - Plan: multi-recipe slots and eat-out notes — chip UI details.
 - Dark mode beyond Cook (deferred; Cook's palette is a head start).

@@ -220,8 +220,9 @@ Real issues confirmed in code but deliberately excluded from the current
 reliability scope. Details in
 [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md).
 
-- Dashboard loads items for only the 4 newest plans; with several future plans
-  the current week can render empty (`app/page.tsx`).
+- ~~Dashboard loads items for only the 4 newest plans~~ — fixed by the
+  reflow's Today screen (2026-07-02): items load for the date-relevant
+  current plan and its successor (`lib/hooks/use-today.ts`).
 - Plan version bumps fire for changes that do not affect groceries (eating-out
   notes, leftover edits), and the grocery page regenerates silently on load.
   Milestone 4 makes this harmless to user state; scoping the bumps and
