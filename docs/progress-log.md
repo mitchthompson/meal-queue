@@ -3,6 +3,31 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-02 (night) - Mini-M5 Merged; Mockups Approved; Milestone 6 Underway
+
+- Mini-M5 merged (PR #6, `abbf3b2`) and deployed — including a
+  `viewport-fit=cover` fix the owner caught on-device: the fixed tabbar's
+  `env(safe-area-inset-bottom)` CSS was dormant without it, colliding with the
+  iOS home indicator in standalone installs.
+- **Direction mockups built and approved** ("huge improvement, I love it"):
+  tappable Today / Plan / Shop / Cook screens, calm-utility base + dark chunky
+  Cook mode. Source committed to
+  [mockups/reflow-v1.html](mockups/reflow-v1.html); app-icon source at
+  [assets/icon-source.svg](assets/icon-source.svg). Brief:
+  [redesign-brief.md](redesign-brief.md).
+- **Milestone 6 started.** PR #7 merged (`dd9006a`): shared date formatters →
+  `lib/date-utils.ts` (vitest 15/15) + the brief + a full `current-state.md`
+  reconciliation (stale sections and duplicated milestone rows had accumulated
+  across incremental patches). Process note: PR #7 was merged while its checks
+  were still pending (should have used `--merge --auto`); the run completed
+  green minutes later and the post-merge main run was green — ritual restored.
+- Slice 2 on the branch: `useGroceryList` hook extraction
+  (`lib/hooks/use-grocery-list.ts`); grocery page ~380 → 191 lines,
+  behavior-neutral, verified (typecheck / vitest / build).
+- Handoff hardening for the next session: mockups + icon source committed
+  in-repo, `setup.md` kickoff prompt made evergreen (it still named milestone
+  2 as next), roadmap/current-state brought fully current.
+
 ## 2026-07-02 (late) - Mini-M5 Shipped; Redesign Direction Set
 
 - **Strategy:** owner wants a larger redesign — look-and-feel plus a reflow

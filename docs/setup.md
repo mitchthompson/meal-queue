@@ -149,6 +149,7 @@ Operating rules (from CLAUDE.md — follow exactly):
   implement with confirmed values only → run it → verify against source → commit
   only after my approval.
 
-The next planned work is Milestone 2 — Atomic Recipe Saves (branch
-codex/atomic-recipe-saves), but confirm with me before starting.
+Identify the current milestone and next concrete action from
+docs/current-state.md (do not assume it from this prompt), and confirm with me
+before starting.
 ```

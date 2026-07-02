@@ -1,0 +1,272 @@
+<title>Meal Queue — Reflow Mockups</title>
+<style>
+  :root{
+    --paper:#FAFAF8; --ink:#16211E; --muted:#5E6B67; --line:#E4E6E1;
+    --teal:#12695E; --teal-soft:#E3EEEB; --amber:#E8A13D;
+    --slate:#131A18; --slate-2:#1D2724; --lite:#F3F6F4;
+    --ok:#2C7A4B; --danger:#B3423A;
+    --r:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#EDEEEA;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;min-height:100vh}
+  .wrap{max-width:960px;margin:0 auto;padding:20px 12px 48px;display:flex;flex-direction:column;gap:16px;align-items:center}
+  .intro{max-width:640px;text-align:center;display:flex;flex-direction:column;gap:6px}
+  .intro h1{font-size:1.15rem;font-weight:700;letter-spacing:-.01em}
+  .intro p{color:var(--muted);font-size:.85rem;line-height:1.5}
+  .switch{display:flex;gap:4px;background:#E0E2DC;border-radius:12px;padding:4px;position:sticky;top:10px;z-index:50;box-shadow:0 2px 10px rgba(22,33,30,.08)}
+  .switch button{border:0;background:transparent;padding:8px 16px;border-radius:9px;font:inherit;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer}
+  .switch button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(22,33,30,.15)}
+  .note{max-width:420px;width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.8rem;line-height:1.5;color:var(--muted)}
+  .note b{color:var(--ink)}
+
+  /* phone frame */
+  .phone{width:390px;max-width:100%;height:780px;background:var(--paper);border-radius:36px;
+    box-shadow:0 18px 50px rgba(22,33,30,.25),0 0 0 10px #21262395;overflow:hidden;position:relative;display:flex;flex-direction:column}
+  @media (max-width:430px){
+    body{background:var(--paper)}
+    .phone{width:100%;height:auto;min-height:88vh;border-radius:0;box-shadow:none}
+  }
+  .screen{display:none;flex:1;flex-direction:column;overflow-y:auto;padding-bottom:76px}
+  .screen.on{display:flex}
+
+  /* shared app chrome */
+  .apphead{padding:22px 20px 10px;display:flex;justify-content:space-between;align-items:baseline}
+  .apphead h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+  .apphead .date{font-size:.8rem;color:var(--muted);font-weight:600}
+  .tabbar{position:absolute;bottom:0;left:0;right:0;background:#FFFFFFEE;backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);display:flex;justify-content:space-around;
+    padding:10px 8px calc(22px + env(safe-area-inset-bottom,0px));z-index:5}
+  /* installed to the iOS home screen: clear the home indicator even when
+     env() resolves to 0 (no viewport-fit=cover in the host head) */
+  @media (display-mode: standalone){
+    .tabbar{padding-bottom:max(34px, calc(22px + env(safe-area-inset-bottom,0px)))}
+    .cooknav{padding-bottom:max(34px, env(safe-area-inset-bottom,0px))}
+  }
+  .tabbar span{font-size:.68rem;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;min-width:56px}
+  .tabbar span.on{color:var(--teal)}
+  .tabbar i{font-style:normal;font-size:1.15rem;line-height:1}
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin:8px 16px 0;padding:16px}
+  .label{font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font:inherit;font-weight:700;font-size:1rem;cursor:pointer;text-align:center}
+  .btn-teal{background:var(--teal);color:#fff}
+  .btn-ghost{background:var(--teal-soft);color:var(--teal)}
+
+  /* TODAY */
+  .tonight{background:var(--teal);color:#fff;border:0;margin:12px 16px 0;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .tonight .label{color:#BFD9D3}
+  .tonight h3{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;line-height:1.2;text-wrap:balance}
+  .tonight .meta{font-size:.82rem;color:#CFE2DD;font-weight:500}
+  .tonight .btn{background:#fff;color:var(--teal)}
+  .strip{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r);margin:12px 16px 0;padding:13px 14px;font-size:.85rem;font-weight:600}
+  .strip .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);flex-shrink:0}
+  .strip small{display:block;color:var(--muted);font-weight:500;font-size:.75rem}
+  .weekpeek{margin:14px 16px 0}
+  .weekpeek .row{display:flex;justify-content:space-between;padding:11px 2px;border-bottom:1px solid var(--line);font-size:.86rem}
+  .weekpeek .row:last-child{border-bottom:0}
+  .weekpeek .d{color:var(--muted);font-weight:700;width:44px;font-size:.74rem;padding-top:2px}
+  .weekpeek .m{flex:1;font-weight:600}
+  .weekpeek .m small{display:block;color:var(--muted);font-weight:500;font-size:.74rem}
+  .pill{font-size:.66rem;font-weight:700;color:var(--teal);background:var(--teal-soft);padding:3px 8px;border-radius:99px;align-self:center}
+  .pill.left{color:#7A5A17;background:#F6E8CF}
+
+  /* PLAN */
+  .dayrow{margin:10px 16px 0;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .dayrow .dhead{display:flex;justify-content:space-between;padding:10px 14px 8px;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .dayrow.today .dhead{color:var(--teal)}
+  .slot{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--line);font-size:.9rem;font-weight:600}
+  .slot .k{font-size:.66rem;font-weight:800;color:var(--muted);width:16px}
+  .slot.empty{color:var(--muted);font-weight:500}
+  .slot .add{margin-left:auto;width:30px;height:30px;border-radius:9px;background:var(--teal-soft);color:var(--teal);border:0;font-size:1.15rem;font-weight:700;line-height:1;cursor:pointer}
+  .slot .x{margin-left:auto;color:var(--muted);font-size:.72rem;font-weight:700}
+
+  /* SHOP — direction C: chunky */
+  .orderbar{margin:12px 16px 0;background:var(--slate);color:var(--lite);border-radius:var(--r);padding:13px 16px;display:flex;justify-content:space-between;align-items:center;font-size:.84rem;font-weight:700}
+  .orderbar small{display:block;color:#9FB0AA;font-weight:500;font-size:.72rem}
+  .orderbar .cnt{font-variant-numeric:tabular-nums;font-size:1.3rem;font-weight:800;color:var(--amber)}
+  .shophead{position:sticky;top:0;background:var(--paper);z-index:4;padding:14px 20px 6px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .g-item{display:flex;align-items:center;gap:14px;margin:0 16px;padding:13px 4px;border-bottom:1px solid var(--line)}
+  .g-check{width:30px;height:30px;border-radius:10px;border:2.5px solid #C6CCC6;background:#fff;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;font-size:1.05rem;font-weight:900;transition:all .12s}
+  .g-item.done .g-check{background:var(--teal);border-color:var(--teal);color:#fff}
+  .g-name{font-size:1.02rem;font-weight:600;flex:1}
+  .g-item.done .g-name{color:var(--muted);text-decoration:line-through}
+  .g-amt{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.88rem;font-weight:600}
+
+  /* COOK — direction C: dark takeover */
+  #scr-cook{background:var(--slate);color:var(--lite)}
+  .cookhead{padding:22px 20px 6px;display:flex;justify-content:space-between;align-items:center}
+  .cookhead .x{color:#9FB0AA;font-size:.8rem;font-weight:700}
+  .cookhead .t{font-size:.85rem;font-weight:700;color:#9FB0AA}
+  .cook-recipe{padding:0 20px;font-size:1.05rem;font-weight:800;letter-spacing:-.01em}
+  .dots{display:flex;gap:6px;padding:14px 20px}
+  .dots i{height:4px;flex:1;border-radius:99px;background:var(--slate-2)}
+  .dots i.done{background:var(--amber)}
+  .stepnum{padding:18px 20px 0;font-size:.78rem;font-weight:800;letter-spacing:.1em;color:var(--amber);text-transform:uppercase}
+  .steptext{padding:10px 20px;font-size:1.7rem;line-height:1.35;font-weight:700;letter-spacing:-.015em;text-wrap:balance}
+  .stepings{display:flex;flex-wrap:wrap;gap:8px;padding:10px 20px}
+  .stepings span{background:var(--slate-2);border:1px solid #2A3733;color:#CBD8D3;font-size:.8rem;font-weight:600;padding:7px 12px;border-radius:99px}
+  .cooknav{margin-top:auto;display:flex;gap:10px;padding:16px 16px 20px}
+  .cooknav button{flex:1;border:0;border-radius:16px;padding:20px;font:inherit;font-size:1.05rem;font-weight:800;cursor:pointer}
+  .cooknav .prev{background:var(--slate-2);color:#9FB0AA;flex:0 0 30%}
+  .cooknav .next{background:var(--amber);color:#131A18}
+  .wake{color:#5E6B67;text-align:center;font-size:.7rem;font-weight:600;padding-bottom:6px}
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Meal Queue — reflow mockups</h1>
+    <p>Direction: <b>calm utility</b> base, <b>bold &amp; chunky</b> where your hands are busy (Cook + Shop). Everything is tappable: switch screens below, check items off, advance cook steps.</p>
+  </div>
+
+  <div class="switch" role="tablist">
+    <button class="on" data-s="today" role="tab">Today</button>
+    <button data-s="plan" role="tab">Plan</button>
+    <button data-s="shop" role="tab">Shop</button>
+    <button data-s="cook" role="tab">Cook</button>
+  </div>
+
+  <div class="phone">
+
+    <!-- TODAY -->
+    <section class="screen on" id="scr-today">
+      <div class="apphead"><h2>Today</h2><span class="date">Thu, Jul 2</span></div>
+      <div class="tonight">
+        <span class="label">Tonight · Dinner</span>
+        <h3>Grilled Chicken Tenderloins with Sweet Potato</h3>
+        <span class="meta">Serves 2 · 7 steps · planned Mon–Sun</span>
+        <button class="btn" data-go="cook">Start cooking →</button>
+      </div>
+      <div class="strip"><span class="dot"></span><div>Grocery order due tomorrow<small>12 items still unchecked · pickup Friday</small></div></div>
+      <div class="card weekpeek">
+        <span class="label">This week</span>
+        <div class="row"><span class="d">THU</span><span class="m">Grilled Chicken Tenderloins<small>dinner</small></span></div>
+        <div class="row"><span class="d">FRI</span><span class="m">Corn &amp; Miso Pasta Salad<small>dinner</small></span></div>
+        <div class="row"><span class="d">SAT</span><span class="m">Leftovers: Grilled Chicken<small>lunch</small></span><span class="pill left">leftover</span></div>
+        <div class="row"><span class="d">SUN</span><span class="m" style="color:var(--muted);font-weight:500">Nothing planned</span><span class="pill">plan →</span></div>
+      </div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+        <div><span class="label">Next week</span><div style="font-size:.9rem;font-weight:600;padding-top:4px">Plan starts Sunday</div></div>
+        <button class="btn btn-ghost" style="width:auto;padding:10px 16px;font-size:.85rem">Plan it</button>
+      </div>
+    </section>
+
+    <!-- PLAN -->
+    <section class="screen" id="scr-plan">
+      <div class="apphead"><h2>Plan</h2><span class="date">Jun 29 – Jul 5</span></div>
+      <div class="dayrow today">
+        <div class="dhead"><span>Thu · today</span></div>
+        <div class="slot"><span class="k">D</span> Grilled Chicken Tenderloins <span class="x">edit</span></div>
+      </div>
+      <div class="dayrow">
+        <div class="dhead"><span>Fri</span></div>
+        <div class="slot"><span class="k">L</span> Eating out — pizza <span class="x">edit</span></div>
+        <div class="slot"><span class="k">D</span> Corn &amp; Miso Pasta Salad <span class="x">edit</span></div>
+      </div>
+      <div class="dayrow">
+        <div class="dhead"><span>Sat</span></div>
+        <div class="slot"><span class="k">L</span> Leftovers: Grilled Chicken <span class="x">edit</span></div>
+        <div class="slot empty"><span class="k">D</span> Add dinner <button class="add">+</button></div>
+      </div>
+      <div class="dayrow">
+        <div class="dhead"><span>Sun</span></div>
+        <div class="slot empty"><span class="k">L</span> Add lunch <button class="add">+</button></div>
+        <div class="slot empty"><span class="k">D</span> Add dinner <button class="add">+</button></div>
+      </div>
+      <div style="margin:14px 16px 0"><button class="btn btn-teal">Generate grocery list</button></div>
+    </section>
+
+    <!-- SHOP -->
+    <section class="screen" id="scr-shop">
+      <div class="apphead"><h2>Shop</h2><span class="date">Jun 29 – Jul 5</span></div>
+      <div class="orderbar"><div>Order tomorrow<small>Pickup Friday 10am</small></div><span class="cnt" id="cnt">12</span></div>
+      <div class="shophead">Groceries</div>
+      <div class="g-item"><button class="g-check">✓</button><span class="g-name">Chicken tenderloins</span><span class="g-amt">1.5 lb</span></div>
+      <div class="g-item"><button class="g-check">✓</button><span class="g-name">Sweet potatoes</span><span class="g-amt">2 item</span></div>
+      <div class="g-item done"><button class="g-check">✓</button><span class="g-name">Corn</span><span class="g-amt">3 item</span></div>
+      <div class="g-item"><button class="g-check">✓</button><span class="g-name">Pasta shells</span><span class="g-amt">12 oz</span></div>
+      <div class="g-item"><button class="g-check">✓</button><span class="g-name">Scallions</span><span class="g-amt">1 item</span></div>
+      <div class="shophead">Pantry check</div>
+      <div class="g-item"><button class="g-check">✓</button><span class="g-name">Olive oil</span><span class="g-amt">3 tbsp</span></div>
+      <div class="g-item done"><button class="g-check">✓</button><span class="g-name">Miso paste</span><span class="g-amt">2 tbsp</span></div>
+      <div class="g-item"><button class="g-check">✓</button><span class="g-name">Salt</span><span class="g-amt">2 tsp</span></div>
+    </section>
+
+    <!-- COOK -->
+    <section class="screen" id="scr-cook">
+      <div class="cookhead"><span class="x" data-go="today">✕ Exit</span><span class="t" id="stepcount">Step 3 of 7</span></div>
+      <div class="cook-recipe">Grilled Chicken Tenderloins</div>
+      <div class="dots" id="dots"></div>
+      <div class="stepnum" id="stepnum">Step 3</div>
+      <div class="steptext" id="steptext">Toss the sweet potato wedges with olive oil, salt, and pepper on the sheet pan.</div>
+      <div class="stepings" id="stepings"></div>
+      <div class="cooknav">
+        <button class="prev" id="prev">Back</button>
+        <button class="next" id="next">Next step</button>
+      </div>
+      <div class="wake">screen stays awake while cooking</div>
+    </section>
+
+    <div class="tabbar">
+      <span data-go="today" class="on"><i>☀️</i>Today</span>
+      <span data-go="plan"><i>🗓</i>Plan</span>
+      <span data-go="shop"><i>🛒</i>Shop</span>
+      <span><i>📖</i>Recipes</span>
+    </div>
+  </div>
+
+  <div class="note" id="scrnote"><b>Today:</b> the app opens to what the day needs — tonight's meal one tap from cooking mode, the grocery deadline surfaced, the week at a glance. No more dashboard-of-everything.</div>
+</div>
+
+<script>
+  const notes = {
+    today: "<b>Today:</b> the app opens to what the day needs — tonight's meal one tap from cooking mode, the grocery deadline surfaced, the week at a glance. No more dashboard-of-everything.",
+    plan:  "<b>Plan:</b> the weekly ritual as thumb-sized day rows — quick-add is the primary action, today is highlighted, grocery generation is the exit. Range pickers and settings tuck behind an edit sheet.",
+    shop:  "<b>Shop:</b> chunky 30px checkboxes for cart-pushing thumbs, the order/pickup deadline pinned on top with a live unchecked count, pantry checks separated. Checked state survives every replan (that's milestone 4 underneath).",
+    cook:  "<b>Cook (bold treatment):</b> dark kitchen-glare-friendly takeover, one step at a time in huge type, that step's ingredients as chips, a giant amber thumb target, wake-lock on. Launched from Tonight's card."
+  };
+  const scrs = document.querySelectorAll(".screen");
+  const tabs = document.querySelectorAll(".switch button");
+  const bar  = document.querySelectorAll(".tabbar span[data-go]");
+  function go(name){
+    scrs.forEach(s => s.classList.toggle("on", s.id === "scr-"+name));
+    tabs.forEach(b => b.classList.toggle("on", b.dataset.s === name));
+    bar.forEach(b => b.classList.toggle("on", b.dataset.go === name));
+    document.getElementById("scrnote").innerHTML = notes[name];
+  }
+  tabs.forEach(b => b.addEventListener("click", () => go(b.dataset.s)));
+  document.querySelectorAll("[data-go]").forEach(el => el.addEventListener("click", () => go(el.dataset.go)));
+
+  // shop interactions
+  const cnt = document.getElementById("cnt");
+  function recount(){ cnt.textContent = document.querySelectorAll(".g-item:not(.done)").length + 4; }
+  document.querySelectorAll(".g-check").forEach(c => c.addEventListener("click", () => { c.closest(".g-item").classList.toggle("done"); recount(); }));
+
+  // cook interactions
+  const steps = [
+    {t:"Heat the oven to 425°F and line a sheet pan.", i:[]},
+    {t:"Pat the chicken tenderloins dry and season both sides.", i:["chicken tenderloins · 1.5 lb","salt · 1 tsp","black pepper · ½ tsp"]},
+    {t:"Toss the sweet potato wedges with olive oil, salt, and pepper on the sheet pan.", i:["sweet potatoes · 2","olive oil · 2 tbsp","salt · ½ tsp"]},
+    {t:"Roast the sweet potatoes for 15 minutes while you heat the grill pan.", i:[]},
+    {t:"Grill the tenderloins 4–5 minutes per side until cooked through.", i:["chicken tenderloins"]},
+    {t:"Steam the mixed veggies until crisp-tender, about 4 minutes.", i:["mixed veggies · 3 cups"]},
+    {t:"Plate everything and rest the chicken 3 minutes before serving.", i:[]},
+  ];
+  let idx = 2;
+  const dots = document.getElementById("dots");
+  steps.forEach(() => dots.appendChild(document.createElement("i")));
+  function render(){
+    document.getElementById("stepcount").textContent = `Step ${idx+1} of ${steps.length}`;
+    document.getElementById("stepnum").textContent = `Step ${idx+1}`;
+    document.getElementById("steptext").textContent = steps[idx].t;
+    const ing = document.getElementById("stepings");
+    ing.innerHTML = "";
+    steps[idx].i.forEach(x => { const s = document.createElement("span"); s.textContent = x; ing.appendChild(s); });
+    dots.querySelectorAll("i").forEach((d,j) => d.classList.toggle("done", j <= idx));
+    document.getElementById("next").textContent = idx === steps.length-1 ? "Done — mark cooked" : "Next step";
+    document.getElementById("prev").style.visibility = idx === 0 ? "hidden" : "visible";
+  }
+  document.getElementById("next").addEventListener("click", () => { if(idx < steps.length-1){ idx++; render(); } else { go("today"); } });
+  document.getElementById("prev").addEventListener("click", () => { if(idx > 0){ idx--; render(); } });
+  render();
+</script>

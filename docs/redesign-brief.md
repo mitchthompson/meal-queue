@@ -2,8 +2,12 @@
 
 Owner-approved direction (2026-07-02, enthusiastic): reorganize the app around
 the household's real weekly cycle instead of entity tabs, with a look-and-feel
-update. Direction mockups (tappable, reviewed on-device):
-calm-utility base + bold/chunky treatment where hands are busy.
+update. Direction mockups (tappable, reviewed on-device): calm-utility base +
+bold/chunky treatment where hands are busy — **source in-repo at
+[mockups/reflow-v1.html](mockups/reflow-v1.html)** (self-contained; open in any
+browser or serve statically to view on a phone). App icon source:
+[assets/icon-source.svg](assets/icon-source.svg) (regenerate PNGs with sharp,
+see progress-log 2026-07-02).
 
 ## The organizing idea
 
