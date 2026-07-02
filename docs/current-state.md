@@ -59,8 +59,14 @@ compatible throughout. See [roadmap.md](roadmap.md).
 
 ## Active Handoff
 
-- **In progress:** Nothing. **The reliability core (milestones 2–4) is
-  complete** as of 2026-07-02. Milestone 4 shipped end to end: PR #5 green on
+- **In progress:** Mini-M5 on `codex/ui-feedback-ergonomics` (PR pending):
+  home-screen icon/manifest/theme-color, per-page titles, friendly errors +
+  `aria-live` status component everywhere, session-flash fix,
+  `ensureUserSettings` dedup. Milestone 5 was **rescoped** — a larger redesign
+  is planned (Plan → Shop → Cook reflow, cooking mode; mobile-first), with
+  milestone 6's component extraction as its foundation; see
+  [roadmap.md](roadmap.md) and [progress-log.md](progress-log.md).
+  **The reliability core (milestones 2–4) is complete** as of 2026-07-02. Milestone 4 shipped end to end: PR #5 green on
   first CI (108/108 pgTAP), prod applied migration-first (backup 113K;
   backfill hit exactly the predicted 18 plans; rolled-back live smoke on the
   busiest plan: 61→61 rows, checked state survived regeneration, stamp
