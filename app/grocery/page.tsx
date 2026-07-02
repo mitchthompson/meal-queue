@@ -4,12 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { toYmd } from "@/lib/date-utils";
-import {
-  buildGroceryRows,
-  formatAmount,
-  type GroceryIngredient,
-  type GroceryMealItem,
-} from "@/lib/grocery";
+import { formatAmount } from "@/lib/grocery";
 import { supabase } from "@/lib/supabase/client";
 
 type MealPlan = {
@@ -17,6 +12,7 @@ type MealPlan = {
   start_date: string;
   end_date: string;
   version: number;
+  groceries_version: number | null;
 };
 
 type GroceryItem = {
@@ -108,7 +104,7 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
     const todayYmd = toYmd(new Date());
     const { data, error: plansError } = await supabase
       .from("meal_plans")
-      .select("id, start_date, end_date, version")
+      .select("id, start_date, end_date, version, groceries_version")
       .gte("end_date", todayYmd);
 
     if (plansError) {
@@ -134,7 +130,7 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
     setLoading(false);
   }
 
-  async function loadGroceryItems(planId: string) {
+  async function loadGroceryItems(planId: string, options?: { skipStaleCheck?: boolean }) {
     setError(null);
     const { data, error: groceryError } = await supabase
       .from("grocery_list_items")
@@ -147,30 +143,17 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
       return;
     }
 
-    const loadedItems = (data ?? []) as GroceryItem[];
-    setItems(loadedItems);
+    setItems((data ?? []) as GroceryItem[]);
 
+    if (options?.skipStaleCheck) return;
     const plan = plans.find((value) => value.id === planId);
     if (!plan) return;
 
-    if (loadedItems.length === 0) {
-      const { count, error: countError } = await supabase
-        .from("meal_plan_items")
-        .select("*", { count: "exact", head: true })
-        .eq("meal_plan_id", plan.id)
-        .eq("slot_type", "cook");
-      if (countError) {
-        setError(countError.message);
-        return;
-      }
-      if ((count ?? 0) > 0) {
-        await regenerateForPlan(plan, true);
-      }
-      return;
-    }
-
-    const hasStaleVersion = loadedItems.some((item) => !item.source_key.startsWith(`v${plan.version}|`));
-    if (hasStaleVersion) {
+    // Stale when the list was generated from a different plan version (or
+    // never generated). Milestone 3's triggers bump the version only on
+    // grocery-relevant changes, and regeneration preserves user state, so an
+    // automatic regenerate here is safe.
+    if (plan.groceries_version !== plan.version) {
       await regenerateForPlan(plan, true);
     }
   }
@@ -181,37 +164,21 @@ function GroceryScreen({ userEmail }: { userEmail?: string }) {
     if (!silent) setMessage(null);
 
     try {
-      const { data: mealItemsData, error: mealItemsError } = await supabase
-        .from("meal_plan_items")
-        .select("recipe_id, serving_multiplier")
-        .eq("meal_plan_id", plan.id)
-        .eq("slot_type", "cook");
-      if (mealItemsError) throw mealItemsError;
+      // Transactional, state-preserving regeneration in the database
+      // (regenerate_grocery_list): unchanged items keep their checked,
+      // on-hand, and pantry-override state; obsolete rows are removed only
+      // after the replacement upsert succeeds.
+      const { error: rpcError } = await supabase.rpc("regenerate_grocery_list", {
+        p_plan_id: plan.id,
+      });
+      if (rpcError) throw rpcError;
 
-      const mealItems = (mealItemsData ?? []) as GroceryMealItem[];
-      const recipeIds = Array.from(new Set(mealItems.map((item) => item.recipe_id).filter((id): id is string => Boolean(id))));
-
-      let ingredients: GroceryIngredient[] = [];
-      if (recipeIds.length > 0) {
-        const { data: ingredientsData, error: ingredientsError } = await supabase
-          .from("ingredients")
-          .select("recipe_id, name, amount, unit_code, is_pantry_staple")
-          .in("recipe_id", recipeIds);
-        if (ingredientsError) throw ingredientsError;
-        ingredients = (ingredientsData ?? []) as GroceryIngredient[];
-      }
-
-      const rows = buildGroceryRows(plan, mealItems, ingredients);
-
-      const { error: deleteError } = await supabase.from("grocery_list_items").delete().eq("meal_plan_id", plan.id);
-      if (deleteError) throw deleteError;
-
-      if (rows.length > 0) {
-        const { error: insertError } = await supabase.from("grocery_list_items").insert(rows);
-        if (insertError) throw insertError;
-      }
-
-      await loadGroceryItems(plan.id);
+      // The function stamped groceries_version = version; mirror that locally
+      // so the reload below does not re-trigger regeneration.
+      setPlans((current) =>
+        current.map((value) => (value.id === plan.id ? { ...value, groceries_version: value.version } : value)),
+      );
+      await loadGroceryItems(plan.id, { skipStaleCheck: true });
       if (!silent) setMessage("Grocery list regenerated from current meal plan.");
     } catch (caughtError) {
       setError(toErrorMessage(caughtError, "Failed to regenerate grocery list."));
