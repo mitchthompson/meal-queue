@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
-import { PlanSlotCell } from "@/components/plan-slot-cell";
+import { PlanDayItems } from "@/components/plan-day-items";
 import { createDefaultsFromStart, dateRange, formatDayAbbrev, formatDisplayDate, toYmd } from "@/lib/date-utils";
 import { StatusMessage } from "@/components/status-message";
 import { usePlan } from "@/lib/hooks/use-plan";
@@ -32,7 +32,7 @@ function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string 
     selectedPlan,
     selectedPlanId,
     selectPlan,
-    itemMap,
+    items,
     itemById,
     createForm,
     setCreateForm,
@@ -41,7 +41,7 @@ function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string 
     settingsDefaults,
     planFilter,
     setPlanFilter,
-    activeSlot,
+    activeDay,
     quickQuery,
     setQuickQuery,
     quickMode,
@@ -60,7 +60,7 @@ function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string 
     createPlan,
     savePlanMeta,
     deleteSelectedPlan,
-    upsertPlanSlot,
+    addMeal,
     removeItem,
     adjustServing,
     openQuickAdd,
@@ -78,9 +78,10 @@ function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string 
     setShowEdit(false);
   }, [selectedPlanId]);
 
-  const slotCellShared = {
+  const dayItemsShared = {
+    items,
     itemById,
-    activeSlot,
+    activeDay,
     quickMode,
     setQuickMode,
     quickQuery,
@@ -93,7 +94,7 @@ function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string 
     quickMatches,
     quickLeftoverOptions,
     handleQuickAddKeyDown,
-    upsertPlanSlot,
+    addMeal,
     removeItem,
     adjustServing,
     openQuickAdd,
@@ -268,8 +269,6 @@ function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string 
 
         {selectedPlan
           ? dateRange(selectedForm.start_date, selectedForm.end_date).map((day) => {
-              const lunchItems = itemMap.get(`${day}:lunch`) ?? [];
-              const dinnerItems = itemMap.get(`${day}:dinner`) ?? [];
               const isToday = day === today;
               return (
                 <div className={clsx("plan-dayrow", isToday && "today")} key={day}>
@@ -280,8 +279,7 @@ function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string 
                     </span>
                     <span>{formatDisplayDate(day, { year: false })}</span>
                   </div>
-                  <PlanSlotCell day={day} items={lunchItems} mealType="lunch" {...slotCellShared} />
-                  <PlanSlotCell day={day} items={dinnerItems} mealType="dinner" {...slotCellShared} />
+                  <PlanDayItems day={day} {...dayItemsShared} />
                 </div>
               );
             })

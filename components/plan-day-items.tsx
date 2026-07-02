@@ -2,28 +2,18 @@
 
 import Link from "next/link";
 import { formatDisplayDate } from "@/lib/date-utils";
-import type { MealPlanItem, usePlan } from "@/lib/hooks/use-plan";
+import type { usePlan } from "@/lib/hooks/use-plan";
 
-// One meal (lunch or dinner) inside a Plan day card: slot rows with an
-// explicit L/D label in the markup, the quick-add card when this slot is
-// active, and the add affordances. All state and writes come in as props
-// from usePlan; the cell owns no state. (The reflow removed the old
-// nth-child ::before label injection — labels are real markup now.)
+// The meals inside a Plan day card: one flat list per day (no lunch/dinner
+// slots — owner decision, 2026-07-02 review), the quick-add card when this
+// day is active, and the add affordances. All state and writes come in as
+// props from usePlan; this component owns no state.
 
-const MEAL_KEY: Record<MealPlanItem["meal_type"], string> = {
-  lunch: "L",
-  dinner: "D",
-};
-
-const EAT_OUT_NOTE_PLACEHOLDER: Record<MealPlanItem["meal_type"], string> = {
-  lunch: "Optional note (e.g. sushi)",
-  dinner: "Optional note (e.g. date night)",
-};
-
-type PlanSlotCellProps = Pick<
+type PlanDayItemsProps = Pick<
   ReturnType<typeof usePlan>,
+  | "items"
   | "itemById"
-  | "activeSlot"
+  | "activeDay"
   | "quickMode"
   | "setQuickMode"
   | "quickQuery"
@@ -36,22 +26,19 @@ type PlanSlotCellProps = Pick<
   | "quickMatches"
   | "quickLeftoverOptions"
   | "handleQuickAddKeyDown"
-  | "upsertPlanSlot"
+  | "addMeal"
   | "removeItem"
   | "adjustServing"
   | "openQuickAdd"
 > & {
   day: string;
-  mealType: MealPlanItem["meal_type"];
-  items: MealPlanItem[];
 };
 
-export function PlanSlotCell({
+export function PlanDayItems({
   day,
-  mealType,
   items,
   itemById,
-  activeSlot,
+  activeDay,
   quickMode,
   setQuickMode,
   quickQuery,
@@ -64,18 +51,18 @@ export function PlanSlotCell({
   quickMatches,
   quickLeftoverOptions,
   handleQuickAddKeyDown,
-  upsertPlanSlot,
+  addMeal,
   removeItem,
   adjustServing,
   openQuickAdd,
-}: PlanSlotCellProps) {
-  const isActive = activeSlot?.day === day && activeSlot.meal_type === mealType;
+}: PlanDayItemsProps) {
+  const isActive = activeDay === day;
+  const dayItems = items.filter((item) => item.plan_date === day);
 
   return (
     <>
-      {items.map((item) => (
+      {dayItems.map((item) => (
         <div className="plan-slot" key={item.id}>
-          <span className="plan-slot-k">{MEAL_KEY[mealType]}</span>
           <div className="plan-slot-main">
             {item.slot_type === "eat_out" ? (
               <span>{item.note?.trim() || "Eating out"}</span>
@@ -114,14 +101,13 @@ export function PlanSlotCell({
         </div>
       ))}
 
-      {items.length === 0 ? (
+      {dayItems.length === 0 ? (
         <div className="plan-slot empty">
-          <span className="plan-slot-k">{MEAL_KEY[mealType]}</span>
-          Add {mealType}
+          Nothing planned
           <button
-            aria-label={`Add ${mealType} on ${formatDisplayDate(day, { year: false })}`}
+            aria-label={`Add a meal on ${formatDisplayDate(day, { year: false })}`}
             className="plan-slot-add"
-            onClick={() => openQuickAdd(day, mealType)}
+            onClick={() => openQuickAdd(day)}
             type="button"
           >
             +
@@ -129,8 +115,8 @@ export function PlanSlotCell({
         </div>
       ) : (
         <div className="plan-slot-more">
-          <button className="text-btn" onClick={() => openQuickAdd(day, mealType)} type="button">
-            + add another {mealType} item
+          <button className="text-btn" onClick={() => openQuickAdd(day)} type="button">
+            + add another meal
           </button>
         </div>
       )}
@@ -170,22 +156,21 @@ export function PlanSlotCell({
                   onChange={(event) => setQuickQuery(event.target.value)}
                   onKeyDown={handleQuickAddKeyDown}
                 />
-                <div className="quick-add-list">
+                <div className="quick-add-results">
                   {quickMatches.map((recipe) => (
                     <button
-                      className="text-btn"
+                      className="quick-add-row"
                       key={recipe.id}
-                      onClick={() =>
-                        upsertPlanSlot(day, mealType, { slotType: "cook", recipeId: recipe.id, servingMultiplier: 1 })
-                      }
+                      onClick={() => addMeal(day, { slotType: "cook", recipeId: recipe.id, servingMultiplier: 1 })}
                       type="button"
                     >
-                      {recipe.name}
+                      <span>{recipe.name}</span>
+                      <span className="muted">Serves {recipe.base_servings}</span>
                     </button>
                   ))}
                 </div>
-                <p className="plan-slot-sub">
-                  Enter adds · Shift+Enter adds and moves to the next day · Backspace on empty clears the slot
+                <p className="plan-slot-sub quick-add-hint">
+                  Enter adds the top match · Shift+Enter adds and jumps to the next day
                 </p>
               </>
             ) : null}
@@ -198,7 +183,7 @@ export function PlanSlotCell({
                   {quickLeftoverOptions.length === 0 ? <option value="">No prior cooked meals</option> : null}
                   {quickLeftoverOptions.map((option) => (
                     <option key={option.id} value={option.id}>
-                      {formatDisplayDate(option.plan_date)} {option.meal_type}: {option.recipe_name}
+                      {formatDisplayDate(option.plan_date)}: {option.recipe_name}
                     </option>
                   ))}
                 </select>
@@ -211,7 +196,7 @@ export function PlanSlotCell({
                         quickLeftoverOptions.find((option) => option.id === quickLeftoverId) ??
                         quickLeftoverOptions[0];
                       if (!choice) return;
-                      upsertPlanSlot(day, mealType, {
+                      addMeal(day, {
                         slotType: "leftover",
                         recipeId: choice.recipe_id,
                         leftoverFromItemId: choice.id,
@@ -229,20 +214,14 @@ export function PlanSlotCell({
               <>
                 <input
                   ref={quickInputRef}
-                  placeholder={EAT_OUT_NOTE_PLACEHOLDER[mealType]}
+                  placeholder="Optional note (e.g. pizza night)"
                   value={quickNote}
                   onChange={(event) => setQuickNote(event.target.value)}
                   onKeyDown={handleQuickAddKeyDown}
                 />
                 <button
                   className="secondary-btn"
-                  onClick={() =>
-                    upsertPlanSlot(day, mealType, {
-                      slotType: "eat_out",
-                      note: quickNote || "Eating out",
-                      servingMultiplier: 1,
-                    })
-                  }
+                  onClick={() => addMeal(day, { slotType: "eat_out", note: quickNote || "Eating out", servingMultiplier: 1 })}
                   type="button"
                 >
                   Save eating out

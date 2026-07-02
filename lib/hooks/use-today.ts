@@ -26,10 +26,10 @@ export type TodayItem = {
   id: string;
   meal_plan_id: string;
   plan_date: string;
-  meal_type: "lunch" | "dinner";
   slot_type: "cook" | "leftover" | "eat_out";
   note: string | null;
   serving_multiplier: number;
+  created_at: string;
   recipe: TodayRecipe | null;
 };
 
@@ -68,12 +68,12 @@ export function useToday() {
   );
 
   const tonightItems = useMemo(
-    () => currentItems.filter((item) => item.plan_date === today && item.meal_type === "dinner"),
+    () => currentItems.filter((item) => item.plan_date === today),
     [currentItems, today],
   );
 
-  // The hero shows one meal: prefer something to cook, then leftovers, then
-  // an eat-out note.
+  // The hero headlines one meal: prefer something to cook, then leftovers,
+  // then an eat-out note.
   const heroItem = useMemo(() => {
     return (
       tonightItems.find((item) => item.slot_type === "cook") ??
@@ -83,15 +83,21 @@ export function useToday() {
     );
   }, [tonightItems]);
 
+  // Up to two of tonight's meals show on the hero (owner request, 2026-07-02
+  // review — e.g. a main plus a side); the rest collapse into "+N more".
+  const alsoTonight = useMemo(
+    () => tonightItems.filter((item) => item.id !== heroItem?.id)[0] ?? null,
+    [tonightItems, heroItem],
+  );
+  const tonightMoreCount = Math.max(0, tonightItems.length - 2);
+
   const weekRows = useMemo(() => {
     if (!currentPlan) return [];
     const start = today > currentPlan.start_date ? today : currentPlan.start_date;
     if (start > currentPlan.end_date) return [];
     return dateRange(start, currentPlan.end_date).map((day) => ({
       day,
-      items: currentItems
-        .filter((item) => item.plan_date === day)
-        .sort((a, b) => (a.meal_type === b.meal_type ? 0 : a.meal_type === "lunch" ? -1 : 1)),
+      items: currentItems.filter((item) => item.plan_date === day),
     }));
   }, [currentPlan, currentItems, today]);
 
@@ -143,9 +149,11 @@ export function useToday() {
       supabase
         .from("meal_plan_items")
         .select(
-          "id, meal_plan_id, plan_date, meal_type, slot_type, note, serving_multiplier, recipe:recipes(id, name, base_servings)",
+          "id, meal_plan_id, plan_date, slot_type, note, serving_multiplier, created_at, recipe:recipes(id, name, base_servings)",
         )
-        .in("meal_plan_id", planIds),
+        .in("meal_plan_id", planIds)
+        .order("plan_date", { ascending: true })
+        .order("created_at", { ascending: true }),
       active
         ? supabase
             .from("grocery_list_items")
@@ -179,7 +187,6 @@ export function useToday() {
           (item) =>
             item.meal_plan_id === active.id &&
             item.plan_date === nowYmd &&
-            item.meal_type === "dinner" &&
             item.slot_type === "cook" &&
             item.recipe,
         )
@@ -204,6 +211,8 @@ export function useToday() {
     currentItems,
     tonightItems,
     heroItem,
+    alsoTonight,
+    tonightMoreCount,
     heroStepCount,
     weekRows,
     uncheckedCount,
