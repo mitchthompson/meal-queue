@@ -3,6 +3,24 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
+## 2026-07-02 (evening) - Milestone 4 Shipped; Reliability Core Complete
+
+- PR #5 green on first CI run (108/108 pgTAP; app checks 47s, db tests 1m12s).
+- Prod runbook (owner-approved "apply and merge"): backup (113K) → preflights
+  (identical to design: 0 dup identities, 783/783 prefixed) → single-transaction
+  apply (`UPDATE 18` backfill — exactly the predicted plans) → verify (function,
+  index, column all registered; 783 rows untouched) → **rolled-back live smoke
+  on the busiest plan: 61→61 rows, a checked item survived regeneration, stamp
+  correct** → zero residue (201 checked rows intact). Merged as `5450606`;
+  branches cleaned up.
+- **Milestones 2–4 are all live in prod.** Each shipped the same way: live-data
+  preflights → migration + pgTAP first → local Colima proof → first-try green
+  CI → owner-gated migration-first prod apply with a rolled-back smoke test →
+  merge. Three PRs, three first-try green CI runs, zero prod incidents since
+  the M2 deploy-order lesson.
+- Next: milestone 5 (UI feedback and ergonomics), scoped by the 2026-06-11 UI
+  audit — feedback/status overhaul, mobile ergonomics, loading polish.
+
 ## 2026-07-02 - Milestone 4 (Grocery State Preservation) Implemented and Locally Proven
 
 - On `codex/grocery-state-preservation`: live preflights first (0 duplicate

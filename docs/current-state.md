@@ -22,12 +22,13 @@ proven end to end — PR #3 produced the first fully green run (app checks +
 33/33 pgTAP against a fresh PG17 stack, 1m02s). The local Colima stack makes DB
 changes provable before prod, and prod DB access (backup/preflight/apply/verify
 runbooks) is agent-executable with owner approval per operation.
-**Milestone 3 (plan integrity) shipped 2026-07-02** (PR #4, prod-applied
-migration-first, smoke-verified): version bumps are trigger-based and
-grocery-scoped, plan invariants are DB-enforced under concurrency.
-**Next up: milestone 4 — grocery state preservation** on
-`codex/grocery-state-preservation`. Existing household data is live and must
-stay compatible throughout. See [roadmap.md](roadmap.md).
+**The reliability core (milestones 2–4) is complete as of 2026-07-02**: atomic
+recipe saves, trigger-based grocery-scoped plan versioning with DB-enforced
+invariants, and transactional state-preserving grocery regeneration — each
+shipped pgTAP-first, CI-proven, prod-applied migration-first with rolled-back
+live smoke tests. **Next up: milestone 5 — UI feedback and ergonomics** on
+`codex/ui-feedback-ergonomics`. Existing household data is live and must stay
+compatible throughout. See [roadmap.md](roadmap.md).
 
 ## Stable Baseline
 
@@ -58,20 +59,18 @@ stay compatible throughout. See [roadmap.md](roadmap.md).
 
 ## Active Handoff
 
-- **In progress:** Milestone 4 implemented on
-  `codex/grocery-state-preservation` (committing/PR-ing this session):
-  migration `20260702023356_grocery_state_preservation.sql`
-  (`regenerate_grocery_list()` transactional upsert-by-identity;
-  `meal_plans.groceries_version` staleness column, backfilled for 18/19 live
-  lists; unique index on (meal_plan_id, source_key)), grocery page regeneration
-  reduced to one RPC, pgTAP suite #3 (25 assertions). Proven locally: 108/108
-  across three suites; typecheck/vitest/build green. Live preflights: 0
-  duplicate identities; 783/783 rows v-prefixed.
-- **Next action:** PR → green CI → owner-gated prod apply (backup-first,
-  **migration before merge**) → merge. Then the reliability core (milestones
-  2–4) is complete; next is milestone 5 (UI feedback and ergonomics). Owner UI
-  sanity checks worth doing after merge: edit a plan note (checklist should
-  survive), regenerate groceries (checked items should stay checked).
+- **In progress:** Nothing. **The reliability core (milestones 2–4) is
+  complete** as of 2026-07-02. Milestone 4 shipped end to end: PR #5 green on
+  first CI (108/108 pgTAP), prod applied migration-first (backup 113K;
+  backfill hit exactly the predicted 18 plans; rolled-back live smoke on the
+  busiest plan: 61→61 rows, checked state survived regeneration, stamp
+  correct; zero residue — 783 rows and 201 checked items untouched), then
+  merged (`5450606`).
+- **Next action:** Milestone 5 (UI feedback and ergonomics) on
+  `codex/ui-feedback-ergonomics`, scoped by the 2026-06-11 UI audit. Owner UI
+  sanity checks worth a minute in the live app first: edit a plan note (the
+  grocery checklist should survive), then Regenerate on the grocery page
+  (checked items should stay checked).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -119,6 +118,7 @@ From [roadmap.md](roadmap.md). Reliability is the current priority.
 | 1.5 | CI + Test Harness | — | Done (PR #3, `240b508`, 2026-07-01) — first green CI: 33/33 pgTAP in 1m02s |
 | 2 | Atomic Recipe Saves | — | Done (PR #2, `061f541`; prod migrations applied + verified 2026-07-01) |
 | 3 | Plan Integrity | — | Done (PR #4, `6d086f2`, 2026-07-02; prod applied migration-first + smoke-verified) |
+| 4 | Grocery State Preservation | — | Done (PR #5, `5450606`, 2026-07-02; prod applied migration-first; live smoke: checked state survived regeneration) |
 | 3 | Plan Integrity | `codex/plan-integrity` | Planned |
 | 4 | Grocery State Preservation | `codex/grocery-state-preservation` | Planned |
 | 5 | UI Feedback and Ergonomics | `codex/ui-feedback-ergonomics` | Planned (after reliability core) |

@@ -130,16 +130,14 @@ Acceptance:
 
 ### 4. Grocery State Preservation
 
-**Status (2026-07-02):** implemented on `codex/grocery-state-preservation` and
-proven locally — 108/108 pgTAP across three suites (25 new). Transactional
-`regenerate_grocery_list()` upserts by stable identity (name|unit|pantry, no
-version prefix), preserving checked / on-hand / pantry-override state;
-staleness moved to `meal_plans.groceries_version` (pairs with milestone 3's
-scoped bumps); legacy prefixed rows keep their state through their first
-regeneration. Pending: PR → green CI → prod apply (migration BEFORE client
-merge) → merge.
-
-Branch: `codex/grocery-state-preservation`
+Done: PR #5 (`5450606`), 2026-07-02. First-try green CI (108/108 pgTAP across
+three suites). Transactional `regenerate_grocery_list()` upserts by stable
+identity (name|unit|pantry, no version prefix), preserving checked / on-hand /
+pantry-override state; staleness moved to `meal_plans.groceries_version`
+(pairs with milestone 3's scoped bumps); legacy rows normalized
+state-intact. Prod applied migration-first; rolled-back live smoke proved
+checked state survives regeneration on real data. **The reliability core
+(milestones 2–4) is complete.**
 
 - Add a transactional grocery regeneration function.
 - Give generated items stable identities within a plan (identity key without
