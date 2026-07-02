@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   addDays,
+  formatDayName,
+  formatDisplayDate,
+  formatLongDate,
   createDefaultsFromStart,
   dateRange,
   findNextAvailableStartDate,
@@ -69,5 +72,17 @@ describe("date utilities", () => {
   it("returns the next day only while it remains in range", () => {
     expect(nextDayInRange("2026-06-11", "2026-06-12")).toBe("2026-06-12");
     expect(nextDayInRange("2026-06-12", "2026-06-12")).toBeNull();
+  });
+});
+
+describe("display formatting", () => {
+  it("formats display dates with and without the year", () => {
+    expect(formatDisplayDate("2026-07-02")).toBe("Jul 2, 2026");
+    expect(formatDisplayDate("2026-07-02", { year: false })).toBe("Jul 2");
+  });
+
+  it("formats day names and long dates from local calendar fields", () => {
+    expect(formatDayName("2026-07-02")).toBe("Thursday");
+    expect(formatLongDate("2026-07-02")).toBe("Thu, Jul 2");
   });
 });
