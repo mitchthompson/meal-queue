@@ -1,6 +1,7 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
+import { TOKEN_COLOR_BG } from "@/lib/design-tokens";
 
 const headingFont = Fraunces({
   subsets: ["latin"],
@@ -15,8 +16,15 @@ const bodyFont = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Meal Queue",
+  title: {
+    default: "Meal Queue",
+    template: "%s · Meal Queue",
+  },
   description: "Plan meals, keep recipes, and generate grocery lists.",
+};
+
+export const viewport: Viewport = {
+  themeColor: TOKEN_COLOR_BG,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
