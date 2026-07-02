@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
+import { CookMode } from "@/components/cook-mode";
 import { formatAmount } from "@/lib/grocery";
 import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
@@ -51,8 +52,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [focusSteps, setFocusSteps] = useState(false);
-  const [focusedStepIndex, setFocusedStepIndex] = useState(0);
+  const [cooking, setCooking] = useState(false);
 
   const pantryCount = useMemo(
     () => ingredients.filter((ingredient) => ingredient.is_pantry_staple).length,
@@ -116,8 +116,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
     setUnitLabelByCode(
       Object.fromEntries(((unitsRes.data ?? []) as Array<{ code: string; label: string }>).map((unit) => [unit.code, unit.label])),
     );
-    setFocusedStepIndex(0);
-    setFocusSteps(false);
+    setCooking(false);
 
     setLoading(false);
   }
@@ -240,50 +239,20 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
               <div className="section-head">
                 <h2>Steps</h2>
                 {steps.length > 0 ? (
-                  <button className="secondary-btn" onClick={() => setFocusSteps((current) => !current)} type="button">
-                    {focusSteps ? "Show all steps" : "Focus mode"}
+                  <button className="primary-btn" onClick={() => setCooking(true)} type="button">
+                    Start cooking
                   </button>
                 ) : null}
               </div>
               {steps.length === 0 ? <p className="muted">No steps.</p> : null}
-              {steps.length > 0 && focusSteps ? (
-                <div className="stack">
-                  <div className="recipe-step-item">
-                    <span className="recipe-step-index">{steps[focusedStepIndex].step_number}</span>
-                    <p>{steps[focusedStepIndex].body}</p>
-                  </div>
-                  <div className="recipe-focus-controls">
-                    <button
-                      className="secondary-btn"
-                      disabled={focusedStepIndex === 0}
-                      onClick={() => setFocusedStepIndex((current) => Math.max(0, current - 1))}
-                      type="button"
-                    >
-                      Previous
-                    </button>
-                    <span className="muted">
-                      Step {focusedStepIndex + 1} of {steps.length}
-                    </span>
-                    <button
-                      className="secondary-btn"
-                      disabled={focusedStepIndex >= steps.length - 1}
-                      onClick={() => setFocusedStepIndex((current) => Math.min(steps.length - 1, current + 1))}
-                      type="button"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <ol className="recipe-step-list">
-                  {steps.map((step) => (
-                    <li className="recipe-step-item" key={step.step_number}>
-                      <span className="recipe-step-index">{step.step_number}</span>
-                      <p>{step.body}</p>
-                    </li>
-                  ))}
-                </ol>
-              )}
+              <ol className="recipe-step-list">
+                {steps.map((step) => (
+                  <li className="recipe-step-item" key={step.step_number}>
+                    <span className="recipe-step-index">{step.step_number}</span>
+                    <p>{step.body}</p>
+                  </li>
+                ))}
+              </ol>
             </article>
 
             {recipe.instructions_raw ? (
@@ -294,6 +263,21 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
             ) : null}
           </div>
         </section>
+      ) : null}
+
+      {cooking && recipe && steps.length > 0 ? (
+        <CookMode
+          ingredients={ingredients.map((ingredient) => ({
+            id: ingredient.id,
+            name: ingredient.name,
+            amount: `${formatAmount(Number(ingredient.amount) * scaleFactor)} ${
+              unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code
+            }`,
+          }))}
+          onExit={() => setCooking(false)}
+          recipeName={recipe.name}
+          steps={steps}
+        />
       ) : null}
     </AppShell>
   );

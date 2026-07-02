@@ -49,6 +49,26 @@ then short semantic aliases pointing at the common ones.
 | `--color-danger` | `#a13c3c` | Danger/error (muted red). Danger button bg/border, `.error-text`. |
 | `--focus-ring` | `#1f6d63` | Focus outline color (identical value to `--color-primary`). Used in `:focus-visible`. |
 
+### Cook-mode tokens (token set v2)
+
+The first tranche of the redesign's token set v2 ([redesign-brief.md](redesign-brief.md)),
+introduced with the Cook screen. Values come from the approved mockup
+([mockups/reflow-v1.html](mockups/reflow-v1.html)). Scoped to the `.cook-mode`
+takeover — this is not a global dark mode. Remaining v2 values (paper ground,
+sharpened teal, native type app-wide) land as each reflow screen ships.
+
+| Variable | Value | Role |
+| --- | --- | --- |
+| `--color-cook-bg` | `#131a18` | Cook takeover background (deep slate). Also the text color on the amber Next button. |
+| `--color-cook-surface` | `#1d2724` | Raised surface on slate — ingredient chips, Back button, unfilled progress dots. |
+| `--color-cook-text` | `#f3f6f4` | Primary text on slate. |
+| `--color-cook-text-soft` | `#cbd8d3` | Ingredient-chip text. |
+| `--color-cook-text-muted` | `#9fb0aa` | Secondary text on slate — exit control, step count, Back label. |
+| `--color-cook-text-dim` | `#5e6b67` | Dimmest text on slate — the wake-lock note. |
+| `--color-cook-border` | `#2a3733` | Chip border on slate. |
+| `--color-cook-amber` | `#e8a13d` | The one warm accent — progress dots, step label, Next button, focus ring inside the takeover. |
+| `--font-cook` | native stack (`-apple-system …`) | Cook takeover type. First landing of the v2 "installed-app" native-stack direction; the rest of the app keeps Fraunces/Manrope until their screens reflow. |
+
 ### Semantic aliases
 
 Short names for the most common raw tokens. **Prefer the alias** where one exists.
@@ -74,7 +94,9 @@ Used only in the `body` background; do not reuse these as component colors:
 - Desktop radials: `#f6d9c7` (warm) and `#d8ece4` (cool).
 - Mobile (`max-width: 700px`) linear gradient: `#f9f5ed` → `#f4efe5`.
 
-There is **no dark mode** and no `prefers-color-scheme` query.
+There is **no dark mode** and no `prefers-color-scheme` query. The one dark
+surface is the Cook takeover (`.cook-mode`), which uses its own scoped
+`--color-cook-*` tokens rather than a theme switch.
 
 ---
 
@@ -187,6 +209,26 @@ Shared base across `.primary-btn`, `.secondary-btn`, `.danger-btn`, `.ghost-btn`
   `0.55rem 0.6rem`, explicit `bg #ffffff`, `color var(--ink)`; `textarea` resizes vertical.
 - `label`: grid with `0.25rem` gap, `0.88rem`, `--muted`.
 - Inline checkboxes (`.inline-check`, `.grocery-check`) reset `width: auto` on the input.
+
+### Cook-mode takeover
+
+`components/cook-mode.tsx` + the `.cook-*` selectors. A `position: fixed;
+inset: 0` full-screen dialog at `z-index: 30` (above the mobile tabbar's 20),
+styled entirely from the `--color-cook-*` tokens and `--font-cook`:
+
+- One step at a time: amber uppercase step label, step body at `1.7rem`/700
+  with `text-wrap: balance`, that step's ingredients as chips (`999px` pills on
+  `--color-cook-surface`, `tabular-nums` amounts).
+- Progress: flexed 4px bars (`.cook-dots`), filled with `--color-cook-amber`
+  up to the current step; decorative (`aria-hidden`).
+- Nav: giant amber Next (`flex: 1`, radius `16px`, `1.25rem` padding) beside a
+  30%-width slate Back (visibility-hidden on step 1 to keep layout stable);
+  last step relabels Next to "Done — mark cooked".
+- Screen wake-lock while mounted (best-effort, re-acquired on
+  `visibilitychange`); the "screen stays awake" note renders only while the
+  lock is actually held.
+- Safe-area aware top and bottom (`env(safe-area-inset-*)`); body scroll is
+  locked behind the takeover; Escape exits.
 
 ### Status text & misc
 
