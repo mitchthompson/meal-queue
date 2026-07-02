@@ -65,6 +65,7 @@ Always confirm against these live files before building. Do **not** trust a plan
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Local dev server (`next dev`) |
+| `npm run dev:phone` | Dev server on the LAN with a printed URL/QR: use this to verify mobile changes on a real iPhone, never on production (see [docs/setup.md](docs/setup.md)) |
 | `npm run build` | Production build (`next build`) |
 | `npm run start` | Serve the production build |
 | `npm run lint` | `next lint` |

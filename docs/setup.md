@@ -60,6 +60,13 @@ npm run dev      # http://localhost:3000
 Sign in with the existing email/password account (this is a single-household
 app; there is no public sign-up flow to rely on).
 
+**Preview on the iPhone:** `npm run dev:phone` binds the dev server to the LAN
+(`next dev -H 0.0.0.0`) and first prints the LAN URL plus a QR code
+(`scripts/phone-preview.mjs`). Scan the QR (or type the URL) in Safari on the
+phone; both devices must be on the same Wi-Fi network. On the first run macOS
+asks whether Node may accept incoming connections: click **Allow**, or the
+phone cannot reach the server.
+
 ## 5. Verify the baseline
 
 ```bash
