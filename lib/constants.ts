@@ -36,3 +36,21 @@ export const DEFAULT_UNITS = [
   { code: "clove", label: "clove" },
   { code: "slice", label: "slice" },
 ];
+
+export type UserSettingsDefaults = {
+  default_plan_days: number;
+  week_starts_on: number;
+  default_order_weekday: number | null;
+  default_pickup_weekday: number | null;
+};
+
+// Canonical client-side defaults for user_settings — the single source of
+// truth. Mirrors the SQL column defaults in supabase/schema.sql: plan_days 7,
+// week_starts_on 5, and order/pickup weekday left unset (null) so the user
+// picks their own days. Do not re-inline these values.
+export const DEFAULT_USER_SETTINGS: UserSettingsDefaults = {
+  default_plan_days: 7,
+  week_starts_on: 5,
+  default_order_weekday: null,
+  default_pickup_weekday: null,
+};

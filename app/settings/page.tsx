@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
-import { WEEKDAYS } from "@/lib/constants";
+import { DEFAULT_USER_SETTINGS, WEEKDAYS } from "@/lib/constants";
 import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
@@ -14,12 +14,7 @@ type SettingsForm = {
   default_pickup_weekday: number | null;
 };
 
-const initialForm: SettingsForm = {
-  default_plan_days: 7,
-  week_starts_on: 5,
-  default_order_weekday: 3,
-  default_pickup_weekday: 4,
-};
+const initialForm: SettingsForm = DEFAULT_USER_SETTINGS;
 
 export default function SettingsPage() {
   return (
@@ -90,7 +85,7 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
   }
 
   return (
-    <AppShell userEmail={userEmail}>
+    <AppShell>
       <div className="page-col">
       <section className="settings-head">
         <h1>Settings</h1>

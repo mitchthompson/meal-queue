@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { ReactNode } from "react";
 import { StatusMessage } from "@/components/status-message";
+import { DEFAULT_USER_SETTINGS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase/client";
 
 type AuthGateProps = {
@@ -55,10 +56,7 @@ export function AuthGate({ children }: AuthGateProps) {
     const { error: settingsError } = await supabase.from("user_settings").upsert(
       {
         user_id: userId,
-        default_plan_days: 7,
-        week_starts_on: 5,
-        default_order_weekday: 3,
-        default_pickup_weekday: 4,
+        ...DEFAULT_USER_SETTINGS,
       },
       { onConflict: "user_id", ignoreDuplicates: true },
     );
