@@ -77,11 +77,14 @@ Acceptance:
 - CI runs green on a PR to `main`.
 - `save_recipe` is proven by the pgTAP suite before it is applied to prod.
 
-Follow-ups (remaining): add a CI guard that diffs the baseline against
-`schema.sql`, and confirm `config.toml` `major_version` against prod. Done:
-pin the CLI version (2.109.0); configure ESLint + add a lint step (PR #23,
-2026-07-03); bump `actions/checkout` and `actions/setup-node` to `@v5`
-(2026-07-03, merge `2e8bc09`, clearing the Node-20 runtime deprecation).
+Follow-ups: all cleared. Done: pin the CLI version (2.109.0); confirm
+`config.toml` `major_version` against prod (set to 17 — prod is Postgres 17.6,
+2026-07-01); configure ESLint + add a lint step (PR #23, 2026-07-03); bump
+`actions/checkout` and `actions/setup-node` to `@v5` (2026-07-03, merge
+`2e8bc09`, clearing the Node-20 runtime deprecation); add a CI guard diffing
+the baseline against `schema.sql` (2026-07-03 — the db-tests "Baseline schema
+matches schema.sql" step, run before `supabase start`, fails on drift with the
+regenerate command).
 
 ### 2. Atomic Recipe Saves
 

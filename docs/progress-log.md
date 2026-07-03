@@ -3,7 +3,31 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - Round-1 review-board pins signed off (all defaults kept)
+## 2026-07-03 (latest) - CI guard: baseline migration must match schema.sql
+
+Closed a standing CI follow-up. The CI/local-only baseline migration
+(`supabase/migrations/20260101000000_baseline_schema.sql`) is a **verbatim
+copy** of `supabase/schema.sql` (regenerated with `cp`), so nothing stopped the
+two from silently drifting — a drift would build a stale schema on every fresh
+CI/local DB and make the pgTAP suite validate against the wrong baseline.
+
+- Added a **"Baseline schema matches schema.sql"** step to the `db-tests` job in
+  `.github/workflows/ci.yml`, placed right after checkout and **before**
+  `supabase start` so drift fails fast with no Docker image pulls. It runs
+  `diff -u schema.sql <baseline>` and, on any difference, prints a
+  `::error::` with the exact regenerate command (`cp supabase/schema.sql
+  supabase/migrations/20260101000000_baseline_schema.sql`) and exits 1.
+- **Verified locally both ways:** in-sync → exit 0; injected a one-line drift
+  into the baseline → step correctly failed with the diff; baseline restored to
+  byte-identical (28193 bytes each). The two files are in sync at commit time.
+- Docs updated: `supabase/migrations/README.md` (follow-up → enforced),
+  `roadmap.md` (M1.5 follow-ups now all cleared — also corrected the stale
+  `config.toml major_version` item, confirmed 17 vs prod 17.6 back on
+  2026-07-01), `current-state.md` (CI description + loose-ends list).
+- **Backlog now:** two lower-priority loose ends remain — `mcp/` npm-audit (9,
+  separate package) and the `schema.sql` baseline/ALTER consolidation.
+
+## 2026-07-03 - Round-1 review-board pins signed off (all defaults kept)
 
 Owner reviewed the ten open round-1 review-board pins and signed off on every
 one as-shipped — **no code changes**. Docs-only session recording the verdicts
