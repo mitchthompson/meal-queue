@@ -33,12 +33,12 @@ type StepRecord = {
 export default function RecipeDetailPage() {
   return (
     <AuthGate>
-      {(session) => <RecipeDetailScreen userEmail={session.user.email} />}
+      {() => <RecipeDetailScreen />}
     </AuthGate>
   );
 }
 
-function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
+function RecipeDetailScreen() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -150,7 +150,7 @@ function RecipeDetailScreen({ userEmail }: { userEmail?: string }) {
   }
 
   return (
-    <AppShell userEmail={userEmail}>
+    <AppShell>
       {loading ? <h1>Loading recipe...</h1> : null}
       {recipe ? (
         <section className="section-head recipe-title-row">

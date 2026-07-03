@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 
 type AppShellProps = {
   children: ReactNode;
-  userEmail?: string;
 };
 
 type NavLink = {

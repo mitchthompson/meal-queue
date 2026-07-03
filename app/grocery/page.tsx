@@ -13,12 +13,12 @@ import type { GroceryItem } from "@/lib/hooks/use-grocery-list";
 export default function GroceryPage() {
   return (
     <AuthGate>
-      {(session) => <ShopScreen userEmail={session.user.email} />}
+      {() => <ShopScreen />}
     </AuthGate>
   );
 }
 
-function ShopScreen({ userEmail }: { userEmail?: string }) {
+function ShopScreen() {
   const {
     plans,
     selectedPlanId,
@@ -93,7 +93,7 @@ function ShopScreen({ userEmail }: { userEmail?: string }) {
   }
 
   return (
-    <AppShell userEmail={userEmail}>
+    <AppShell>
       <div className="page-col">
         <section className="shop-head">
           <h1>Shop</h1>

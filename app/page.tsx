@@ -12,7 +12,7 @@ import type { TodayItem } from "@/lib/hooks/use-today";
 export default function TodayPage() {
   return (
     <AuthGate>
-      {(session) => <TodayScreen userEmail={session.user.email} />}
+      {() => <TodayScreen />}
     </AuthGate>
   );
 }
@@ -23,7 +23,7 @@ function itemLabel(item: TodayItem) {
   return item.slot_type === "leftover" ? `Leftovers: ${name}` : name;
 }
 
-function TodayScreen({ userEmail }: { userEmail?: string }) {
+function TodayScreen() {
   const {
     currentPlan,
     nextPlan,
@@ -51,7 +51,7 @@ function TodayScreen({ userEmail }: { userEmail?: string }) {
   const relativeDay = (ymd: string) => formatRelativeDay(ymd, today);
 
   return (
-    <AppShell userEmail={userEmail}>
+    <AppShell>
       <div className="page-col">
       <section className="today-head">
         <h1>Today</h1>
