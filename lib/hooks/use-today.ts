@@ -103,7 +103,6 @@ export function useToday() {
 
   useEffect(() => {
     loadToday();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadToday() {

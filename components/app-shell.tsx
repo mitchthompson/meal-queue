@@ -76,7 +76,7 @@ export function NavIcon({ name }: { name: NavLink["icon"] }) {
   );
 }
 
-export function AppShell({ children, userEmail }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
   return (

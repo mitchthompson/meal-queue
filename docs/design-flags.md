@@ -76,10 +76,10 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** Automated tests currently protect date and grocery calculations only. Supabase write flows and UI interactions have no coverage, so regressions in save/regenerate/version logic are not caught. Needs test coverage for the write paths and key UI interactions (partially addressed as milestones land, but the gap is currently open). Update (2026-06-27): milestone 1.5 adds a pgTAP suite for `save_recipe` (atomicity, RLS, version bump) run in CI against an ephemeral local Supabase stack — closing this gap for the save path once CI runs; broader UI-interaction coverage stays open.
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
 
-### `npm run lint` is non-functional (no ESLint config)
-- **Where it's used:** `npm run lint` (= `next lint`); CI app-checks job
-- **What's needed:** There is no ESLint config in the repo, so `next lint` (deprecated, removed in Next.js 16) drops into an interactive setup wizard and cannot run non-interactively (it would hang in CI). The CI app-checks job deliberately omits lint for now. Needs an ESLint config (and migration off the deprecated `next lint` to the ESLint CLI), then re-add a lint step to CI.
-- **Source:** Session 2026-06-27 baseline verification
+### `AppShell` receives `userEmail` from all six screens but never renders it
+- **Where it's used:** `components/app-shell.tsx` (prop `userEmail?: string`); passed by `app/page.tsx`, `app/plans/page.tsx`, `app/grocery/page.tsx`, `app/recipes/page.tsx`, `app/recipes/[id]/page.tsx`, `app/settings/page.tsx`
+- **What's needed:** Every screen threads the signed-in `userEmail` into `<AppShell>`, but the shell renders it nowhere — it reads like an account/sign-out affordance that was wired but never built. Surfaced 2026-07-03 by the new ESLint gate (`@typescript-eslint/no-unused-vars`); the minimal fix stopped destructuring the prop (kept in `AppShellProps` so callers are untouched). Owner decision: either build the affordance (show email / sign-out in the shell) or remove the dead prop threading from all six screens. Note `app/settings/page.tsx` already renders the email itself (`{userEmail ?? "Signed in"}`), so the value is live and meaningful.
+- **Source:** ESLint setup, 2026-07-03
 
 ### `npm audit` reports 1 high-severity vulnerability (docs previously said zero)
 - **Where it's used:** dependency tree (reported by `npm ci`)
@@ -87,6 +87,12 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** Session 2026-06-27 baseline verification
 
 ## Resolved
+
+### `npm run lint` was non-functional (no ESLint config)
+- **Where it was used:** `npm run lint` (was `next lint`); CI app-checks job
+- **What was needed:** There was no ESLint config, so `next lint` (deprecated, removed in Next.js 16) dropped into an interactive setup wizard and could not run non-interactively (it would hang CI). The CI app-checks job deliberately omitted lint; the ask was an ESLint config, migration off `next lint` to the ESLint CLI, then a CI lint step.
+- **Resolution (2026-07-03, `codex/eslint-ci`):** Migrated off `next lint` to the ESLint CLI. Added `eslint.config.mjs` (flat config: `next/core-web-vitals` + `next/typescript`, ignoring `mcp/**` — a separate package with its own build); `npm run lint` is now `eslint . --max-warnings=0` (zero-warning gate, local == CI); `next build` no longer lints (`eslint.ignoreDuringBuilds` in `next.config.mjs`) so the CLI step is the single gate; the CI app-checks job runs a dedicated Lint step. Installed devDeps `eslint`, `eslint-config-next`, `@eslint/eslintrc` (zero new audit findings — the 3 highs are the pre-existing `ws`/supabase chain). First run surfaced 7 problems: 3 errors in `mcp/dist` (out of scope → ignored) and 4 warnings (fixed: unused `userEmail` destructure in `AppShell`, and 3 dead `react-hooks/exhaustive-deps` disable directives). Tree is lint-clean at zero warnings; typecheck / vitest 16 / `next build` all green. The `userEmail` cleanup opened a standing flag (above).
+- **Source:** Session 2026-06-27 baseline verification; resolved 2026-07-03
 
 ### Pre-reflow remnants: hardcoded cream values and un-swept screens (owner question, 2026-07-02)
 - **Where it's used:** `app/globals.css` — the ≤700px `.panel` override (border `#e4d8c6`, background `rgba(255,253,248,.92)` — affects every mobile panel: Settings, the recipes list/editor, auth, plan sheets), `.recipe-view-section` (`#c9bba6`), `.recipe-meta` / `.recipe-step-item` (`#fffefb`), `.pantry-badge` (`#c9bba6`/`#f3eadc`/`#5e513d`), assorted literal `#fff`; plus the screens the reflow deliberately did not rebuild (Settings, Recipes library + editor, recipe detail, auth).
