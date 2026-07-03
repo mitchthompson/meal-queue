@@ -6,6 +6,7 @@ import {
   nextDayInRange,
   toYmd,
 } from "@/lib/date-utils";
+import { DEFAULT_USER_SETTINGS } from "@/lib/constants";
 import { toErrorMessage } from "@/lib/errors";
 import { supabase } from "@/lib/supabase/client";
 
@@ -83,12 +84,7 @@ export function usePlan(userId: string) {
     order_date: "",
     pickup_date: "",
   });
-  const [settingsDefaults, setSettingsDefaults] = useState<SettingsDefaults>({
-    default_plan_days: 7,
-    week_starts_on: 5,
-    default_order_weekday: 3,
-    default_pickup_weekday: 4,
-  });
+  const [settingsDefaults, setSettingsDefaults] = useState<SettingsDefaults>(DEFAULT_USER_SETTINGS);
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [recentRecipeIds, setRecentRecipeIds] = useState<string[]>([]);
   const [quickQuery, setQuickQuery] = useState("");
@@ -222,12 +218,7 @@ export function usePlan(userId: string) {
     setPlans(loadedPlans);
     if (loadedPlans.length > 0) setSelectedPlanId(loadedPlans[0].id);
 
-    const settings = settingsRes.data ?? {
-      default_plan_days: 7,
-      week_starts_on: 5,
-      default_order_weekday: 3,
-      default_pickup_weekday: 4,
-    };
+    const settings = settingsRes.data ?? DEFAULT_USER_SETTINGS;
     setSettingsDefaults(settings);
     const defaultStart = findNextAvailableStartDate(settings.week_starts_on, loadedPlans);
     setCreateForm(createDefaultsFromStart(defaultStart, settings));

@@ -21,12 +21,12 @@ const FILTER_LABELS: Array<{ value: PlanListFilter; label: string }> = [
 export default function PlansPage() {
   return (
     <AuthGate>
-      {(session) => <PlanScreen userId={session.user.id} userEmail={session.user.email} />}
+      {(session) => <PlanScreen userId={session.user.id} />}
     </AuthGate>
   );
 }
 
-function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string }) {
+function PlanScreen({ userId }: { userId: string }) {
   const {
     visiblePlans,
     selectedPlan,
@@ -101,7 +101,7 @@ function PlanScreen({ userId, userEmail }: { userId: string; userEmail?: string 
   };
 
   return (
-    <AppShell userEmail={userEmail}>
+    <AppShell>
       <div className="page-col">
         <section className="plan-head">
           <h1>Plan</h1>

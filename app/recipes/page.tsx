@@ -12,12 +12,12 @@ import type { RecipeSortOption } from "@/lib/hooks/use-recipes";
 export default function RecipesPage() {
   return (
     <AuthGate>
-      {(session) => <RecipesScreen userId={session.user.id} userEmail={session.user.email} />}
+      {(session) => <RecipesScreen userId={session.user.id} />}
     </AuthGate>
   );
 }
 
-function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: string }) {
+function RecipesScreen({ userId }: { userId: string }) {
   const searchParams = useSearchParams();
   const editRecipeId = searchParams.get("edit");
   const {
@@ -50,7 +50,7 @@ function RecipesScreen({ userId, userEmail }: { userId: string; userEmail?: stri
   }
 
   return (
-    <AppShell userEmail={userEmail}>
+    <AppShell>
       <div className={showEditor ? "recipes-screen editor-open" : "recipes-screen"}>
       <section className="recipes-head">
         <h1>Recipes</h1>
