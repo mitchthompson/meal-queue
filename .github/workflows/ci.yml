@@ -21,9 +21,9 @@ jobs:
     name: App checks (lint / typecheck / test / build)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
@@ -66,7 +66,7 @@ jobs:
     name: DB tests (Supabase + pgTAP)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Pinned to the CLI release the suite was verified against locally
       # (2026-07-01, Postgres 17 matching prod 17.6). Bump deliberately, never
