@@ -3,7 +3,35 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - Four standing follow-ups cleared (CI actions v5, ws advisory, settings-defaults SoT, userEmail cleanup)
+## 2026-07-03 (latest) - Round-1 review-board pins signed off (all defaults kept)
+
+Owner reviewed the ten open round-1 review-board pins and signed off on every
+one as-shipped — **no code changes**. Docs-only session recording the verdicts
+in the two living registers so the next session doesn't re-ask.
+
+- **T1–T4 (Today):** settings gear in the Today header (off the 4-tab bar);
+  plan-less Today teal hero → `/plans` + recipes pointer; link hover stays v2
+  **amber** `#e8a13d` (`--brand-2`) — flip back to teal (`--brand`) is a
+  one-line token change if it ever reads as two competing accents; desktop
+  column capped at 640px (`.page-col`).
+- **P1–P3 (Plan):** inline collapsible edit panel (not a modal); "Generate
+  grocery list" is a link to `/grocery` (Shop's staleness regen does the work
+  on arrival); filter pills + compact plan picker kept above the day rows.
+- **S1–S2 (Shop):** manual Regenerate ghost button kept as the escape hatch
+  alongside auto-regen; On-hand section defaults collapsed.
+- **C2 (Cook):** "Done — mark cooked" **stays a no-op exit**. No cooked/
+  `cooked_at` state added; schema unchanged. **Decision (why):** no concrete
+  consumer today (Today is built and doesn't need it). Adding cooked state
+  later remains a schema change + migration on the usual rails — and the
+  meaning of "cooked" for multi-night leftovers would need pinning down first.
+
+Docs touched: `design-flags.md` (four flags moved Open → Resolved),
+`current-state.md` (phase paragraph, Active Handoff, Open issues, Last
+reviewed). All review-board pins (rounds 1–4) are now resolved; the backlog is
+down to three lower-priority loose ends (`mcp/` npm-audit, CI baseline-vs-
+`schema.sql` guard, `schema.sql` baseline/ALTER consolidation).
+
+## 2026-07-03 - Four standing follow-ups cleared (CI actions v5, ws advisory, settings-defaults SoT, userEmail cleanup)
 
 Cleared four standing follow-ups in one session, all low-risk and merged
 directly to `main` (no PRs) after review + verification. `main` advanced

@@ -11,16 +11,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** These are skeletons; flesh out as each page is worked. Update (2026-07-02): [settings](pages/settings.md) was rewritten with the v2 Settings pass (PR #20), and [recipes](pages/recipes.md) was de-rotted with the v2 Recipes/detail passes (PRs #21–#22 — it had still described pre-M2 non-atomic saves, the removed sample-data seeder, and the pre-reflow "focus mode"). [today](pages/today.md), [plans](pages/plans.md), and [grocery](pages/grocery.md) remain stubs (the redesign brief supersedes them for future-state intent).
 - **Source:** Session decision (canonical context)
 
-### Today reflow judgment calls (settings gear, plan-less state, amber hover, desktop width)
-- **Where it's used:** `app/page.tsx`, `components/app-shell.tsx`, `app/globals.css`
-- **What's needed:** Owner sign-off on four defaults chosen while building Today (the mockup doesn't specify them): (1) **Settings access** moved off the tabbar (mockup shows a 4-tab bar with no settings entry) to a gear icon in the Today header — confirm placement; (2) **plan-less Today** (first run / gap weeks — the brief's open question) renders a teal hero "Plan your week to get started" → `/plans` plus a recipes pointer card; (3) `--brand-2` (link hover) now resolves to the v2 **amber** `#e8a13d` since terracotta retired — hover may want to stay teal instead; (4) desktop Today constrains the column to **640px** (`.page-col`).
-- **Source:** Session 2026-07-02 (reflow Today build); [redesign-brief.md](redesign-brief.md) open questions
-
-### Shop reflow judgment calls (Regenerate button kept, on-hand collapsed)
-- **Where it's used:** `app/grocery/page.tsx`
-- **What's needed:** Owner sign-off on two defaults from the Shop reflow: (1) the brief's open question "keep manual Regenerate, or trust staleness entirely?" — the **Regenerate button was kept** (small ghost button in the header) since auto-regeneration already runs on staleness and the button is the manual escape hatch; drop it once trusted. (2) The **On hand** section now defaults to collapsed (previously expanded) — it's post-purchase bookkeeping, not shopping. Also: the old always-visible plan sidebar became a compact plan picker shown only when more than one active/future plan exists.
-- **Source:** Session 2026-07-02 (reflow Shop build); [redesign-brief.md](redesign-brief.md) open questions
-
 ### Plan version bumps fire for grocery-irrelevant changes (over-triggered regeneration)
 - **Where it's used:** `app/plans/page.tsx` / `app/grocery/page.tsx`
 - **What's needed:** Update (2026-07-02): milestone 3 (on `codex/plan-integrity`) resolves the scoping half at the root — version bumps are now a database trigger scoped to grocery-relevant changes only (cook items added/removed; recipe or serving multiplier changed), so note/leftover/eat-out/date edits no longer invalidate the checklist. Remaining open (milestone 4/5 scope): the grocery page still regenerates silently on load rather than prompting.
@@ -46,11 +36,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Needs sign-up confirmation messaging, a password-reset flow, and friendlier auth error handling. Explicitly deferred (out of milestone 5 scope).
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Auth flow gaps, finding 6); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
 
-### Plan reflow judgment calls (sheets, generate exit, filters kept)
-- **Where it's used:** `app/plans/page.tsx`, `components/plan-day-items.tsx`
-- **What's needed:** Owner sign-off on defaults from the Plan reflow: (1) the mockup's "edit sheet" is an inline collapsible panel toggled from the header (New plan / Edit plan), not a modal overlay; (2) "Generate grocery list" is a link to `/grocery` — Shop's staleness-driven regeneration does the actual generating on arrival; (3) the plan filter pills (Current/Upcoming/Past/All) and the compact plan picker were kept above the day rows (the mockup shows a single plan only). Update (2026-07-02, round 1): the fourth question (multi-item slot rendering) was superseded by the owner-requested flat-day rework — every day is now a stacked meal list with one "+ add another meal" line (PR #18); pins P1–P3 remain open.
-- **Source:** Session 2026-07-02 (reflow Plan build); [redesign-brief.md](redesign-brief.md) open questions
-
 ### Thin empty states, no dark mode (wake-lock resolved)
 - **Where it's used:** New-user empty states across routes; global theming in [`app/globals.css`](../app/globals.css)
 - **What's needed:** Update (2026-07-02): the wake-lock half is done — Cook mode (`components/cook-mode.tsx`, reflow screen 1) holds a screen wake-lock while active, re-acquired on `visibilitychange`. Still open: richer empty states for new users, and dark-mode support beyond the Cook takeover (deferred per the brief; the v2 `--color-slate-*` set is a head start).
@@ -61,17 +46,20 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** The schema has no step↔ingredient association (`recipe_steps` and `ingredients` are independent children of `recipes`), so the mockup's "that step's ingredients as chips" is implemented by matching ingredient names against the step text (case-insensitive substring, tolerating a trailing plural `s`/`es`). Works for the household's recipe style but will miss renames/paraphrases ("the chicken") and can over-match short names. Owner to judge on real recipes: keep the heuristic, tune it, or (bigger) add a step↔ingredient link to the schema (schema change — needs its own approval and migration). Update (2026-07-02 review, round 1): owner verdict — the heuristic stays; the chips restyled to variant B (one muted text line), **shipped in PR #17**. Only the heuristic half of this flag remains open: judge match quality on real recipes over time (tune, or add a step↔ingredient link — schema change on the usual rails).
 - **Source:** Session 2026-07-02 (reflow Cook build); [redesign-brief.md](redesign-brief.md) Cook section
 
-### Cook mode: "Done — mark cooked" writes nothing
-- **Where it's used:** `components/cook-mode.tsx` (last-step primary action)
-- **What's needed:** The brief's open question "any data write behind mark cooked?" is unanswered: no cooked/`cooked_at` state exists anywhere in [`supabase/schema.sql`](../supabase/schema.sql), so the button currently just exits the takeover. If the owner wants cooked state (e.g. for Today's "tonight" logic or leftover suggestions), that is a schema change + migration on the usual rails. Decide when Today is built, since Today is the consumer.
-- **Source:** Session 2026-07-02 (reflow Cook build); [redesign-brief.md](redesign-brief.md) open questions
-
 ### No automated coverage for Supabase write flows or UI interactions
 - **Where it's used:** Test suite (Vitest); writes in `app/plans/page.tsx`, `app/recipes/page.tsx`, `app/grocery/page.tsx`
 - **What's needed:** Automated tests currently protect date and grocery calculations only. Supabase write flows and UI interactions have no coverage, so regressions in save/regenerate/version logic are not caught. Needs test coverage for the write paths and key UI interactions (partially addressed as milestones land, but the gap is currently open). Update (2026-06-27): milestone 1.5 adds a pgTAP suite for `save_recipe` (atomicity, RLS, version bump) run in CI against an ephemeral local Supabase stack — closing this gap for the save path once CI runs; broader UI-interaction coverage stays open.
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
 
 ## Resolved
+
+### Reflow round-1 board pins T1–T4 (Today), P1–P3 (Plan), S1–S2 (Shop): all defaults kept
+- **Resolution (2026-07-03):** Owner signed off on every round-1 judgment-call default — no code changes. **T1** settings gear in the Today header (kept off the 4-tab bar); **T2** plan-less Today teal hero "Plan your week to get started" → `/plans` + recipes pointer; **T3** link hover stays v2 **amber** `#e8a13d` (`--brand-2`) — a flip back to teal (`--brand`) remains a one-line token change if it ever reads as two competing accents; **T4** desktop column capped at 640px (`.page-col`); **P1** inline collapsible edit panel (not a modal); **P2** "Generate grocery list" is a link to `/grocery` (Shop's staleness regen does the work on arrival); **P3** filter pills (Current/Upcoming/Past/All) + compact plan picker kept above the day rows; **S1** manual Regenerate ghost button kept as the escape hatch alongside auto-regen; **S2** On-hand section defaults collapsed. Supersedes the open "Today reflow judgment calls", "Plan reflow judgment calls", and "Shop reflow judgment calls" flags.
+- **Source:** Round-1 review-board pins; owner verdicts 2026-07-03
+
+### Cook mode: "Done — mark cooked" (C2) — stays a no-op exit for now
+- **Resolution (2026-07-03):** Owner verdict — leave the last-step action as a takeover exit with no data write. No cooked/`cooked_at` state added; the schema is unchanged. Revisit only if a concrete consumer appears (e.g. Today's "tonight" logic or leftover suggestions), at which point adding cooked state is a schema change + migration on the usual rails (backup → preflight → apply → verify) — and the meaning of "cooked" for multi-night leftovers needs pinning down first. Supersedes the open "Cook mode: Done — mark cooked writes nothing" flag.
+- **Source:** Session 2026-07-02 (reflow Cook build); owner verdict 2026-07-03
 
 ### ensureUserSettings duplicate call + default settings disagreed across files
 - **Resolution:** Duplicate call fixed in mini-M5 (guarded session effect). Defaults single source of truth done 2026-07-03 (direct to `main`, merge `aada18f`): `DEFAULT_USER_SETTINGS` in `lib/constants.ts` mirrors the SQL column defaults (plan_days 7, week_starts_on 5, order/pickup weekday null); the four inline `{7,5,3,4}` copies (settings form `initialForm`, `ensureUserSettings` upsert, two spots in `use-plan.ts`) now reference it. Owner chose client-matches-SQL (null/unset) over codifying Wed/Thu as DB defaults, so no migration ran. Behavior: new users get unset order/pickup dates (they pick their own days); existing saved settings load from the DB, unaffected. `lib/date-utils.test.ts` keeps the 3/4 fixture (it tests the non-null weekday path, not a default).

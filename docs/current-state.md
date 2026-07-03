@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (four standing follow-ups cleared — CI actions v5, ws advisory → 0 vulns, settings-defaults SoT, userEmail cleanup)
+Last reviewed: 2026-07-03 (four standing follow-ups cleared — CI actions v5, ws advisory → 0 vulns, settings-defaults SoT, userEmail cleanup; round-1 board pins signed off, all defaults kept)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -30,10 +30,12 @@ to `main`: CI Actions bumped `@v4` to `@v5` (Node-20 deprecation gone), the
 `ws` advisory resolved to **0 npm-audit vulns** via a lockfile-only
 supabase-js bump, settings defaults consolidated to a single
 `DEFAULT_USER_SETTINGS` source of truth, and the unused `userEmail` prop
-threading removed from the shell + five screens. **Next: the ten open
-round-1 review-board pins** (owner picks; see Active Handoff) — the standing
-follow-up queue is now essentially drained. The round-2/3/4 pins are all
-resolved and shipped.
+threading removed from the shell + five screens. The **ten open round-1
+review-board pins were then signed off (2026-07-03): every default kept, no
+code changes** (T1–T4 Today, P1–P3 Plan, S1–S2 Shop, and C2 — mark-cooked
+stays a no-op exit). **All review-board pins (rounds 1–4) are now resolved**
+and the standing follow-up queue is drained. **Next: owner picks from the
+remaining lower-priority loose ends** (see Active Handoff).
 
 ## Stable Baseline
 
@@ -79,23 +81,21 @@ resolved and shipped.
 - **In progress:** None. Milestone 7 (PRs #19-#22), the ESLint/CI lint gate
   (PR #23), and the 2026-07-03 standing-follow-up cleanup (merges `2e8bc09`
   and `aada18f`) are all shipped and deployed; all branches merged, tree clean.
-- **Next action:** **owner picks the next unit** from two queues. (a) The
-  **ten open round-1 board pins** in [design-flags.md](design-flags.md) —
-  T1–T4 (settings gear placement, plan-less Today, amber link hover, 640px
-  desktop column), P1–P3 (inline sheets, generate-is-a-link, filter pills),
-  S1–S2 (Regenerate button, On-hand collapsed), C2 ("mark cooked" writes
-  nothing — a schema question) — these are shipped defaults awaiting
-  sign-off, so the move is to ask the owner for verdicts (pin codes in
-  chat), not to build. (b) The **standing follow-ups are now cleared** (all 2026-07-03, direct to
-  `main`): the CI Actions `@v4`->`@v5` bump, the `ws` advisory (npm audit
-  3 high -> 0 via a lockfile-only supabase-js bump), settings-defaults
-  consolidated to one `DEFAULT_USER_SETTINGS` source of truth, and the
-  unused `userEmail` prop threading removed. Lower-priority loose ends
-  remain: the `mcp/` npm-audit findings (9, separate package), a CI guard
-  diffing the baseline against `schema.sql`, and the `schema.sql`
-  baseline/ALTER consolidation (see [design-flags.md](design-flags.md)). For any new UI round, the rhythm is
-  mocks-first on the review board (same artifact URL; toolkit + templates in
-  `scripts/review-board/`, README has the flow).
+- **Next action:** **owner picks the next unit.** The **ten round-1 board pins
+  are now signed off** (2026-07-03): every default kept, no code changes —
+  T1–T4 (settings gear, plan-less Today, amber link hover, 640px desktop
+  column), P1–P3 (inline sheets, generate-is-a-link, filter pills), S1–S2
+  (Regenerate button, On-hand collapsed), and C2 (mark-cooked stays a no-op
+  exit; adding cooked state remains available as a schema change on the usual
+  rails if a consumer appears). See the Resolved section of
+  [design-flags.md](design-flags.md). With the standing follow-ups also
+  cleared (CI Actions `@v5`, `ws` advisory 3 high -> 0, settings-defaults SoT,
+  `userEmail` cleanup), what remains are **lower-priority loose ends**: the
+  `mcp/` npm-audit findings (9, separate package), a CI guard diffing the
+  baseline against `schema.sql`, and the `schema.sql` baseline/ALTER
+  consolidation (see [design-flags.md](design-flags.md)). For any new UI round,
+  the rhythm is mocks-first on the review board (same artifact URL; toolkit +
+  templates in `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -161,8 +161,9 @@ mini-M5).
 
 ## Open issues
 
-- Ten round-1 review-board pins await owner verdicts (shipped defaults, not
-  bugs): T1–T4, P1–P3, S1–S2, C2 — see [design-flags.md](design-flags.md).
+- Round-1 review-board pins signed off 2026-07-03 (all defaults kept, no code
+  changes); C2 (mark-cooked no-op) can still be revisited as a schema change
+  if a consumer appears — see [design-flags.md](design-flags.md).
 - No route-level `error.tsx` / `loading.tsx` boundaries; unmapped errors still
   surface raw messages (mini-M5 added friendly mapping + `aria-live`).
 - `npm audit`: root is clean (0 vulns as of 2026-07-03, the `ws` chain
