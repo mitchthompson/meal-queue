@@ -31,11 +31,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** Each plan mutation did insert, version read, version write, item reload, and plan reload sequentially, making planning sluggish on iPhone Safari (a primary target). Update (2026-07-02): milestone 3's trigger-based versioning removed the two version round trips (now insert + item reload + plan reload). Optimistic UI updates remain deferred (milestone 5).
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes ("No optimistic UI")
 
-### ensureUserSettings runs twice per sign-in and default settings disagree across files
-- **Where it's used:** `components/auth-gate.tsx` (`ensureUserSettings`); default values duplicated across three client files vs [`supabase/schema.sql`](../supabase/schema.sql)
-- **What's needed:** Update (2026-07-02): the duplicate call is fixed (mini-M5) — `ensureUserSettings` now runs once per sign-in via the guarded session effect. Still open: default settings values are duplicated in three files and disagree with the SQL defaults (DB: null order/pickup weekdays; client: 3/4) — needs a single source of truth. Split out of M6 as its own follow-up (owner decision, 2026-07-02); not yet scheduled. See [data model](data-model.md).
-- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes and [current-state](current-state.md) Known Reliability Risks
-
 ### Raw Supabase error strings render in the UI; no route-level error or loading boundaries
 - **Where it's used:** UI route components (`app/*`, e.g. `app/plans/page.tsx`, `app/recipes/page.tsx`, `app/grocery/page.tsx`)
 - **What's needed:** Update (2026-07-02): mini-M5 added `lib/errors.ts` (friendly mapping for common constraint/permission codes; our own P0001 trigger messages pass through — they are written to be human-readable) and an `aria-live` `StatusMessage` component adopted across all screens. Still open: route-level `error.tsx` / `loading.tsx` boundaries, and unmapped errors still surface raw messages.
@@ -76,17 +71,19 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** Automated tests currently protect date and grocery calculations only. Supabase write flows and UI interactions have no coverage, so regressions in save/regenerate/version logic are not caught. Needs test coverage for the write paths and key UI interactions (partially addressed as milestones land, but the gap is currently open). Update (2026-06-27): milestone 1.5 adds a pgTAP suite for `save_recipe` (atomicity, RLS, version bump) run in CI against an ephemeral local Supabase stack — closing this gap for the save path once CI runs; broader UI-interaction coverage stays open.
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
 
-### `AppShell` receives `userEmail` from all six screens but never renders it
-- **Where it's used:** `components/app-shell.tsx` (prop `userEmail?: string`); passed by `app/page.tsx`, `app/plans/page.tsx`, `app/grocery/page.tsx`, `app/recipes/page.tsx`, `app/recipes/[id]/page.tsx`, `app/settings/page.tsx`
-- **What's needed:** Every screen threads the signed-in `userEmail` into `<AppShell>`, but the shell renders it nowhere — it reads like an account/sign-out affordance that was wired but never built. Surfaced 2026-07-03 by the new ESLint gate (`@typescript-eslint/no-unused-vars`); the minimal fix stopped destructuring the prop (kept in `AppShellProps` so callers are untouched). Owner decision: either build the affordance (show email / sign-out in the shell) or remove the dead prop threading from all six screens. Note `app/settings/page.tsx` already renders the email itself (`{userEmail ?? "Signed in"}`), so the value is live and meaningful.
-- **Source:** ESLint setup, 2026-07-03
-
-### `npm audit` reports 1 high-severity vulnerability (docs previously said zero)
-- **Where it's used:** dependency tree (reported by `npm ci`)
-- **What's needed:** `npm ci` reports 1 high-severity vulnerability; the reliability foundation (2026-06-11) had brought `npm audit` to zero, so this was likely disclosed since. Triage and patch within the major version (no dependency upgrade without owner approval). Untouched this session.
-- **Source:** Session 2026-06-27 baseline verification
-
 ## Resolved
+
+### ensureUserSettings duplicate call + default settings disagreed across files
+- **Resolution:** Duplicate call fixed in mini-M5 (guarded session effect). Defaults single source of truth done 2026-07-03 (direct to `main`, merge `aada18f`): `DEFAULT_USER_SETTINGS` in `lib/constants.ts` mirrors the SQL column defaults (plan_days 7, week_starts_on 5, order/pickup weekday null); the four inline `{7,5,3,4}` copies (settings form `initialForm`, `ensureUserSettings` upsert, two spots in `use-plan.ts`) now reference it. Owner chose client-matches-SQL (null/unset) over codifying Wed/Thu as DB defaults, so no migration ran. Behavior: new users get unset order/pickup dates (they pick their own days); existing saved settings load from the DB, unaffected. `lib/date-utils.test.ts` keeps the 3/4 fixture (it tests the non-null weekday path, not a default).
+- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md); resolved 2026-07-03
+
+### `AppShell` received `userEmail` from all six screens but never rendered it
+- **Resolution (2026-07-03, direct to `main`, merge `aada18f`):** Owner chose remove over building an account/sign-out affordance. Dropped `userEmail` from `AppShellProps` and stopped threading it from the five screens that only forwarded it (Today, Plan, Shop, Recipes, recipe detail). Settings keeps its own `userEmail`: it renders the signed-in address itself (`{userEmail ?? "Signed in"}`). Verified: eslint 0 warnings, typecheck clean, vitest 16/16; residual grep confirms `userEmail` survives only where Settings renders it.
+- **Source:** ESLint setup 2026-07-03; resolved 2026-07-03
+
+### `npm audit` root high-severity `ws` advisory (was 3 high, docs once said 1)
+- **Resolution (2026-07-03, direct to `main`, merge `aada18f`):** `npm audit fix` bumped the `@supabase/*` chain 2.95.3 -> 2.110.0 (inside the declared `^2.49.1` range), so newer `@supabase/realtime-js` drops the vulnerable `ws`. Lockfile-only, `package.json` unchanged; root `npm audit` went 3 high -> **0**. Not a major bump, so no owner-gated dependency upgrade beyond applying the fix. `mcp/` still reports 9 findings of its own (separate package, triage before heavy MCP use).
+- **Source:** Session 2026-06-27 baseline; resolved 2026-07-03
 
 ### `npm run lint` was non-functional (no ESLint config)
 - **Where it was used:** `npm run lint` (was `next lint`); CI app-checks job

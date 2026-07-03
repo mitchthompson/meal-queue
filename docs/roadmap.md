@@ -80,7 +80,8 @@ Acceptance:
 Follow-ups (remaining): add a CI guard that diffs the baseline against
 `schema.sql`, and confirm `config.toml` `major_version` against prod. Done:
 pin the CLI version (2.109.0); configure ESLint + add a lint step (PR #23,
-2026-07-03).
+2026-07-03); bump `actions/checkout` and `actions/setup-node` to `@v5`
+(2026-07-03, merge `2e8bc09`, clearing the Node-20 runtime deprecation).
 
 ### 2. Atomic Recipe Saves
 
@@ -275,10 +276,12 @@ reliability scope. Details in
   notes, leftover edits), and the grocery page regenerates silently on load.
   Milestone 4 makes this harmless to user state; scoping the bumps and
   prompting before regeneration remain open.
-- `ensureUserSettings` runs twice per sign-in, and default settings values are
-  duplicated across three files inconsistently with the SQL defaults. (The
-  duplicate call was fixed in mini-M5; the defaults single source of truth is
-  a standalone follow-up per the 2026-07-02 owner decision.)
+- ~~`ensureUserSettings` runs twice per sign-in, and default settings values
+  are duplicated across three files inconsistently with the SQL defaults.~~
+  Both done: the duplicate call was fixed in mini-M5, and the defaults single
+  source of truth landed 2026-07-03 (`DEFAULT_USER_SETTINGS` in
+  `lib/constants.ts`, mirroring the SQL null/unset order/pickup defaults;
+  direct to `main`, merge `aada18f`).
 - Raw Supabase error strings render in the UI; no route-level error or loading
   boundaries.
 - No optimistic UI; plan mutations feel sluggish on mobile.

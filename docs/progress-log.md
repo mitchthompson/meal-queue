@@ -3,7 +3,51 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - ESLint flat config + CI lint gate (PR #23)
+## 2026-07-03 (latest) - Four standing follow-ups cleared (CI actions v5, ws advisory, settings-defaults SoT, userEmail cleanup)
+
+Cleared four standing follow-ups in one session, all low-risk and merged
+directly to `main` (no PRs) after review + verification. `main` advanced
+`2e354eb → aada18f`; CI green on every push; Vercel redeployed.
+
+- **CI actions `@v4 → @v5`** (`codex/ci-actions-v5`, commit `b13e5c6`, merge
+  `2e8bc09`): bumped `actions/checkout@v4 → v5` (both jobs) and
+  `actions/setup-node@v4 → v5`, clearing the Node-20 runtime deprecation that
+  CI annotations had started flagging. Left `supabase/setup-cli@v1` (no v5
+  exists) and `node-version: 20` (app toolchain, separate concern) untouched.
+  Confirmed live: the post-merge run on `main` was green on v5 (1m12s).
+- **ws advisory → 0 vulns** (commit `f136694`): `npm audit fix` updated the
+  `@supabase/*` chain `2.95.3 → 2.110.0`, which stays inside the declared
+  `^2.49.1` range, so newer `@supabase/realtime-js` drops the vulnerable `ws`
+  entirely. **Lockfile-only** — `package.json` unchanged; `npm audit` went
+  3 high → **0**. Not a major bump, so no owner-approval-gated dependency
+  upgrade was needed beyond applying the fix.
+- **Settings-defaults single source of truth** (commit `f56c610`): added
+  `DEFAULT_USER_SETTINGS` to `lib/constants.ts` mirroring the SQL column
+  defaults in `supabase/schema.sql` (plan_days 7, week_starts_on 5,
+  order/pickup weekday **null**). Removed the four inline `{7,5,3,4}` copies
+  (settings form `initialForm`, `ensureUserSettings` upsert, and two spots in
+  `use-plan.ts`). **Decision (why):** owner chose "client matches SQL —
+  null/unset" over "codify Wed/Thu as DB defaults (migration)", so schema
+  stays canonical and no migration was needed. **Behavior note:** brand-new
+  users now get *unset* order/pickup dates (they pick their own days) instead
+  of the old auto-Wed/Thu; existing users load their saved settings from the
+  DB and are unaffected. The `lib/date-utils.test.ts` fixture keeps explicit
+  3/4 — it exercises the non-null weekday path, not a default.
+- **userEmail dead-threading removed** (commit `3b84f08`): `AppShell` never
+  rendered `userEmail`. Dropped it from `AppShellProps` and stopped threading
+  it from the five screens that only forwarded it (Today, Plan, Shop, Recipes,
+  recipe detail). **Decision (why):** owner chose remove over building an
+  account/sign-out affordance. Settings keeps its own `userEmail` — it renders
+  the signed-in address itself (`{userEmail ?? "Signed in"}`).
+- **Verification (as run):** `eslint .` clean at 0 warnings; `tsc --noEmit`
+  clean; vitest 16/16; `next build` green (11/11 pages). Residual greps
+  confirm `userEmail` survives only where Settings renders it, and `3/4` only
+  in the test fixture. Two CI runs on `main` green (actions-v5 merge 1m12s;
+  standing-followups merge 1m14s), both jobs (app-checks + 108 pgTAP) passing.
+- **Remaining:** the ten round-1 board pins (T1–T4, P1–P3, S1–S2, C2) still
+  await owner verdicts — untouched this session.
+
+## 2026-07-03 - ESLint flat config + CI lint gate (PR #23)
 
 Cleared the "`npm run lint` non-functional" follow-up. Migrated off the
 deprecated `next lint` (removed in Next 16) to the ESLint CLI on a flat

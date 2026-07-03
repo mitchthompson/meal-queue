@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (ESLint/CI lint gate live — PR #23)
+Last reviewed: 2026-07-03 (four standing follow-ups cleared — CI actions v5, ws advisory → 0 vulns, settings-defaults SoT, userEmail cleanup)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -24,17 +24,26 @@ hairline rows both lists, full-width Start cooking, header language +
 44px stepper, the pantry-badge cascade quirk fixed at the root, and the
 RD5 tighter title row — breadcrumb + one-row actions). Since then the
 **ESLint/CI lint gate follow-up shipped (PR #23, 2026-07-03)** — `npm run
-lint` works again on a flat config and CI enforces it. **Next: the ten open
-round-1 review-board pins and/or the remaining standing follow-ups** (owner
-picks; see Active Handoff). The round-2/3/4 pins are all resolved and
-shipped.
+lint` works again on a flat config and CI enforces it. A **follow-up cleanup
+session (2026-07-03) then cleared four standing items**, all merged directly
+to `main`: CI Actions bumped `@v4` to `@v5` (Node-20 deprecation gone), the
+`ws` advisory resolved to **0 npm-audit vulns** via a lockfile-only
+supabase-js bump, settings defaults consolidated to a single
+`DEFAULT_USER_SETTINGS` source of truth, and the unused `userEmail` prop
+threading removed from the shell + five screens. **Next: the ten open
+round-1 review-board pins** (owner picks; see Active Handoff) — the standing
+follow-up queue is now essentially drained. The round-2/3/4 pins are all
+resolved and shipped.
 
 ## Stable Baseline
 
-- **`main`:** at `83d0b86` — the full reflow (PRs #13–#16), review round 1
-  (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), and
-  the **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, all deployed on
-  Vercel. Merge to `main` auto-deploys (confirmed); Cook was owner-verified
+- **`main`:** at `aada18f` — the full reflow (PRs #13–#16), review round 1
+  (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
+  **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, and the **2026-07-03
+  standing-follow-up cleanup** (CI actions v5 merge `2e8bc09`; ws advisory +
+  settings-defaults SoT + userEmail cleanup merge `aada18f`), all deployed on
+  Vercel. These last two landed as direct-to-main merges (low-risk, no PRs).
+  Merge to `main` auto-deploys (confirmed); Cook was owner-verified
   on-device in prod.
 - **Prod database:** all four migrations in `supabase/migrations/` are applied
   and verified (`save_recipe`, Data API grants, plan-integrity triggers,
@@ -44,12 +53,16 @@ shipped.
   vitest / build) and DB tests (ephemeral Supabase stack, 108 pgTAP assertions
   across three suites), CLI pinned 2.109.0, NOTESTS guard. Lint runs
   `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
-  longer lints (`eslint.ignoreDuringBuilds`). Twenty-three PRs merged; every
-  PR's first CI run has been green. Housekeeping flag (now confirmed live in
-  run annotations): `actions/checkout@v4` / `setup-node@v4` /
-  `supabase/setup-cli@v1` are force-run on Node 24 — bump `@v4 → @v5` in
-  passing.
-- **Latest verification:** 2026-07-03 (ESLint/CI gate, PR #23) — `eslint .`
+  longer lints (`eslint.ignoreDuringBuilds`). Twenty-three PRs merged plus three
+  direct-to-main follow-up merges; every CI run has been green.
+  `actions/checkout` and `actions/setup-node` are now on `@v5` (2026-07-03,
+  merge `2e8bc09`), clearing the Node-20 runtime deprecation;
+  `supabase/setup-cli@v1` stays (no v5) and `node-version: 20` is unchanged.
+- **Latest verification:** 2026-07-03 (standing-follow-up cleanup): eslint 0
+  warnings, typecheck clean, vitest 16/16, `next build` 11/11 pages, root
+  `npm audit` 0; CI green on both `main` merges (actions-v5 1m12s, cleanup
+  1m14s), pgTAP 108/108 (DB layer untouched). Prior same day (ESLint/CI gate,
+  PR #23) — `eslint .`
   clean at zero warnings, typecheck clean, vitest 16/16, `next build` green
   (11/11 static pages, lint skipped); CI green on the PR (app-checks 47s,
   db-tests 1m7s) and on `main` post-merge (49s / 1m12s), pgTAP 108/108 (DB
@@ -63,9 +76,9 @@ shipped.
 
 ## Active Handoff
 
-- **In progress:** None — milestone 7 complete (PRs #19–#22) and the ESLint/CI
-  lint gate shipped (PR #23, merged `83d0b86`, deployed); all branches merged,
-  tree clean.
+- **In progress:** None. Milestone 7 (PRs #19-#22), the ESLint/CI lint gate
+  (PR #23), and the 2026-07-03 standing-follow-up cleanup (merges `2e8bc09`
+  and `aada18f`) are all shipped and deployed; all branches merged, tree clean.
 - **Next action:** **owner picks the next unit** from two queues. (a) The
   **ten open round-1 board pins** in [design-flags.md](design-flags.md) —
   T1–T4 (settings gear placement, plan-less Today, amber link hover, 640px
@@ -73,13 +86,14 @@ shipped.
   S1–S2 (Regenerate button, On-hand collapsed), C2 ("mark cooked" writes
   nothing — a schema question) — these are shipped defaults awaiting
   sign-off, so the move is to ask the owner for verdicts (pin codes in
-  chat), not to build. (b) The **standing follow-ups**: the Actions Node-20
-  version bump (`@v4 → @v5`; mechanical, self-contained — now confirmed live
-  in CI annotations, a good first pick), settings-defaults single source of
-  truth, npm audit triage (3 high in root — all the `ws`/supabase-js chain —
-  plus 9 in `mcp/`), and the new **`userEmail` dead-threading** decision (build
-  the account affordance vs. remove the prop threading — see
-  [design-flags.md](design-flags.md)). For any new UI round, the rhythm is
+  chat), not to build. (b) The **standing follow-ups are now cleared** (all 2026-07-03, direct to
+  `main`): the CI Actions `@v4`->`@v5` bump, the `ws` advisory (npm audit
+  3 high -> 0 via a lockfile-only supabase-js bump), settings-defaults
+  consolidated to one `DEFAULT_USER_SETTINGS` source of truth, and the
+  unused `userEmail` prop threading removed. Lower-priority loose ends
+  remain: the `mcp/` npm-audit findings (9, separate package), a CI guard
+  diffing the baseline against `schema.sql`, and the `schema.sql`
+  baseline/ALTER consolidation (see [design-flags.md](design-flags.md)). For any new UI round, the rhythm is
   mocks-first on the review board (same artifact URL; toolkit + templates in
   `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
@@ -103,7 +117,7 @@ the other three are stubs the redesign brief supersedes).
 | Recipe detail | `/recipes/[id]` (`app/recipes/[id]/page.tsx`) | Working — v2 pass shipped (PR #22): flat hairline rows, full-width teal "Start cooking" (launches `components/cook-mode.tsx`), breadcrumb + one-row actions, pantry-badge quirk fixed |
 | Plan | `/plans` (`app/plans/page.tsx`) | Working — flat day lists (no lunch/dinner division, PR #18; `meal_type` vestigial), per-day quick-add (44px rows, recents first), sheets, generate exit; day items in `components/plan-day-items.tsx`; data layer in `lib/hooks/use-plan.ts` |
 | Shop | `/grocery` (`app/grocery/page.tsx`) | Working — reflow chunky direction (pinned order bar, 30px checks, sticky sections); transactional state-preserving regeneration underneath; data layer in `lib/hooks/use-grocery-list.ts` |
-| Settings | `/settings` (`app/settings/page.tsx`) | Working — v2 pass shipped (PR #20): iOS-style rows, page title + card labels, 44px targets, full-width teal save; `ensureUserSettings` runs once per sign-in (defaults duplication still open) |
+| Settings | `/settings` (`app/settings/page.tsx`) | Working — v2 pass shipped (PR #20): iOS-style rows, page title + card labels, 44px targets, full-width teal save; `ensureUserSettings` runs once per sign-in; settings defaults now share one `DEFAULT_USER_SETTINGS` source of truth mirroring SQL (2026-07-03) |
 
 Authentication is email/password through Supabase. The app installs to the
 iPhone home screen as a standalone app (manifest + icons + safe-area handling,
@@ -120,7 +134,7 @@ mini-M5).
 | 3 | Plan Integrity | Done (PR #4 + prod apply, 2026-07-02) |
 | 4 | Grocery State Preservation | Done (PR #5 + prod apply, 2026-07-02) |
 | 5 | UI Feedback and Ergonomics | Rescoped — mini-M5 done (PR #6, 2026-07-02); rest folds into the redesign |
-| 6 | Component Hardening | Done — slices 1–4 (PRs #7, #9, #10, #12); settings-defaults split out as a standalone follow-up |
+| 6 | Component Hardening | Done — slices 1–4 (PRs #7, #9, #10, #12); settings-defaults single source of truth done 2026-07-03 |
 | — | The Reflow (redesign) | Done (2026-07-02) — Cook (PR #13), Today (PR #14), Shop (PR #15), Plan (PR #16); token set v2 live app-wide ([redesign-brief.md](redesign-brief.md)) |
 | — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); 10 board pins still open |
 | 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
@@ -149,15 +163,11 @@ mini-M5).
 
 - Ten round-1 review-board pins await owner verdicts (shipped defaults, not
   bugs): T1–T4, P1–P3, S1–S2, C2 — see [design-flags.md](design-flags.md).
-- Default settings values duplicated across client files vs SQL defaults
-  (standalone follow-up — split out of M6 by owner decision, 2026-07-02).
 - No route-level `error.tsx` / `loading.tsx` boundaries; unmapped errors still
   surface raw messages (mini-M5 added friendly mapping + `aria-live`).
-- `AppShell` receives `userEmail` from all six screens but renders it nowhere
-  — build the account affordance or remove the dead threading (new flag,
-  2026-07-03; see [design-flags.md](design-flags.md)).
-- `npm audit`: 3 high-severity in root (all the `ws → realtime-js →
-  supabase-js` chain), 9 in `mcp/` — triage pending.
+- `npm audit`: root is clean (0 vulns as of 2026-07-03, the `ws` chain
+  resolved via the supabase-js lockfile bump); `mcp/` still reports 9
+  (separate package, triage before heavy MCP use).
 - Full register: [design-flags.md](design-flags.md).
 
 ## Where to go next
