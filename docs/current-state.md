@@ -53,7 +53,10 @@ remaining lower-priority loose ends** (see Active Handoff).
   the timestamped baseline copy is CI/local-only.
 - **CI:** GitHub Actions on every PR — app checks (**lint** / typecheck /
   vitest / build) and DB tests (ephemeral Supabase stack, 108 pgTAP assertions
-  across three suites), CLI pinned 2.109.0, NOTESTS guard. Lint runs
+  across three suites), CLI pinned 2.109.0, NOTESTS guard. The db-tests job
+  also guards baseline drift — a "Baseline schema matches schema.sql" step runs
+  before `supabase start` and fails if the baseline migration and `schema.sql`
+  diverge (2026-07-03). Lint runs
   `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
   longer lints (`eslint.ignoreDuringBuilds`). Twenty-three PRs merged plus three
   direct-to-main follow-up merges; every CI run has been green.
@@ -90,9 +93,9 @@ remaining lower-priority loose ends** (see Active Handoff).
   rails if a consumer appears). See the Resolved section of
   [design-flags.md](design-flags.md). With the standing follow-ups also
   cleared (CI Actions `@v5`, `ws` advisory 3 high -> 0, settings-defaults SoT,
-  `userEmail` cleanup), what remains are **lower-priority loose ends**: the
-  `mcp/` npm-audit findings (9, separate package), a CI guard diffing the
-  baseline against `schema.sql`, and the `schema.sql` baseline/ALTER
+  `userEmail` cleanup, and the **CI baseline-vs-`schema.sql` guard**, 2026-07-03),
+  what remains are two **lower-priority loose ends**: the `mcp/` npm-audit
+  findings (9, separate package) and the `schema.sql` baseline/ALTER
   consolidation (see [design-flags.md](design-flags.md)). For any new UI round,
   the rhythm is mocks-first on the review board (same artifact URL; toolkit +
   templates in `scripts/review-board/`, README has the flow).

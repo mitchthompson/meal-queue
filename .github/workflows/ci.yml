@@ -68,6 +68,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Guard: the CI/local-only baseline migration is a VERBATIM copy of
+      # schema.sql (regenerate with
+      # `cp supabase/schema.sql supabase/migrations/20260101000000_baseline_schema.sql`).
+      # If they drift, a fresh CI/local DB builds a stale schema and the pgTAP
+      # suite validates against the wrong baseline — a silent correctness hole.
+      # Runs before `supabase start` so drift fails fast with no image pulls.
+      - name: Baseline schema matches schema.sql
+        run: |
+          if ! diff -u supabase/schema.sql supabase/migrations/20260101000000_baseline_schema.sql; then
+            echo "::error::baseline migration drifted from schema.sql — regenerate: cp supabase/schema.sql supabase/migrations/20260101000000_baseline_schema.sql"
+            exit 1
+          fi
+
       # Pinned to the CLI release the suite was verified against locally
       # (2026-07-01, Postgres 17 matching prod 17.6). Bump deliberately, never
       # float on `latest` — CLI/image drift can turn green runs red with no

@@ -51,4 +51,6 @@ yet exist and `check_function_bodies` (on by default) rejects it.
   Superseded Decisions).
 - Regenerate whenever `schema.sql` changes:
   `cp supabase/schema.sql supabase/migrations/20260101000000_baseline_schema.sql`.
-  Follow-up: add a CI guard that diffs the two so they cannot silently drift.
+  A CI guard enforces this: the db-tests job's "Baseline schema matches
+  schema.sql" step (before `supabase start`) fails the run if the two ever
+  drift, printing the exact regenerate command.
