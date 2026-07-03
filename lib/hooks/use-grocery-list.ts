@@ -64,7 +64,6 @@ export function useGroceryList() {
 
   useEffect(() => {
     loadPlans();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

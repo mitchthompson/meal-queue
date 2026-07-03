@@ -8,15 +8,17 @@ on:
 
 jobs:
   # ---------------------------------------------------------------------
-  # App checks: types, unit tests, production build.
+  # App checks: lint, types, unit tests, production build.
   #
-  # NOTE: `npm run lint` is intentionally NOT run here. The repo has no
-  # ESLint config, so `next lint` drops into an interactive setup wizard
-  # that would HANG the runner. Configuring ESLint (then adding a lint
-  # step) is a tracked follow-up.
+  # Lint runs the ESLint CLI (`npm run lint` -> `eslint . --max-warnings=0`)
+  # against the flat config in eslint.config.mjs (next/core-web-vitals +
+  # next/typescript). We migrated off the deprecated `next lint` (removed in
+  # Next 16); `next build` no longer lints either (eslint.ignoreDuringBuilds
+  # in next.config.mjs), so this is the single lint gate. Zero warnings are
+  # tolerated — suppress intentional exceptions with an inline eslint-disable.
   # ---------------------------------------------------------------------
   app-checks:
-    name: App checks (typecheck / test / build)
+    name: App checks (lint / typecheck / test / build)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +30,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
 
       - name: Typecheck
         run: npm run typecheck

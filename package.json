@@ -7,7 +7,7 @@
     "dev:phone": "node scripts/phone-preview.mjs && next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -21,9 +21,12 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
     "@types/node": "^22.10.6",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^15.5.20",
     "typescript": "^5.7.2",
     "vitest": "^4.1.8"
   },
