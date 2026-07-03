@@ -59,10 +59,10 @@ Added ahead of applying the reliability migrations because there is no staging
 environment ("plan B"): prove database changes against a real Postgres before
 the live hand-apply.
 
-- GitHub Actions CI: an app-checks job (`npm ci` + typecheck + test + build with
-  placeholder `NEXT_PUBLIC_*` env; no lint until ESLint is configured) and a
-  db-tests job (ephemeral local Supabase stack via the CLI + pgTAP; no cloud
-  credentials).
+- GitHub Actions CI: an app-checks job (`npm ci` + lint + typecheck + test +
+  build with placeholder `NEXT_PUBLIC_*` env; lint added with the ESLint flat
+  config in PR #23) and a db-tests job (ephemeral local Supabase stack via the
+  CLI + pgTAP; no cloud credentials).
 - pgTAP coverage for `save_recipe` (atomicity rollback, version-bump
   invalidation, RLS/owner-scope on the app and service-role paths).
 - A CI/local-only baseline migration (`20260101000000_baseline_schema.sql`, a
@@ -77,9 +77,10 @@ Acceptance:
 - CI runs green on a PR to `main`.
 - `save_recipe` is proven by the pgTAP suite before it is applied to prod.
 
-Follow-ups: pin the CLI version, configure ESLint and add a lint step, add a CI
-guard that diffs the baseline against `schema.sql`, and confirm `config.toml`
-`major_version` against prod.
+Follow-ups (remaining): add a CI guard that diffs the baseline against
+`schema.sql`, and confirm `config.toml` `major_version` against prod. Done:
+pin the CLI version (2.109.0); configure ESLint + add a lint step (PR #23,
+2026-07-03).
 
 ### 2. Atomic Recipe Saves
 

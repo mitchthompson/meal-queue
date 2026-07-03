@@ -3,7 +3,55 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-02 (evening, latest) - V2 Sweep complete: Recipes pass (PR #21) + recipe detail (PR #22)
+## 2026-07-03 (latest) - ESLint flat config + CI lint gate (PR #23)
+
+Cleared the "`npm run lint` non-functional" follow-up. Migrated off the
+deprecated `next lint` (removed in Next 16) to the ESLint CLI on a flat
+config, and made it a CI gate. Merged as `83d0b86`, deployed to Vercel,
+green on `main`.
+
+- **Setup** (`codex/eslint-ci`, commit `1b50329`, merge `83d0b86`): new
+  `eslint.config.mjs` — the Next codemod's flat config, `next/core-web-vitals`
+  + `next/typescript`, ignoring `mcp/**` (separate package, own build);
+  `package.json` lint script `next lint` → `eslint . --max-warnings=0`; devDeps
+  `eslint@9.39.4`, `eslint-config-next@15.5.20`, `@eslint/eslintrc@3.3.5`.
+- **Decisions (why):** (1) *strict ruleset* — owner chose core-web-vitals +
+  typescript over core-web-vitals-only, for the TS-aware layer on top of `tsc`.
+  (2) *`--max-warnings=0`* — finished at zero warnings, so this locks the clean
+  slate and keeps local == CI (the parity value the CI comments already state);
+  intentional exceptions use an inline `eslint-disable`, matching the existing
+  hook pattern. (3) *decouple the build* — `eslint.ignoreDuringBuilds` in
+  `next.config.mjs` so `next build` stops linting via the deprecated path (build
+  now prints "Skipping linting"; TS checking during build is unaffected),
+  leaving the CLI step as the single gate. (4) *delivery* — owner chose branch
+  + PR so the new CI lint step proved green on the PR before merge.
+- **First-run findings (7), all resolved:** 3 errors were all in `mcp/dist`
+  (a build artifact in the out-of-scope MCP subpackage) → fixed by ignoring
+  `mcp/**`, not a code change. 4 warnings fixed: the unused `userEmail`
+  destructure in `AppShell` (dropped from the signature, kept in the prop type
+  so the six callers are untouched), and 3 dead `react-hooks/exhaustive-deps`
+  disable directives in the hooks (the rule is active — one *used* directive
+  remains at `use-grocery-list.ts` — and reported nothing at the removed sites;
+  re-ran lint to confirm no removal unmasked a real warning).
+- **New flag raised:** every screen threads `userEmail` into `<AppShell>`,
+  which never renders it — likely an account/sign-out affordance wired but
+  never built. Logged in [design-flags.md](design-flags.md) (open); owner
+  decides build-it vs. remove-the-threading.
+- **Dependency safety:** the 3 devDeps added zero new audit findings — the root
+  "3 high" are the pre-existing `ws → @supabase/realtime-js →
+  @supabase/supabase-js` chain (docs previously said "1 high"; same underlying
+  vuln, now counted as 3 chain nodes).
+- **CI observation (feeds a standing follow-up):** both jobs now annotate the
+  Node-20 deprecation — `actions/checkout@v4` / `setup-node@v4` /
+  `supabase/setup-cli@v1` are force-run on Node 24. Confirms the "Actions
+  Node-20 version bump" follow-up is live; a `@v4 → @v5` bump would clear it.
+- **Verification (as run):** `eslint .` clean at 0 warnings; `tsc --noEmit`
+  clean; vitest 16/16; `next build` green (11/11 static pages, "Skipping
+  linting"). CI green on PR #23's first run (app-checks 47s, db-tests 1m7s) and
+  again on `main` post-merge (49s / 1m12s). pgTAP untouched (108/108).
+- **Remaining:** none for this unit — merged, deployed, verified.
+
+## 2026-07-02 (evening) - V2 Sweep complete: Recipes pass (PR #21) + recipe detail (PR #22)
 
 - **Round-3 board (Recipes library + editor):** before shots + two
   CSS-injected direction mocks per screen (A: v2-dressed cards / stacked

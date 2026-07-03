@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-02 (evening — milestone 7 complete)
+Last reviewed: 2026-07-03 (ESLint/CI lint gate live — PR #23)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -22,45 +22,50 @@ editor, full-width save — plus a fix for the save confirmation that had
 never displayed), and **PR #22** (recipe detail, round-4 verdicts: flat
 hairline rows both lists, full-width Start cooking, header language +
 44px stepper, the pantry-badge cascade quirk fixed at the root, and the
-RD5 tighter title row — breadcrumb + one-row actions). **Next: the ten
-open round-1 review-board pins and/or the standing follow-ups** (owner
+RD5 tighter title row — breadcrumb + one-row actions). Since then the
+**ESLint/CI lint gate follow-up shipped (PR #23, 2026-07-03)** — `npm run
+lint` works again on a flat config and CI enforces it. **Next: the ten open
+round-1 review-board pins and/or the remaining standing follow-ups** (owner
 picks; see Active Handoff). The round-2/3/4 pins are all resolved and
 shipped.
 
 ## Stable Baseline
 
-- **`main`:** at `74da4ea` — the full reflow (PRs #13–#16), review round 1
-  (PRs #17–#18), and the complete v2 sweep: token fix (PR #19), Settings
-  (PR #20), Recipes library + editor (PR #21, merge `1a9401b`), and recipe
-  detail incl. RD5 (PR #22, merge `74da4ea`), all deployed on Vercel.
-  Merge to `main` auto-deploys (confirmed); Cook was owner-verified
+- **`main`:** at `83d0b86` — the full reflow (PRs #13–#16), review round 1
+  (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), and
+  the **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, all deployed on
+  Vercel. Merge to `main` auto-deploys (confirmed); Cook was owner-verified
   on-device in prod.
 - **Prod database:** all four migrations in `supabase/migrations/` are applied
   and verified (`save_recipe`, Data API grants, plan-integrity triggers,
   grocery state preservation). `supabase/schema.sql` is canonical and in sync;
   the timestamped baseline copy is CI/local-only.
-- **CI:** GitHub Actions on every PR — app checks (typecheck / vitest / build)
-  and DB tests (ephemeral Supabase stack, 108 pgTAP assertions across three
-  suites), CLI pinned 2.109.0, NOTESTS guard. Twenty-two PRs merged; every
-  PR's first CI run has been green. Housekeeping flag: the workflow's
-  `actions/*@v4` actions warn about deprecated Node 20 — bump versions in
+- **CI:** GitHub Actions on every PR — app checks (**lint** / typecheck /
+  vitest / build) and DB tests (ephemeral Supabase stack, 108 pgTAP assertions
+  across three suites), CLI pinned 2.109.0, NOTESTS guard. Lint runs
+  `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
+  longer lints (`eslint.ignoreDuringBuilds`). Twenty-three PRs merged; every
+  PR's first CI run has been green. Housekeeping flag (now confirmed live in
+  run annotations): `actions/checkout@v4` / `setup-node@v4` /
+  `supabase/setup-cli@v1` are force-run on Node 24 — bump `@v4 → @v5` in
   passing.
-- **Latest verification:** 2026-07-02 (v2 sweep back half) — typecheck clean,
-  vitest 16/16, `next build` green on both branches; pgTAP 108/108 in CI (DB
-  layer untouched). Both branches driven with Playwright on the local stack
-  (prod route-blocked): PR #21 — 22/22 assertions at 390px/1280px plus a
-  live `save_recipe` round-trip (servings 2→3, persisted through reload,
-  reverted); PR #22 — 15/15 assertions plus behavior checks (stepper
-  rescales amounts, Start cooking opens the Cook takeover, `?cook=1`
-  deep link auto-opens) — zero console errors throughout.
+- **Latest verification:** 2026-07-03 (ESLint/CI gate, PR #23) — `eslint .`
+  clean at zero warnings, typecheck clean, vitest 16/16, `next build` green
+  (11/11 static pages, lint skipped); CI green on the PR (app-checks 47s,
+  db-tests 1m7s) and on `main` post-merge (49s / 1m12s), pgTAP 108/108 (DB
+  layer untouched). Prior (v2 sweep, 2026-07-02): both branches driven with
+  Playwright on the local stack — PR #21 22/22 assertions + a live
+  `save_recipe` round-trip; PR #22 15/15 + stepper / Start-cooking / `?cook=1`
+  behavior checks, zero console errors.
 - **Remote:** `origin` = `https://github.com/mitchthompson/meal-queue.git`.
 - **Backups:** manual `pg_dump` runbook (libpq 18.4); latest snapshots in
   `~/meal-queue-backup-2026-07-01-*.dump` (98K/113K, 10-table manifests).
 
 ## Active Handoff
 
-- **In progress:** None — milestone 7 is complete (PRs #19–#22 merged and
-  deployed); all branches merged, tree clean.
+- **In progress:** None — milestone 7 complete (PRs #19–#22) and the ESLint/CI
+  lint gate shipped (PR #23, merged `83d0b86`, deployed); all branches merged,
+  tree clean.
 - **Next action:** **owner picks the next unit** from two queues. (a) The
   **ten open round-1 board pins** in [design-flags.md](design-flags.md) —
   T1–T4 (settings gear placement, plan-less Today, amber link hover, 640px
@@ -68,12 +73,15 @@ shipped.
   S1–S2 (Regenerate button, On-hand collapsed), C2 ("mark cooked" writes
   nothing — a schema question) — these are shipped defaults awaiting
   sign-off, so the move is to ask the owner for verdicts (pin codes in
-  chat), not to build. (b) The **standing follow-ups**: settings-defaults
-  single source of truth, ESLint config + CI lint step (mechanical,
-  self-contained — good first pick), npm audit triage (1 high root, 9 in
-  `mcp/`), and the Actions Node-20 version bump. For any new UI round,
-  the rhythm is mocks-first on the review board (same artifact URL;
-  toolkit + templates in `scripts/review-board/`, README has the flow).
+  chat), not to build. (b) The **standing follow-ups**: the Actions Node-20
+  version bump (`@v4 → @v5`; mechanical, self-contained — now confirmed live
+  in CI annotations, a good first pick), settings-defaults single source of
+  truth, npm audit triage (3 high in root — all the `ws`/supabase-js chain —
+  plus 9 in `mcp/`), and the new **`userEmail` dead-threading** decision (build
+  the account affordance vs. remove the prop threading — see
+  [design-flags.md](design-flags.md)). For any new UI round, the rhythm is
+  mocks-first on the review board (same artifact URL; toolkit + templates in
+  `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -145,8 +153,11 @@ mini-M5).
   (standalone follow-up — split out of M6 by owner decision, 2026-07-02).
 - No route-level `error.tsx` / `loading.tsx` boundaries; unmapped errors still
   surface raw messages (mini-M5 added friendly mapping + `aria-live`).
-- `npm run lint` non-functional (no ESLint config) — tracked follow-up.
-- `npm audit`: 1 high-severity finding (root), 9 in `mcp/` — triage pending.
+- `AppShell` receives `userEmail` from all six screens but renders it nowhere
+  — build the account affordance or remove the dead threading (new flag,
+  2026-07-03; see [design-flags.md](design-flags.md)).
+- `npm audit`: 3 high-severity in root (all the `ws → realtime-js →
+  supabase-js` chain), 9 in `mcp/` — triage pending.
 - Full register: [design-flags.md](design-flags.md).
 
 ## Where to go next

@@ -13,7 +13,7 @@ don't duplicate. The end-of-session wrap-up is canonical in
 Run from the repo root:
 
 ```powershell
-npm run lint        # next lint
+npm run lint        # eslint . --max-warnings=0 (flat config; zero-warning gate)
 npm run typecheck   # tsc --noEmit
 npm run test        # vitest run (one-shot)
 ```
