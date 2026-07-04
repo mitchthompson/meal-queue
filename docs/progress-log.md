@@ -3,7 +3,73 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-04 (latest) - Recipe Import PR 1 shipped: Phase D review, live smoke, merged to main & deployed
+## 2026-07-04 (latest) - Recipe Import PR 2 (Phase C): import UI built, reviewed, merged & deployed
+
+Built Recipe Import Phase C (the in-app import UI) on `codex/import-ui`, ran a
+Phase D senior review, and merged PR #29 to `main` — production now has the
+import flow. Same PR carried the standing PR-1 docs-wrap commit (`9601b1f`) to
+`main`. Zero new npm deps, zero schema changes. **Milestone 8 is functionally
+complete** (phases A/B/C/D all shipped); the only tail is the real-device pass.
+
+- **Built C1–C6 per [plans/recipe-import.md](plans/recipe-import.md) §6, round-5 verdicts applied:**
+  - **C1** extracted `saveRecipeForm` from the editor's `saveRecipe`
+    (`lib/hooks/use-recipes.ts`) — the import review screen and the editor now
+    share one save path. Behavior-neutral: `verify-recipes-pass.mjs` 22/22 incl.
+    a live `save_recipe` round-trip.
+  - **C2** `lib/hooks/use-import.ts` (state machine entry→parsing→review; calls
+    `POST /api/import-recipe`; saves via `saveRecipeForm`) + the pure
+    `draftToFormState` mapper in `lib/hooks/draft-to-form.ts` (6 vitest cases).
+  - **C3** `components/recipe-import.tsx` `ImportFlow` — mode pills (IM1 B),
+    parsing wait (IM2), review with Parsed/Original toggle (IM4 B); the review
+    form copies the editor markup verbatim so the editor stays untouched.
+  - **C4** wired the Import button (IM7 A, beside "New recipe") + `?import=1`
+    deep link into `app/recipes/page.tsx`; editor/import mutually exclusive.
+  - **C5** `app/globals.css`, tokens only — amber `.import-callout` (IM3 A
+    paywall redirect), indeterminate `.import-progress` bar, `.import-open`
+    mobile takeover.
+  - **C6** `scripts/review-board/verify-import-pass.mjs` (route-intercepted, no
+    LLM spend) + docs (pages/recipes, design-system, design-flags).
+- **Phase D review (`/code-review` high, 8 finder angles) — 3 bugs + 3 cleanups, all fixed & re-verified:**
+  - **HIGH:** `startParse` couldn't distinguish a user Cancel from a
+    programmatic reset (both call `.abort()`) — closing the panel mid-parse
+    re-opened it via the catch's aborted branch. Fixed with controller-identity
+    guards in `catch`/`finally` (only the still-active controller touches
+    phase/ref).
+  - **MED:** the `?edit=…&import=1` deep-link combo could render editor + import
+    together. Fixed: `ImportFlow` renders only when `!showEditor` (editor wins).
+  - **LOW:** the paywall focus effect refocused the textarea on later mode
+    toggles. Fixed: keyed on the redirect flag only.
+  - Cleanups: removed a dead `draftToFormState` re-export (kept the mapper's
+    client-free import path clean), dropped a vestigial `errorCode` from the
+    hook's public return, deduped a local `UnitOption` type.
+- **Deviations from the spec (recorded in [decisions.md](decisions.md)):** (1)
+  parsing status uses a period not an em-dash ("Reading the recipe. This can
+  take about 15 seconds.") — owner no-em-dash rule, matching PR 1; (2)
+  `draftToFormState` lives in a **client-free** module (not literally spread from
+  `blankIngredient`) so vitest can load it without the browser Supabase client
+  throwing on missing env; (3) `ImportFlow` takes the `useImport()` return as a
+  `flow` prop (the page owns the hook to drive `import-open` + `?import=1`); (4)
+  paste imports show no "Imported from" line (no host) — avoids inventing copy;
+  (5) two unpinned CSS values chosen + flagged (`.import-textarea` min-height
+  `9rem`, `.import-progress` `1.1s` sweep).
+- **Verification (all green):** eslint clean, tsc clean, **vitest 125/125** (119
+  + 6 new `draftToFormState`), `next build` 12 routes; `verify-recipes-pass.mjs`
+  22/22 (C1 neutral), `verify-import-pass.mjs` 26/26 (entry→parsing→review→save→
+  detail + 422-red + paywall-amber/focus). One transient `ensureUserSettings`
+  "Failed to fetch" in a recipes-pass run (auth path, unrelated) cleared on
+  re-run. PR #29 CI green (app-checks 50s, db-tests 1m11s); `main` post-merge CI
+  green (1m4s); prod liveness `/recipes` 200 + `POST /api/import-recipe` 400 on
+  an empty body (body validation runs before auth).
+- **Merged & deployed:** PR #29 (`codex/import-ui` → `main`, merge `88a6bc5`),
+  carrying `d220839` (Phase C) + `9601b1f` (PR-1 docs wrap). Feature branch
+  deleted (local + remote).
+- **Remaining (owner tail, not blocking):** the Needs-Mitchell real-device import
+  pass on `npm run dev:phone` (actual NYT paste, one URL import, paywall
+  redirect, keyboard over textarea, safe-area under the save bar — Playwright
+  WebKit ≠ real Safari); plus the still-open PR-1 tails (authed prod smoke of the
+  Vercel key, key rotation).
+
+## 2026-07-04 - Recipe Import PR 1 shipped: Phase D review, live smoke, merged to main & deployed
 
 Closed out Recipe Import PR 1 end to end: collected the round-5 board verdicts,
 ran the Phase D senior review, applied the fixes, smoke-tested against the live

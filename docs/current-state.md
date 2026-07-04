@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-04 (execution session: **Recipe Import PR 1 shipped**. Round-5 board verdicts (IM1–IM7) collected + recorded; Phase D senior review applied 7 fixes (SSRF hardening, step-range corruption, reuse); live B13 smoke passed against the Anthropic API (all 4 deviations resolved); **PR #28 (`codex/import-api`) merged to `main` (`11834f9`) and deployed to Vercel prod**, route live on `meal-queue.vercel.app`. `ANTHROPIC_API_KEY` provisioned locally + in Vercel. Phase C (import UI, `codex/import-ui`) now unblocked. See Active Handoff. Prior: Phase A+B build; iPad coherence PRs #26–#27)
+Last reviewed: 2026-07-04 (execution session: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped; only the Needs-Mitchell real-device pass remains. See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -54,11 +54,21 @@ B13 smoke passed against the Anthropic API (all 4 spec deviations resolved,
 including the root-level `anyOf` schema confirmed live), and **PR #28
 (`codex/import-api`) merged to `main` (`11834f9`) and deployed to Vercel prod**
 (route live on `meal-queue.vercel.app`; `ANTHROPIC_API_KEY` set locally + in
-Vercel). Phase C (the import UI, `codex/import-ui`) is the open next step. See Active Handoff.
+Vercel). **This session (2026-07-04) then shipped Phase C — the in-app import
+UI** on `codex/import-ui`: C1 extracted a shared `saveRecipeForm` seam
+(behavior-neutral), C2 added `use-import.ts` + the pure `draftToFormState`
+mapper, C3 built `components/recipe-import.tsx` (`ImportFlow`: entry/parsing/
+review), C4 wired the Import button + `?import=1` into the recipes page, C5 the
+token-only import CSS, C6 the `verify-import-pass.mjs` harness + docs. A Phase D
+`/code-review` fixed 3 bugs (abort-vs-reset coordination, `?edit`+`?import`
+mutual-exclusion, paywall focus) + 3 cleanups; **PR #29 merged to `main`
+(`88a6bc5`) and deployed** (carrying the PR-1 docs-wrap `9601b1f`).
+**Milestone 8 is functionally complete** (phases A/B/C/D done); the only tail is
+the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Stable Baseline
 
-- **`main`:** at `11834f9` (**Recipe Import PR 1 merged this session** — merge of `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert, deployed to Vercel prod) atop `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
+- **`main`:** at `88a6bc5` (**Recipe Import PR 2 / Phase C merged this session** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
   reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
@@ -87,14 +97,26 @@ Vercel). Phase C (the import UI, `codex/import-ui`) is the open next step. See A
   before `supabase start` and fails if the baseline migration and `schema.sql`
   diverge (2026-07-03). Lint runs
   `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
-  longer lints (`eslint.ignoreDuringBuilds`). Twenty-eight PRs merged plus several
+  longer lints (`eslint.ignoreDuringBuilds`). Twenty-nine PRs merged plus several
   direct-to-main follow-up merges; CI has been green (one transient
   `supabase start` port-bind flake on `main` — `54322 already in use` — cleared
   by a job rerun, not a repo issue).
   `actions/checkout` and `actions/setup-node` are now on `@v5` (2026-07-03,
   merge `2e8bc09`), clearing the Node-20 runtime deprecation;
   `supabase/setup-cli@v1` stays (no v5) and `node-version: 20` is unchanged.
-- **Latest verification:** 2026-07-04 (Recipe Import PR 1, PR #28): eslint /
+- **Latest verification:** 2026-07-04 (Recipe Import PR 2 / Phase C, PR #29):
+  eslint / tsc clean, **vitest 125/125** (119 + 6 new `draftToFormState`),
+  `next build` **12 routes** (`/recipes` 8.08 kB with the import UI added;
+  `/api/import-recipe` node fn unchanged); **`verify-recipes-pass.mjs` 22/22**
+  (proves the C1 `saveRecipeForm` seam neutral, live `save_recipe` round-trip) +
+  **`verify-import-pass.mjs` 26/26** (entry→parsing→review→save→detail, plus the
+  422-red and paywall-amber+focus paths; the `/api/import-recipe` route was
+  intercepted with fixtures — no LLM spend; one transient `ensureUserSettings`
+  "Failed to fetch" in a recipes-pass run cleared on re-run). PR #29 CI green
+  (app-checks 50s, db-tests 1m11s), `main` post-merge CI green (1m4s); prod
+  liveness `/recipes` 200 + `POST /api/import-recipe` 400 on an empty body (body
+  validation before auth); DB layer untouched (pgTAP unchanged at 108). Prior —
+  2026-07-04 (Recipe Import PR 1, PR #28): eslint /
   tsc clean, **vitest 119/119**, `next build` 11 pages + `/api/import-recipe` as
   a `ƒ` node function (built with no key present); PR #28 CI green (app-checks
   48s, db-tests 1m4s), `main` post-merge CI green (1m8s), DB layer untouched
@@ -139,35 +161,35 @@ Vercel). Phase C (the import UI, `codex/import-ui`) is the open next step. See A
 
 ## Active Handoff
 
-- **Just shipped:** **Recipe Import PR 1 — merged & deployed.** PR #28
-  (`codex/import-api`) is merged to `main` (`11834f9`) and live on Vercel prod:
-  `POST /api/import-recipe` (the app's first server-side route) + `lib/import/*`
-  (9 modules), vitest **119/119**, all four Phase D spec deviations resolved,
-  live B13 smoke green (paste + URL + negatives, against the Anthropic API).
-  Round-5 board verdicts (IM1–IM7) are recorded in [decisions.md](decisions.md);
-  IM6 resolved in [design-flags.md](design-flags.md) Resolved. Zero schema
-  changes, zero new npm deps.
-- **Next action:** **`/onboard`, then Recipe Import Phase C on a fresh
-  `codex/import-ui` branch off `main`.** Build the import UI per
-  [plans/recipe-import.md](plans/recipe-import.md) §6 (C1–C7), applying the
-  board verdicts (IM1 **B** mode pills paste-first · IM2 wait as shown · IM3
-  **A** amber paywall redirect · IM4 **B** Parsed/Original toggle · IM5 save
-  cluster as shown · IM6 provenance stored as built · IM7 **A** Import beside
-  "New recipe"). In order: (1) C1 — a **behavior-neutral** refactor seam in
-  `lib/hooks/use-recipes.ts` (verify clean, no UX change); (2) C2
-  `lib/hooks/use-import.ts` (calls `POST /api/import-recipe` with the Bearer
-  token); (3) C3 `components/recipe-import.tsx` (the entry surface + wait + review
-  screen — reuse the recipe-editor idiom); (4) C4 wire into
-  `app/recipes/page.tsx`; (5) C5 `app/globals.css` **tokens only** (any missing
-  value → [design-flags.md](design-flags.md), never inline); (6) C7 gate: eslint
-  / tsc / vitest / `next build`, then drive it on `npm run dev` (the key is set
-  locally). Open PR 2 on the owner's word. Confirm live values against
-  `app/globals.css` + [docs/pages/recipes.md](pages/recipes.md) before building.
-- **Blockers:** none for Phase C — PR 1 is merged and all verdicts are in.
-- **Environment notes:** `main` is the working branch again (feature branch
-  `codex/import-api` merged; can be deleted). `.env.local` now includes
+- **Just shipped:** **Recipe Import PR 2 / Phase C — merged & deployed.** PR #29
+  (`codex/import-ui` → `main` `88a6bc5`, feature branch deleted) is live on Vercel
+  prod: the in-app import UI — `components/recipe-import.tsx` (`ImportFlow`:
+  entry/parsing/review), `lib/hooks/use-import.ts` + the pure
+  `lib/hooks/draft-to-form.ts` mapper, the shared `saveRecipeForm` seam in
+  `lib/hooks/use-recipes.ts`, and token-only import CSS. Round-5 verdicts applied,
+  Phase D `/code-review` fixed 3 bugs + 3 cleanups, vitest **125/125**,
+  `verify-recipes-pass` 22/22 (C1 neutral) + `verify-import-pass` 26/26. The same
+  PR carried the PR-1 docs-wrap `9601b1f`. **Milestone 8 (Recipe Import) is
+  functionally complete** (phases A/B/C/D done). Zero schema changes, zero new
+  npm deps.
+- **Next action:** **No approved milestone is queued** — Recipe Import (milestone
+  8) was the last active one and is now done. `/onboard`, then **await owner
+  direction** for the next build. The one open item is owner-run, not an agent
+  task: the **Needs-Mitchell real-device import pass** — on `npm run dev:phone`,
+  iPhone standalone (never prod), paste an actual NYT Cooking recipe end to end,
+  do one open-site URL import, trigger the paywall redirect, and check
+  keyboard-over-textarea + safe-area under the teal save bar (Playwright WebKit ≠
+  real Safari). When the owner picks the next milestone, unscoped candidates live
+  in [roadmap.md](roadmap.md) Deferred Fixes/Ideas: route-level
+  `error.tsx`/`loading.tsx` boundaries, optimistic UI, auth-flow completion
+  (sign-up confirmation / password reset), richer empty states / dark mode. None
+  are scoped yet — interview + spec first, per the house rhythm.
+- **Blockers:** none.
+- **Environment notes:** `main` is the working branch (feature branch
+  `codex/import-ui` merged + deleted, local and remote). `.env.local` includes
   `ANTHROPIC_API_KEY` (sk-ant-, present locally); **Vercel has `ANTHROPIC_API_KEY`
-  set for Production + Preview** (owner-provisioned; prod deploy picked it up).
+  set for Production + Preview** (owner-provisioned). The review-board dev server
+  used for the Phase C verifies (`:3123`, local-pointed) was stopped at wrap.
   **Key rotation:** the raw key value was briefly exposed in a session transcript
   (IDE selection) — rotation was recommended but the owner chose to **leave it
   as-is for now**; rotate if that changes (Console → API Keys → revoke
@@ -188,7 +210,7 @@ the other three are stubs the redesign brief supersedes).
 | Page | Route | Status |
 | --- | --- | --- |
 | Today | `/` (`app/page.tsx`) | Working — reflow home screen ("Tonight" hero shows up to two meals + "Also tonight", deadline strip, week peek without meal-type sublabels, nudge); data layer in `lib/hooks/use-today.ts` |
-| Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working — v2 pass shipped (PR #21): page title + card labels, teal links, 44px targets, full-width save, serves line + sample-data seeder removed; atomic `save_recipe` RPC live; mobile editor takeover (PR #17); data layer in `lib/hooks/use-recipes.ts` |
+| Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working — v2 pass shipped (PR #21): page title + card labels, teal links, 44px targets, full-width save, serves line + sample-data seeder removed; atomic `save_recipe` RPC live; mobile editor takeover (PR #17); **in-app import shipped (PR #29): Import button + `?import=1` → paste/URL → LLM parse → review screen → save via the shared `saveRecipeForm`** (`components/recipe-import.tsx`, `lib/hooks/use-import.ts`); data layer in `lib/hooks/use-recipes.ts` |
 | Recipe detail | `/recipes/[id]` (`app/recipes/[id]/page.tsx`) | Working — v2 pass shipped (PR #22): flat hairline rows, full-width teal "Start cooking" (launches `components/cook-mode.tsx`), breadcrumb + one-row actions, pantry-badge quirk fixed |
 | Plan | `/plans` (`app/plans/page.tsx`) | Working — flat day lists (no lunch/dinner division, PR #18; `meal_type` vestigial), per-day quick-add (44px rows, recents first), sheets, generate exit; day items in `components/plan-day-items.tsx`; data layer in `lib/hooks/use-plan.ts` |
 | Shop | `/grocery` (`app/grocery/page.tsx`) | Working — reflow chunky direction (pinned order bar, 30px checks, sticky sections); transactional state-preserving regeneration underneath; data layer in `lib/hooks/use-grocery-list.ts` |
@@ -216,7 +238,7 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); all 10 board pins signed off 2026-07-03 (defaults kept) |
 | 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
 | — | iPad coherence | **Done (2026-07-03)** — orientation-routed chrome (PR #26) + portrait content-width fill (PR #27); CSS-only, deployed & confirmed on iPad Pro ([plans/ipad-support.md](plans/ipad-support.md)) |
-| 8 | Recipe Import (in-app) | **In progress (2026-07-04)** — **PR 1 merged** (`codex/import-api` → `main` `11834f9`, PR #28): `POST /api/import-recipe` + `lib/import/*`, vitest 119/119, Phase D review + live smoke done, deployed to prod. Phases A/B/D done; **Phase C (import UI, `codex/import-ui`) is next**. Spec: [plans/recipe-import.md](plans/recipe-import.md) |
+| 8 | Recipe Import (in-app) | **Done (2026-07-04)** — PR 1 (server route, PR #28 `11834f9`) + **PR 2 / Phase C (import UI, PR #29 `codex/import-ui` → `main` `88a6bc5`)**: paste/URL → LLM parse → review → save via shared `saveRecipeForm`; vitest 125/125, verify-recipes-pass 22/22 (C1 neutral) + verify-import-pass 26/26, deployed to prod. Phases A/B/C/D all shipped; only the owner real-device pass remains. Spec: [plans/recipe-import.md](plans/recipe-import.md) |
 
 ## Architecture snapshot
 
@@ -253,6 +275,12 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
   no-auth probe can't verify it; costs one paid call), and **key rotation** (the
   raw key value was briefly exposed in a session transcript; owner chose to leave
   it for now).
+- Recipe Import Phase C (PR #29): one tail — the **Needs-Mitchell real-device
+  import pass** (owner-run on `npm run dev:phone`: actual NYT paste, one URL
+  import, the paywall redirect, keyboard-over-textarea, safe-area under the teal
+  save bar; Playwright WebKit ≠ real Safari). Two unpinned CSS values were
+  chosen and flagged for owner eyes — `.import-textarea` min-height `9rem` and
+  the `.import-progress` `1.1s` sweep (see [design-flags.md](design-flags.md)).
 - `npm audit`: **both packages clean (0 vulns)** as of 2026-07-03 — root via
   the supabase-js lockfile bump (`ws` chain), and `mcp/` via an in-range
   lockfile-only `npm audit fix` (9 → 0: `undici`/`ws`/`hono`/`express`/`qs`/

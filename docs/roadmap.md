@@ -268,10 +268,11 @@ Acceptance (all met, 2026-07-02):
 
 ### 8. Recipe Import (in-app)
 
-**Status: in progress (2026-07-04) — PR 1 (Phases A/B/D) merged & deployed;
-Phase C (import UI) is the open next step.** Full builder-ready execution spec:
-[plans/recipe-import.md](plans/recipe-import.md) (owner interviewed; all design
-forks decided and recorded in its §1 table).
+**Status: done (2026-07-04) — all phases (A/B/C/D) shipped & deployed.** PR 1
+(server route, PR #28) and PR 2 / Phase C (import UI, PR #29) are both merged to
+`main` and live on Vercel prod; only the owner real-device pass remains. Full
+builder-ready execution spec: [plans/recipe-import.md](plans/recipe-import.md)
+(owner interviewed; all design forks decided and recorded in its §1 table).
 
 Add recipes from the app itself (today they enter via the MCP server in a
 Claude Code session): paste recipe text (primary — NYT Cooking is paywalled
@@ -291,7 +292,11 @@ changes by design.
   (SSRF hardening, step-range, reuse), all 4 deviations resolved, live B13
   smoke green; vitest 119/119.**
 - Phase C — PR 2 `codex/import-ui`: import flow + review screen +
-  behavior-neutral `saveRecipeForm` extraction. **Open — next step, unblocked.**
+  behavior-neutral `saveRecipeForm` extraction. **Done — merged 2026-07-04
+  (PR #29, `88a6bc5`), deployed. Phase D `/code-review` fixed 3 bugs
+  (abort-vs-reset coordination, `?edit`+`?import` mutual-exclusion, paywall
+  focus) + 3 cleanups; vitest 125/125, `verify-recipes-pass` 22/22 (C1 neutral)
+  + `verify-import-pass` 26/26.**
 
 Owner gate: Anthropic Console setup (`ANTHROPIC_API_KEY`, ~$10/mo spend cap)
 before Phase B smoke tests.
