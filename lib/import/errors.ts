@@ -10,6 +10,7 @@
 
 export type ImportErrorCode =
   | "invalid_request"
+  | "conflicting_source"
   | "text_too_long"
   | "unauthorized"
   | "fetch_failed"
@@ -23,9 +24,19 @@ export const IMPORT_ERRORS: Record<
   ImportErrorCode,
   { status: number; message: string }
 > = {
+  // Generic 400: malformed body or a field that failed validation (e.g. a
+  // tag over the length/count bound). Reserved the "not both" wording for
+  // conflicting_source below so a field error no longer reads as a paste/URL
+  // mistake.
   invalid_request: {
     status: 400,
-    message: "Provide a recipe URL or pasted recipe text (not both).",
+    message: "That recipe request wasn't valid. Paste the recipe text or a recipe URL and try again.",
+  },
+  // The exactly-one rule failed: both text and url present, or neither. Only
+  // reachable via a raw API call — the app UI submits exactly one field.
+  conflicting_source: {
+    status: 400,
+    message: "Send exactly one: recipe text or a recipe URL.",
   },
   text_too_long: {
     status: 400,
