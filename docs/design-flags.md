@@ -6,6 +6,15 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Open
 
+### Recipe Import (PR 1, `codex/import-api`) — spec deviations to confirm at Phase D
+- **Where it's used:** `lib/import/errors.ts`, `lib/import/fetch-page.ts`, `lib/import/schema.ts`, `app/api/import-recipe/route.ts`.
+- **What's needed:** four small departures from / risks against [plans/recipe-import.md](plans/recipe-import.md) §5 (Phase B), pending owner + senior confirmation:
+  1. **Em-dashes removed from four error messages.** §B2's table used em-dashes in `text_too_long`, `unauthorized`, `llm_failure`, and `llm_output_invalid`; these render in the UI, so em-dashes were replaced with periods per the owner's standing no-em-dash-in-copy rule. Wording is otherwise verbatim. Revert if the exact phrasing was intentional.
+  2. **`detectPaywall` signature widened.** §B7 listed `detectPaywall(html, extractedTextLen: number, hasJsonLd)`, but its phrase-scan clause needs "the first 1500 chars of the extracted text," which a length cannot provide. The parameter is the extracted text itself; length is derived internally. Behavior matches the spec's intent.
+  3. **`assertSafeUrl` rejection code (unspecified in §B7).** An unsafe/unfetchable URL throws `fetch_failed` (422, "Couldn't fetch that page…") so a blocked internal host reads as a fetch problem rather than advertising the SSRF policy.
+  4. **`DRAFT_JSON_SCHEMA` uses a root-level `anyOf`** (draft object or `{no_recipe:true}`), per §B1. Structured outputs list `anyOf` as supported, but a non-object root is untested until the STOP ② smoke test (no key yet). If the API rejects it, wrap as `{type:"object", properties:{result:{anyOf:[…]}}, required:["result"], additionalProperties:false}` and unwrap in the route.
+- **Source:** Recipe Import Phase B build, 2026-07-03; branch `codex/import-api`.
+
 ### Per-page docs are stubs
 - **Where it's used:** [docs/pages/*.md](pages/) — [today](pages/today.md), [recipes](pages/recipes.md), [plans](pages/plans.md), [grocery](pages/grocery.md), [settings](pages/settings.md)
 - **What's needed:** These are skeletons; flesh out as each page is worked. Update (2026-07-02): [settings](pages/settings.md) was rewritten with the v2 Settings pass (PR #20), and [recipes](pages/recipes.md) was de-rotted with the v2 Recipes/detail passes (PRs #21–#22 — it had still described pre-M2 non-atomic saves, the removed sample-data seeder, and the pre-reflow "focus mode"). [today](pages/today.md), [plans](pages/plans.md), and [grocery](pages/grocery.md) remain stubs (the redesign brief supersedes them for future-state intent).

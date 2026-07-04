@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (planning session: **Recipe Import feature fully scoped and spec'd** — owner interviewed, all design forks decided, and a builder-ready execution spec written to [plans/recipe-import.md](plans/recipe-import.md). No code changed. Prior: iPad coherence shipped & deployed in two CSS-only PRs — chrome PR #26 (`e0a6a3c`) + portrait content-width PR #27 (`a40b90a`), owner-confirmed on iPad Pro)
+Last reviewed: 2026-07-03 (execution session: **Recipe Import Phase A + B executed**. Board round 5 (IM1–IM7 mocks) deployed to the 🍳 artifact for owner verdicts; `codex/import-api` (PR 1 — the app's first API route + `lib/import/*`, vitest 114/114) built to a green gate and **committed locally on `codex/import-api` (2 commits, not pushed)**; not smoke-tested. See Active Handoff. Prior: the planning session that spec'd this to [plans/recipe-import.md](plans/recipe-import.md); iPad coherence PRs #26–#27 shipped)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -42,15 +42,18 @@ iPad coherence** ([plans/ipad-support.md](plans/ipad-support.md)) in two CSS-onl
 PRs — **chrome PR #26** (portrait iPads → phone tabbar, landscape → desktop nav,
 via a `(pointer: coarse) and (max-width: 1024px)` trigger) and **content-width
 PR #27** (portrait tablets fill the shell instead of stranding a right gutter) —
-both deployed and confirmed on an iPad Pro. This session (2026-07-03, evening)
-was **planning only**: the owner chose the next unit — **in-app Recipe Import**
-(paste text or URL → LLM parse → dedicated review screen → save) — and it was
-scoped via owner interview into a locked, builder-ready spec at
-[plans/recipe-import.md](plans/recipe-import.md). See Active Handoff.
+both deployed and confirmed on an iPad Pro. A planning session then scoped
+**in-app Recipe Import** (paste text or URL → LLM parse → dedicated review
+screen → save) into a locked, builder-ready spec at
+[plans/recipe-import.md](plans/recipe-import.md), and **this session (2026-07-03)
+executed its Phase A + Phase B**: the review-board round-5 mocks (IM1–IM7) are
+deployed for owner verdicts, and the server route (PR 1, branch
+`codex/import-api`) is built, gate-green, and **committed locally (2 commits,
+not pushed)** but unsmoketested. Phases C (UI) and D (senior review) are open. See Active Handoff.
 
 ## Stable Baseline
 
-- **`main`:** at `81340be` (docs wrap on top of merge `a40b90a`) — the full
+- **`main`:** at `45d5260` (recipe-import spec commit atop the iPad-coherence merges; **unchanged this session** — the import work is committed on branch `codex/import-api` (2 commits, not pushed)) — the full
   reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
@@ -120,32 +123,42 @@ scoped via owner interview into a locked, builder-ready spec at
 
 ## Active Handoff
 
-- **In progress:** **Recipe Import — planned, not started.** The complete
-  execution spec (written for handoff to a lower-capability builder model, with
-  a senior-model review gate before any merge) is
-  [plans/recipe-import.md](plans/recipe-import.md). All design forks are
-  **owner-decided and locked** in its §1 table: LLM parser (Claude Haiku 4.5,
-  pinned id, plain-fetch server call), both paste+URL avenues in v1
-  (paste-first — NYT Cooking is paywalled and unfetchable), iPhone-first,
-  dedicated review screen, no schema change (provenance via `Source:` line in
-  `instructions_raw`), tags only from the existing vocabulary, mocks-first
-  board round 5. Zero new npm deps, zero schema changes by design.
-- **Next action:** **execute [plans/recipe-import.md](plans/recipe-import.md)
-  from Phase A** (review-board round-5 mocks, IM1–IM7 pin questions) **and
-  Phase B in parallel** (branch `codex/import-api`: the app's first API route
-  `app/api/import-recipe/route.ts` + `lib/import/*` per the file-by-file spec
-  B1–B13). Builder must read the spec's §2 ground rules first and honor its
-  STOP points. **Owner gate before Phase B smoke-testing:** provision
-  `ANTHROPIC_API_KEY` (Console account + ~$5 credit + $10/mo spend cap → Vercel
-  env + `.env.local` — spec §8). The iPad tails (real-device pass, landscape
-  640-column centring) remain optional and owner-gated, unchanged.
-- **Blockers:** Phase B curl smoke + deploy blocked on the owner's Anthropic
-  key setup (spec §8). Phase C (UI PR) gated on round-5 board verdicts +
-  PR 1 merge. Nothing blocks starting Phase A / Phase B code today.
-- **Environment notes:** `.env.local` exists (prod DB access verified,
-  PG 17.6); `ANTHROPIC_API_KEY` does **not** exist yet anywhere (owner setup
-  pending — recipe-import spec §8); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
-  pending first use); `gh` holds both accounts (`2a-webteam` active machine-
+- **In progress:** **Recipe Import — Phase A + B executed, uncommitted.** On
+  branch `codex/import-api`, the working tree holds Phase B (PR 1): `lib/import/`
+  (9 modules + 5 vitest suites, **114/114**) and
+  `app/api/import-recipe/route.ts` — the app's first server-side code — plus 6
+  doc updates and the two Phase A scripts
+  (`scripts/review-board/capture-import-variants.mjs`, `gen-board-r5.mjs`).
+  Gate is green (eslint / tsc / vitest / `next build` with the route as a node
+  function and no build-time key read); zero new deps, zero schema changes.
+  **Committed locally on `codex/import-api` (2 commits: feat + docs), not
+  pushed, not smoke-tested, not merged** — held for Phase D review before
+  push/PR. Phase A: the round-5 board (IM1–IM7 mocks) is deployed to the
+  🍳 artifact (`af261057…`) for verdicts. Spec:
+  [plans/recipe-import.md](plans/recipe-import.md).
+- **Next action:** **`/onboard`, then Recipe Import Phase D (senior review) on
+  branch `codex/import-api`.** In order: (1) collect the owner's **IM1–IM7
+  verdicts** from the 🍳 board and record them in [decisions.md](decisions.md) +
+  [design-flags.md](design-flags.md) — they gate Phase C; (2) run `/code-review`
+  + a spec-compliance pass against [plans/recipe-import.md](plans/recipe-import.md)
+  §5, and resolve the **4 flagged deviations** (design-flags.md → em-dashes,
+  `detectPaywall` signature, `assertSafeUrl` code, root-`anyOf`); (3) once the
+  owner provisions **`ANTHROPIC_API_KEY`** (spec §8) into `.env.local`, run the
+  B13 curl smoke tests on `npm run dev`; (4) on the owner's word, **push**
+  `codex/import-api` and open PR 1 (the branch is already committed locally: 2
+  commits, feat + docs). Phase C (`codex/import-ui`) unblocks once verdicts are
+  in and PR 1 merges.
+- **Blockers:** Phase B curl smoke blocked on the owner's `ANTHROPIC_API_KEY`
+  (spec §8, STOP ②); the **push + PR are held for Phase D review** + owner word
+  (branch is committed locally, 2 commits). Phase C (UI PR) gated on round-5
+  board verdicts + PR 1 merge.
+- **Environment notes:** Recipe Import work is committed on branch
+  `codex/import-api` (2 commits, **not pushed**; main untouched); the local
+  Supabase stack is left **up** on
+  Colima (this session used it for the Phase A capture). `.env.local` exists
+  (prod DB access verified, PG 17.6); `ANTHROPIC_API_KEY` does **not** exist yet
+  anywhere (owner setup pending — recipe-import spec §8); read-only Supabase MCP
+  configured in `.mcp.json` (owner OAuth pending first use); `gh` holds both accounts (`2a-webteam` active machine-
   wide, `mitchthompson` pinned per command via
   `GH_TOKEN=$(gh auth token --user mitchthompson)`); local Supabase stack runs
   on Colima (`supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,mailpit,supavisor`).
@@ -187,7 +200,7 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); all 10 board pins signed off 2026-07-03 (defaults kept) |
 | 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
 | — | iPad coherence | **Done (2026-07-03)** — orientation-routed chrome (PR #26) + portrait content-width fill (PR #27); CSS-only, deployed & confirmed on iPad Pro ([plans/ipad-support.md](plans/ipad-support.md)) |
-| 8 | Recipe Import (in-app) | **Planned (2026-07-03)** — paste/URL → LLM parse → review → save; spec locked at [plans/recipe-import.md](plans/recipe-import.md); awaiting execution (board round 5 + `codex/import-api`) |
+| 8 | Recipe Import (in-app) | **In progress (2026-07-03)** — Phase A board round 5 (IM1–IM7) deployed for verdicts; Phase B `codex/import-api` (API route + `lib/import/*`, vitest 114/114, gate-green) built, **committed locally (not pushed)**, unsmoketested; Phases C/D open. Spec: [plans/recipe-import.md](plans/recipe-import.md) |
 
 ## Architecture snapshot
 

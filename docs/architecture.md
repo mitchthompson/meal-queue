@@ -29,6 +29,11 @@ the authenticated owner.
 - `lib/grocery.ts` owns pure ingredient scaling, normalization, grouping, and
   grocery-row construction.
 - `lib/supabase/client.ts` creates the browser Supabase client.
+- `app/api/import-recipe` owns the recipe-import server route (parse-only; the
+  app's first server-side code, milestone 8).
+- `lib/import/` owns the import pipeline consumed only by that route: request and
+  draft schemas, the LLM prompt, HTML/JSON-LD extraction, draft normalization,
+  URL-safety plus page fetch, token auth, and the Anthropic call.
 
 ## Data Model
 
@@ -84,6 +89,34 @@ The recipe-import MCP server under [`mcp/`](../mcp/) is a separate package with
 its own lifecycle and is out of scope for the web app. The Next.js client does
 not import from it, and changes here do not implicate it unless a task names it
 explicitly.
+
+## Server Surface and Anthropic Boundary
+
+The app was 100% client components until in-app Recipe Import (milestone 8).
+`POST /api/import-recipe` (`app/api/import-recipe/route.ts`, Node runtime) is the
+first server-side code and the first paid external dependency (the Anthropic API,
+Claude Haiku 4.5). It exists because pasted recipe text needs LLM parsing and the
+API key must stay server-only.
+
+The route is deliberately narrow:
+
+- It **parses only and never touches the database.** It verifies the caller's
+  Supabase token as an auth gate (`supabase.auth.getUser`) and returns a draft;
+  saving stays client-side through the `save_recipe` RPC (the auth.uid RLS path),
+  unchanged.
+- It reads `ANTHROPIC_API_KEY` at request time, never at module load, so
+  `next build` stays green without the key. No new Supabase env (the
+  `NEXT_PUBLIC_*` vars are readable server-side).
+- The extraction, schema, and pantry logic in `lib/import/` is **copied, not
+  imported, from `mcp/`** (ported files carry a provenance header). `mcp/` stays
+  a separate package; the two are not merged.
+
+Cost posture and guardrails: ~$0.006–0.01 per import on Haiku 4.5 ($1/$5 per
+MTok), bounded by input caps (25k-char paste, 15k JSON-LD, 8k text fallback) and
+`max_tokens: 4096`. The perimeter is the auth gate plus an Anthropic Console
+monthly spend cap; there is no rate limiter (single household, no KV in the
+stack). See [decisions](decisions.md) and
+[plans/recipe-import.md](plans/recipe-import.md).
 
 ## Known Structural Debt
 

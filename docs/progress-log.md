@@ -3,7 +3,54 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - Recipe Import planned: owner-interviewed scope, builder-ready spec (no code)
+## 2026-07-03 (latest) - Recipe Import Phase A + B executed: board round 5 deployed, codex/import-api built & gate-green (uncommitted)
+
+Executed [plans/recipe-import.md](plans/recipe-import.md) Phase A (board mocks)
+and Phase B (server route) in one session. Both reached their spec STOP points,
+then were **committed locally on `codex/import-api` (2 commits, not pushed)** at
+the owner's word ("commit, don't push") — not smoke-tested, not pushed, not
+merged (STOP ② + the push/PR still pending).
+
+- **Phase B — `codex/import-api` (PR 1), built, gate-green, uncommitted.** New
+  `lib/import/` (9 modules: schema, errors, html-extract, pantry-staples,
+  prompt, normalize, fetch-page, auth, anthropic) + `app/api/import-recipe/route.ts`
+  — the app's first server-side code. Ports from `mcp/` (html-extract made
+  cheerio-free; recipe-schema; pantry-staples; fetch headers) are **copied with
+  provenance headers, not imported**. `saveRecipeForm` refactor (C1) is deferred
+  to Phase C — Phase B is the route only.
+- **Anthropic call verified against the live API, not taken on faith** (via the
+  `claude-api` skill): `output_config.format` JSON-schema structured output is
+  current/GA for Haiku 4.5, **no beta header**, **no `effort`** (errors on
+  Haiku), `temperature: 0` accepted, pinned id `claude-haiku-4-5-20251001` +
+  $1/$5 per MTok confirmed. The spec's request shape was correct.
+- **Verification (B13):** eslint clean, `tsc` clean, **vitest 114/114** (98 new
+  across schema / html-extract / normalize / fetch-page / prompt), `next build`
+  OK with `/api/import-recipe` as a `ƒ` node route — built with **no
+  `ANTHROPIC_API_KEY` present**, proving no build-time env read. Zero new npm
+  deps, zero schema changes. Smoke tests (B13 curl) NOT run — blocked on the key.
+- **Phase A — review board round 5, deployed.** 10 mocks (IM1–IM7) CSS/DOM-
+  injected on the live local `/recipes` at 390px, reusing real token classes so
+  they read as native; captured headless at 390px and deployed **in place** to
+  the 🍳 artifact (`af261057-8b9d-4184-aab3-2b555bb20857`). New scripts
+  `capture-import-variants.mjs` + `gen-board-r5.mjs` (untracked; committed in
+  Phase C per §C6). Shots + board HTML are gitignored. Reviewer account already
+  had 4 seeded recipes from a prior run — no reseed needed.
+- **Deviations flagged (design-flags.md → confirm at Phase D):** (1) em-dashes
+  removed from 4 error messages — the owner's no-em-dash-in-copy rule outranks
+  the spec's verbatim table (revertible); (2) `detectPaywall` takes the extracted
+  text, not its length — the phrase-scan clause needs the text; (3) `assertSafeUrl`
+  throws `fetch_failed` (spec left the code unspecified); (4) `DRAFT_JSON_SCHEMA`
+  root `anyOf` is untested until STOP ② — a fallback object-wrap is noted.
+- **Docs (B12):** decisions ADR ("architectural firsts"), routes.md API section,
+  architecture.md server-surface + Anthropic boundary, roadmap.md status,
+  `.env.example` key line, design-flags deviations.
+- **Owner gates:** STOP ① pin IM1–IM7 on the board; STOP ② provision
+  `ANTHROPIC_API_KEY` (spec §8) for the curl smoke; STOP ③ commit done locally
+  at the owner's word ("commit, don't push") — the push + PR wait on Phase D
+  senior review. Local Supabase stack left **up**; the review dev server
+  (port 3123) was stopped.
+
+## 2026-07-03 - Recipe Import planned: owner-interviewed scope, builder-ready spec (no code)
 
 Planning-only session. The owner picked the next unit — **in-app recipe
 adding** (today recipes enter via the MCP server in a Claude Code session) —

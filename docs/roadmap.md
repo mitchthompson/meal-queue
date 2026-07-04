@@ -268,9 +268,10 @@ Acceptance (all met, 2026-07-02):
 
 ### 8. Recipe Import (in-app)
 
-**Status: planned (2026-07-03) — spec locked, not started.** Full builder-ready
-execution spec: [plans/recipe-import.md](plans/recipe-import.md) (owner
-interviewed; all design forks decided and recorded in its §1 table).
+**Status: in progress (2026-07-03) — spec locked; Phase B built, Phases A/C/D
+open.** Full builder-ready execution spec:
+[plans/recipe-import.md](plans/recipe-import.md) (owner interviewed; all design
+forks decided and recorded in its §1 table).
 
 Add recipes from the app itself (today they enter via the MCP server in a
 Claude Code session): paste recipe text (primary — NYT Cooking is paywalled
@@ -283,6 +284,10 @@ changes by design.
 - Phase B — PR 1 `codex/import-api`: the app's first API route
   (`POST /api/import-recipe`) + `lib/import/*` helpers with vitest; merges
   inert. ADR for the two architectural firsts (server code, LLM dependency).
+  **Built 2026-07-03; gate green (lint / typecheck / vitest 114/114 / `next
+  build` with the route as a node function and no build-time key read).
+  Awaiting owner `ANTHROPIC_API_KEY` for curl smoke (STOP ②) and senior
+  review before merge.**
 - Phase C — PR 2 `codex/import-ui`: import flow + review screen +
   behavior-neutral `saveRecipeForm` extraction.
 - Phase D — senior-model review + spec-compliance pass before any merge;
