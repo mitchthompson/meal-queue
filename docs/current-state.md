@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (iPad coherence: chrome **merged & deployed** (PR #26, `e0a6a3c`); owner on-device found a right-gutter on iPad Pro portrait, so a content-width follow-up — portrait tablets fill the shell — is on branch `codex/ipad-content-width`, all local checks green, awaiting CI+merge. Prior: backlog fully cleared — round-1 board pins signed off, CI baseline drift guard, schema.sql consolidation, mcp/ npm-audit fix)
+Last reviewed: 2026-07-03 (iPad coherence **shipped & deployed** in two CSS-only PRs — chrome PR #26 (`e0a6a3c`) + portrait content-width PR #27 (`a40b90a`); both verified live in the production CSS bundle. Owner confirmed on iPad Pro. Backlog empty again; only open item is real-device sign-off + an optional landscape-column centering. Prior: backlog cleared — round-1 board pins signed off, CI baseline drift guard, schema.sql consolidation, mcp/ npm-audit fix)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -37,23 +37,30 @@ stays a no-op exit). **All review-board pins (rounds 1–4) are now resolved**
 and the standing follow-up queue is drained. This session then **cleared the
 entire remaining backlog** (2026-07-03): the CI baseline-vs-`schema.sql` drift
 guard (PR #24), the `schema.sql` baseline/ALTER consolidation (PR #25), and the
-`mcp/` npm-audit fix (9 → 0, direct to `main`). **Next: a fresh unit — a
-proposed iPad-coherence plan is drafted at `docs/plans/ipad-support.md`,
-awaiting the owner's go-ahead** (see Active Handoff).
+`mcp/` npm-audit fix (9 → 0, direct to `main`). The next session then **shipped
+iPad coherence** ([plans/ipad-support.md](plans/ipad-support.md)) in two CSS-only
+PRs — **chrome PR #26** (portrait iPads → phone tabbar, landscape → desktop nav,
+via a `(pointer: coarse) and (max-width: 1024px)` trigger) and **content-width
+PR #27** (portrait tablets fill the shell instead of stranding a right gutter) —
+both deployed and confirmed on an iPad Pro. **Backlog empty again** (see Active
+Handoff).
 
 ## Stable Baseline
 
-- **`main`:** at `443c9c6` — the full reflow (PRs #13–#16), review round 1
+- **`main`:** at `a40b90a` — the full reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
   standing-follow-up cleanup** (CI actions v5 merge `2e8bc09`; ws advisory +
-  settings-defaults SoT + userEmail cleanup merge `aada18f`), and the
-  **2026-07-03 backlog-clearing session**: round-1 pin sign-off docs
-  (`ca0c131`), the CI baseline drift guard (PR #24, merge `cbe424b`), the
-  `schema.sql` consolidation (PR #25, merge `5308e4a`), and the `mcp/`
-  npm-audit fix (`443c9c6`, direct to `main`) — all deployed on Vercel. The
+  settings-defaults SoT + userEmail cleanup merge `aada18f`), the **2026-07-03
+  backlog-clearing session** (round-1 pin sign-off docs `ca0c131`, CI baseline
+  drift guard PR #24 merge `cbe424b`, `schema.sql` consolidation PR #25 merge
+  `5308e4a`, `mcp/` npm-audit fix `443c9c6` direct-to-main), and the **2026-07-03
+  iPad-coherence work**: chrome **PR #26** (merge `e0a6a3c`) + portrait
+  content-width **PR #27** (merge `a40b90a`) — all deployed on Vercel. The
   direct-to-main merges were low-risk (docs / lockfile / CI). Merge to `main`
-  auto-deploys (confirmed); Cook was owner-verified on-device in prod.
+  auto-deploys (confirmed); Cook was owner-verified on-device in prod, and the
+  iPad chrome + width fixes were confirmed live in the production CSS bundle and
+  on the owner's iPad Pro.
 - **Prod database:** all four migrations in `supabase/migrations/` are applied
   and verified (`save_recipe`, Data API grants, plan-integrity triggers,
   grocery state preservation). `supabase/schema.sql` is canonical and in sync;
@@ -68,16 +75,25 @@ awaiting the owner's go-ahead** (see Active Handoff).
   before `supabase start` and fails if the baseline migration and `schema.sql`
   diverge (2026-07-03). Lint runs
   `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
-  longer lints (`eslint.ignoreDuringBuilds`). Twenty-five PRs merged plus several
+  longer lints (`eslint.ignoreDuringBuilds`). Twenty-seven PRs merged plus several
   direct-to-main follow-up merges; CI has been green (one transient
   `supabase start` port-bind flake on `main` — `54322 already in use` — cleared
   by a job rerun, not a repo issue).
   `actions/checkout` and `actions/setup-node` are now on `@v5` (2026-07-03,
   merge `2e8bc09`), clearing the Node-20 runtime deprecation;
   `supabase/setup-cli@v1` stays (no v5) and `node-version: 20` is unchanged.
-- **Latest verification:** 2026-07-03 (backlog-clearing session): CI baseline
-  guard PR #24 green (db-tests 1m1s; the guard step ran and passed; fail-on-drift
-  verified locally); schema.sql consolidation PR #25 — fresh-build
+- **Latest verification:** 2026-07-03 (iPad coherence): chrome **PR #26** —
+  6-viewport × 6-screen Chromium sweep on the local stack (portrait 744/820/834/
+  1024 → tabbar on, pills hidden; landscape 1194/1366 → pills kept, touch-sized)
+  + a boundary regression probe (phone-390 and desktop-1280-mouse unchanged);
+  app-checks 51s / db-tests 1m1s; live prod CSS grep confirmed the trigger.
+  Content-width **PR #27** — page-col width probe (11″ portrait 640→802, 12.9″
+  640→928, landscape/desktop 640 unchanged), re-swept both iPad Pro portraits;
+  app-checks 46s / db-tests 1m3s; live prod CSS confirmed the fill rule; owner
+  confirmed on iPad Pro. Both: eslint / tsc clean, vitest 16/16, `next build`
+  11/11, DB layer untouched (no pgTAP change). Prior (backlog-clearing session):
+  CI baseline guard PR #24 green (db-tests 1m1s; the guard step ran and passed;
+  fail-on-drift verified locally); schema.sql consolidation PR #25 — fresh-build
   `pg_dump --schema-only` of old vs new baseline byte-identical (only pg_dump's
   random session nonce differs), pgTAP 108/108, CI green; mcp/ npm-audit 9 → 0
   (in-range lockfile-only), `tsc` clean + a live MCP `initialize` handshake over
@@ -100,29 +116,26 @@ awaiting the owner's go-ahead** (see Active Handoff).
 
 ## Active Handoff
 
-- **In progress:** **iPad content-width follow-up on branch
-  `codex/ipad-content-width`** (awaiting CI + merge). The chrome work shipped and
-  deployed (PR #26, `e0a6a3c`); on-device the owner found the `.page-col` reading
-  column (Today/Plan/Shop/Settings) stranded a big right gutter on iPad Pro
-  portrait. Fix is one scoped rule — `@media (pointer: coarse) and (max-width:
-  1024px) { .page-col { max-width: none; margin-inline: auto } }` — so portrait
-  tablets fill the centered 960 shell; **landscape + desktop keep the 640px
-  column unchanged**. CSS-only; docs corrected (the earlier "Phase 3 skipped"
-  claim reversed). **All local checks green** (eslint / tsc / vitest 16 / `next
-  build` 11/11; DB untouched); page-col width probe confirms portrait 640→802/928
-  and landscape/desktop still 640.
-- **Next action:** **land the follow-up** (commit → PR → CI → merge = deploy),
-  then the **real-device confirmation is still open**: check portrait fills
-  cleanly, landscape unchanged, and the iPadOS home-screen standalone on a real
-  iPad Pro (Playwright WebKit ≠ real Safari). Optional, owner's call: centre the
-  **landscape** 640 column too (currently left-pinned, accepted). After that the
-  backlog is empty again — pick a deferred item from [roadmap.md](roadmap.md)
-  (auth-flow completion, optimistic UI, route-level `error.tsx`/`loading.tsx`
-  boundaries, richer empty states / dark mode). The **ten round-1 pins are all
-  signed off** (defaults kept; C2 mark-cooked can still become a schema change
-  if a consumer appears — see [design-flags.md](design-flags.md)). For any new UI
-  round, the rhythm is mocks-first on the review board (same artifact URL;
-  toolkit + templates in `scripts/review-board/`, README has the flow).
+- **In progress:** None. iPad coherence shipped in full — chrome (PR #26,
+  `e0a6a3c`) and portrait content-width (PR #27, `a40b90a`), both merged,
+  deployed, and confirmed live (production CSS bundle grep + owner on iPad Pro).
+  Tree clean, backlog empty.
+- **Next action:** **owner decides the next unit — the backlog is empty.** Two
+  small iPad tails remain, both optional and owner-gated: (1) a final real-device
+  pass on iPad Pro (portrait fill + landscape + iPadOS home-screen standalone —
+  Playwright WebKit ≠ real Safari; owner already eyeballed portrait and approved);
+  (2) **centre the landscape 640 column** — landscape iPads keep the desktop
+  reading column left-pinned (probe: gutters 133/421), which the owner accepted;
+  if revisited, mirror the portrait fix but gate on landscape (`(pointer: coarse)
+  and (min-width: 1025px)` or orientation) and edit `.page-col` in
+  `app/globals.css` near the existing coarse-pointer rules (~line 1700). Otherwise
+  pick a deferred item from [roadmap.md](roadmap.md) (auth-flow completion,
+  optimistic UI, route-level `error.tsx`/`loading.tsx` boundaries, richer empty
+  states / dark mode). The **ten round-1 pins are all signed off** (defaults kept;
+  C2 mark-cooked can still become a schema change if a consumer appears — see
+  [design-flags.md](design-flags.md)). For any new UI round, the rhythm is
+  mocks-first on the review board (same artifact URL; toolkit + templates in
+  `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -148,7 +161,9 @@ the other three are stubs the redesign brief supersedes).
 
 Authentication is email/password through Supabase. The app installs to the
 iPhone home screen as a standalone app (manifest + icons + safe-area handling,
-mini-M5).
+mini-M5). **iPad is supported app-wide** (2026-07-03): portrait tablets get the
+phone tabbar chrome and fill-width content, landscape tablets get the desktop
+top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/ipad-support.md)).
 
 ## Milestone status
 
@@ -165,6 +180,7 @@ mini-M5).
 | — | The Reflow (redesign) | Done (2026-07-02) — Cook (PR #13), Today (PR #14), Shop (PR #15), Plan (PR #16); token set v2 live app-wide ([redesign-brief.md](redesign-brief.md)) |
 | — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); all 10 board pins signed off 2026-07-03 (defaults kept) |
 | 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
+| — | iPad coherence | **Done (2026-07-03)** — orientation-routed chrome (PR #26) + portrait content-width fill (PR #27); CSS-only, deployed & confirmed on iPad Pro ([plans/ipad-support.md](plans/ipad-support.md)) |
 
 ## Architecture snapshot
 
@@ -193,6 +209,9 @@ mini-M5).
   if a consumer appears — see [design-flags.md](design-flags.md).
 - No route-level `error.tsx` / `loading.tsx` boundaries; unmapped errors still
   surface raw messages (mini-M5 added friendly mapping + `aria-live`).
+- iPad: two optional tails (owner's call, not blocking) — a final real-device
+  pass (portrait fill + landscape + iPadOS standalone), and centring the
+  landscape 640px reading column (currently left-pinned, owner-accepted).
 - `npm audit`: **both packages clean (0 vulns)** as of 2026-07-03 — root via
   the supabase-js lockfile bump (`ws` chain), and `mcp/` via an in-range
   lockfile-only `npm audit fix` (9 → 0: `undici`/`ws`/`hono`/`express`/`qs`/

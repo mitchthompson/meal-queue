@@ -31,6 +31,11 @@ gutter on the right "most of the time."**
   DB untouched.
 - **Docs:** corrected the "Phase 3 skipped" claims in decisions / design-system /
   this log / current-state / the plan; added the new breakpoint row.
+- **Shipped:** **merged as PR #27 / commit `a40b90a` and deployed**; post-merge
+  `main` CI green; the fill rule confirmed live in the production CSS bundle
+  (`e0376ab7…css`). Owner confirmed the fix on iPad Pro ("looks great"). Backlog
+  empty again; only optional tails remain (real-device sign-off, landscape
+  centring).
 
 ## 2026-07-03 - iPad coherence: orientation-routed chrome (CSS-only, PR #26, merged `e0a6a3c`, deployed)
 
