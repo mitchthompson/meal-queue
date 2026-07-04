@@ -3,7 +3,42 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-04 (latest) - Recipe Import PR 2 (Phase C): import UI built, reviewed, merged & deployed
+## 2026-07-04 (latest) - Recipe Import hotfix: tags cap + validation-error clarity (PR #31)
+
+First real use of the shipped import flow surfaced a bug: the owner pasted an NYT
+recipe and got **"Provide a recipe URL or pasted recipe text (not both)"** — a
+misleading `invalid_request` 400. Root cause: the client sends the user's whole
+tag vocabulary so the LLM can only pick tags that already exist, but
+`importRequestSchema` capped `tags` at **50** and the household had **82** rows
+(confirmed via prod `select count(*) from tags` → 82, max name length 13). The
+whole request was rejected before it ever reached the parser, and the route
+collapsed *every* non-text-length validation failure into the "(not both)"
+message, so a tag-count problem read as a paste/URL mistake.
+
+- **Fix (server-only; no DB change, no client change, no new deps), PR #31
+  (`codex/fix-import-tags-cap` → `main` `cbb1c57`), deployed:**
+  - `lib/import/schema.ts` — raised the `tags` array bound **50 → 500** (a sanity
+    bound on an auth-gated, self-owned list, not free user input).
+  - `lib/import/errors.ts` + `app/api/import-recipe/route.ts` — reserved the
+    "(not both)" wording for an actual both/neither submission (new
+    `conflicting_source` 400 code, "Send exactly one: recipe text or a recipe
+    URL."); every other 400 now gets a clear generic message. The route keys
+    `conflicting_source` off the exactly-one refine's form-level issue (`custom`,
+    empty path).
+  - `lib/import/schema.test.ts` — +3 tests: accepts 100 tags, still bounds >500,
+    and locks the form-level custom-issue shape the route detects.
+- **Verified against the live route (no LLM spend — validation runs before the
+  auth gate):** 82 tags + text → **401** (validation passes; was 400 before);
+  both/neither → `conflicting_source`; tag>40 → generic `invalid_request`;
+  text>25k → `text_too_long`; 501 tags → still bounded. Confirmed on **both**
+  the local dev route and the deployed prod route (`meal-queue.vercel.app`).
+  Gate: eslint / tsc clean, **vitest 128/128** (125 + 3), `next build` 12 routes,
+  `verify-import-pass` 26/26. PR #31 CI green (app-checks 45s, db-tests 1m13s);
+  `main` post-merge CI green (1m12s).
+- **Owner confirmed the real import works end to end** after deploy (NYT paste →
+  review screen → save). This is the first live in-app import.
+
+## 2026-07-04 - Recipe Import PR 2 (Phase C): import UI built, reviewed, merged & deployed
 
 Built Recipe Import Phase C (the in-app import UI) on `codex/import-ui`, ran a
 Phase D senior review, and merged PR #29 to `main` — production now has the
