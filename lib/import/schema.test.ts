@@ -101,6 +101,32 @@ describe("import schema", () => {
       expect(importRequestSchema.parse({ text: "x" }).tags).toEqual([]);
     });
 
+    it("accepts a large real-world tag vocabulary (well past the old 50 cap)", () => {
+      const tags = Array.from({ length: 100 }, (_, i) => `tag-${i}`);
+      const result = importRequestSchema.safeParse({ text: "x", tags });
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.tags).toHaveLength(100);
+    });
+
+    it("still bounds an absurd tag list (over 500)", () => {
+      const tags = Array.from({ length: 501 }, (_, i) => `tag-${i}`);
+      expect(importRequestSchema.safeParse({ text: "x", tags }).success).toBe(false);
+    });
+
+    it("flags both-or-neither as a form-level (empty-path) custom issue", () => {
+      // The route keys "conflicting_source" off exactly this issue shape; if zod
+      // ever changes it, this test fails before the route silently mislabels.
+      for (const body of [{}, { text: "x", url: "https://example.com/r" }]) {
+        const result = importRequestSchema.safeParse(body);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(
+            result.error.issues.some((issue) => issue.code === "custom" && issue.path.length === 0),
+          ).toBe(true);
+        }
+      }
+    });
+
     it("flags over-long text with a too_big issue on the text path", () => {
       const result = importRequestSchema.safeParse({ text: "a".repeat(25001) });
       expect(result.success).toBe(false);

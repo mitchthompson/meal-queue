@@ -34,10 +34,19 @@ export async function POST(req: Request): Promise<Response> {
 
     const parsed = importRequestSchema.safeParse(body);
     if (!parsed.success) {
-      const tooLong = parsed.error.issues.some(
+      const issues = parsed.error.issues;
+      const tooLong = issues.some(
         (issue) => issue.path[0] === "text" && issue.code === "too_big",
       );
-      throw importError(tooLong ? "text_too_long" : "invalid_request");
+      // The exactly-one refine is a form-level issue (custom, empty path).
+      // Everything else (a bad field, malformed shape) is a generic 400 — only
+      // the refine failure should read as the "not both" case.
+      const conflictingSource = issues.some(
+        (issue) => issue.code === "custom" && issue.path.length === 0,
+      );
+      throw importError(
+        tooLong ? "text_too_long" : conflictingSource ? "conflicting_source" : "invalid_request",
+      );
     }
     const { text, url, tags } = parsed.data;
 

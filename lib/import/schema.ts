@@ -59,7 +59,13 @@ export const importRequestSchema = z
         message: "URL must start with http:// or https://",
       })
       .optional(),
-    tags: z.array(z.string().max(40)).max(50).default([]),
+    // The user's existing tag vocabulary, passed so the LLM can only pick from
+    // tags that already exist. This is the whole tags table (auth-gated, the
+    // household's own rows), not free user input — the cap is a sanity bound on
+    // payload size, not a real limit. Started at 50, which a real vocabulary
+    // outgrew (82 tags → a whole import rejected); 500 covers any realistic
+    // single-household growth.
+    tags: z.array(z.string().max(40)).max(500).default([]),
   })
   .refine(
     (v) => {
