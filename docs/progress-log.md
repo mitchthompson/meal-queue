@@ -3,7 +3,36 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - iPad coherence: orientation-routed chrome (CSS-only, branch `codex/ipad-coherence`)
+## 2026-07-03 (latest) - iPad Pro content width: portrait tablets fill the shell (follow-up to PR #26)
+
+The chrome work (below) **merged as PR #26 / commit `e0a6a3c` and deployed** —
+verified live by reading the production CSS bundle at `meal-queue.vercel.app`
+(both the `(pointer: coarse) and (max-width: 1024px)` chrome trigger and the
+`(pointer: coarse)` pill bump are in the shipped stylesheet). Owner then tested
+on a real iPad Pro and reported the tabbar chrome working but **a large empty
+gutter on the right "most of the time."**
+
+- **Cause:** the `.page-col` reading column (`max-width: 640px`, left-pinned,
+  used by Today / Plan / Shop / Settings — 4 of 6 screens, hence "most of the
+  time") is a desktop-tier constraint. Under the phone chrome on a wide iPad it
+  stranded ~384px of dead space on the right of a 12.9″ (1024px) portrait. This
+  was the Phase-3 item I had **wrongly skipped** — my "desktop-consistent, not a
+  marooning" rationale held for desktop but not for a tablet on phone chrome.
+- **Fix (branch `codex/ipad-content-width`, CSS-only, one rule):**
+  `@media (pointer: coarse) and (max-width: 1024px) { .page-col { max-width:
+  none; margin-inline: auto } }` — the column fills the existing centered 960
+  shell. Scoped to the portrait-tablet band, so **landscape iPads and desktop
+  keep the 640px column untouched** (owner's accepted landscape-gutter decision
+  stands).
+- **Verified:** page-col width probe — 11″ portrait 640→**802** (16/16 gutters),
+  12.9″ portrait 640→**928** (48/48), 11″ landscape **640** unchanged, desktop
+  mouse **640** unchanged. Re-swept both iPad Pro portrait sizes (Today +
+  Settings fill and balance). eslint / tsc / vitest 16 / next build 11/11 green.
+  DB untouched.
+- **Docs:** corrected the "Phase 3 skipped" claims in decisions / design-system /
+  this log / current-state / the plan; added the new breakpoint row.
+
+## 2026-07-03 - iPad coherence: orientation-routed chrome (CSS-only, PR #26, merged `e0a6a3c`, deployed)
 
 First unit off the drained backlog. Made iPad a supported target by routing each
 orientation into an existing, already-designed layout — **no new tablet layouts**.

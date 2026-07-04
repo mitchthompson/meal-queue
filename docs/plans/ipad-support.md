@@ -1,17 +1,22 @@
 # Plan: iPad coherence
 
-Status: **implemented on `codex/ipad-coherence`, awaiting commit approval + real-device check** (2026-07-03) · Drafted 2026-07-03 · Scope chosen by owner: **"make it coherent"** — a CSS-tier fix, **no new layouts, no review-board round**.
+Status: **shipped — chrome merged & deployed (PR #26, `e0a6a3c`); content-width follow-up on `codex/ipad-content-width` awaiting merge; real-device confirmation open** (2026-07-03) · Drafted 2026-07-03 · Scope chosen by owner: **"make it coherent"** — a CSS-tier fix, **no new layouts, no review-board round**.
 
-> **Implementation note (2026-07-03).** Built as planned. Phase 0 sweep
+> **Implementation note (2026-07-03).** Phase 0 sweep
 > (`scripts/review-board/capture-ipad.mjs`) confirmed the defect and narrowed the
 > touch-target work to the four 39px nav-pills; Phase 1 shipped the shared
 > `(max-width: 700px), (pointer: coarse) and (max-width: 1024px)` chrome trigger;
-> Phase 2 sized landscape pills to 44px; **Phase 3 was skipped** (`.page-col` is
-> already desktop-consistent). Both open questions were answered by the owner and
-> **accepted as recommended**: (1) accept landscape gutters, (2) accept the 12.9″
-> portrait hybrid (tabbar chrome + desktop content). See
-> [decisions.md](../decisions.md) and the progress-log entry. Real iPad Safari /
-> iPadOS standalone verification is still outstanding (Needs-Mitchell digest).
+> Phase 2 sized landscape pills to 44px — all merged as **PR #26 (`e0a6a3c`) and
+> deployed**. **Phase 3 was initially skipped, then implemented** after the owner
+> tested on a real iPad Pro and saw the `.page-col` column strand a right gutter:
+> the fix `@media (pointer: coarse) and (max-width: 1024px) { .page-col {
+> max-width: none; margin-inline: auto } }` fills the shell on portrait tablets
+> (landscape/desktop keep the 640px column). Both open questions were answered by
+> the owner and **accepted as recommended**: (1) accept landscape gutters, (2)
+> accept the 12.9″ portrait hybrid (tabbar chrome + desktop content). See
+> [decisions.md](../decisions.md) and the progress-log. Still open: real iPad
+> Safari / iPadOS standalone confirmation, and an optional centring of the
+> landscape 640 column.
 
 ## Problem
 
