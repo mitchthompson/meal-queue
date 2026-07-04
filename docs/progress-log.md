@@ -3,7 +3,52 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - mcp/ npm-audit cleared (9 → 0, in-range lockfile-only) — backlog empty
+## 2026-07-03 (latest) - iPad coherence: orientation-routed chrome (CSS-only, branch `codex/ipad-coherence`)
+
+First unit off the drained backlog. Made iPad a supported target by routing each
+orientation into an existing, already-designed layout — **no new tablet layouts**.
+Full plan: [plans/ipad-support.md](plans/ipad-support.md). Owner greenlit and
+accepted both open-question recommendations (accept landscape gutters; accept the
+12.9″ portrait hybrid).
+
+- **Phase 0 (baseline, grounded not assumed):** wrote
+  [`scripts/review-board/capture-ipad.mjs`](../scripts/review-board/capture-ipad.mjs)
+  — a Chromium sweep over **6 iPad viewports × 6 screens** that screenshots and,
+  more decisively, **programmatically probes** each: `matchMedia` pointer/hover,
+  the proposed trigger, tabbar-vs-navpills visibility, sub-44px targets. Findings:
+  (1) `pointer: coarse` **is** emulated under Playwright `isMobile`+`hasTouch`, so
+  the sweep can validate the trigger; (2) **no iPad — portrait or landscape — got
+  the tabbar**; every one showed the desktop nav-pills (the core defect); (3) a
+  phone-390 control proved the **entire** iPad-unique touch-target gap was the four
+  39px nav-pills — every other sub-44px control (`text-btn=20`, `shop-check=30`,
+  plan `pill=30`) matched the phone treatment exactly (iPad sub44 = phone sub44 + 4
+  on every screen); (4) only 3 `:hover` rules exist, all with resting states, and
+  the one reveal (`.quick-add-hint`) was already `hover: none`-guarded → no hover
+  work.
+- **Phase 1 (chrome, the core fix):** extended the tabbar/nav-pills/safe-area swap
+  from `max-width: 700px` to the shared query
+  `@media (max-width: 700px), (pointer: coarse) and (max-width: 1024px)`. Only the
+  nav chrome + tabbar bottom-clearance moved to the shared block; the phone
+  **content**-layout rules stayed gated at `≤700px`, so 12.9″ portrait (1024px,
+  inclusive) gets the tabbar while keeping desktop content — the accepted hybrid.
+- **Phase 2 (touch):** one rule — `@media (pointer: coarse) { .nav-pills .pill {
+  min-height: 2.75rem } }` — sizes the landscape-iPad top-nav to 44px. No-op where
+  the pills are hidden (phones / portrait tablets).
+- **Phase 3 (content width): skipped by design** — `.page-col` (`max-width: 640px`,
+  no centering) is left-aligned identically on desktop and iPad; the portrait
+  column is the app's established width, not a marooning.
+- **Verification (all green):** re-ran the sweep — portrait 744/820/834/1024 →
+  `tabbar=true, navpills=false`, sub44 now equals phone exactly; landscape
+  1194/1366 → `tabbar=false, navpills=true`, the four pills off the sub-44 list.
+  Boundary regression probe: phone-390 still tabbar; desktop-1280 (mouse) unchanged
+  (pills 39px, coarse bump correctly skipped); narrow-desktop-800 (mouse) keeps
+  pills, no accidental tabbar. `eslint` clean, `tsc` clean, vitest 16/16, `next
+  build` 11/11 pages. DB layer untouched (no pgTAP run).
+- **Remaining:** real-device verification (WebKit ≠ real Safari) — a "Needs
+  Mitchell" digest accompanies the PR. Not committed/pushed yet; branch
+  `codex/ipad-coherence` awaits the owner's word.
+
+## 2026-07-03 - mcp/ npm-audit cleared (9 → 0, in-range lockfile-only) — backlog empty
 
 Cleared the final backlog loose end. `mcp/` (the separate recipe-import MCP
 server) reported 9 npm-audit findings (2 moderate, 7 high).
