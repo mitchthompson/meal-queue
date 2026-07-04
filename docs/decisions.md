@@ -78,6 +78,35 @@ import-screen UI before Phase C (`codex/import-ui`) is coded:
   recipe" inside the library panel, rather than B's page-head placement by the
   title.
 
+### Recipe Import Phase C — UI build decisions (PR 2, `codex/import-ui`, 2026-07-04)
+
+Durable choices made building the import UI (deviations from the builder spec,
+all applied and gate-green; full context in [progress-log.md](progress-log.md)):
+
+- **Shared save path via `saveRecipeForm`.** C1 extracted the editor's save body
+  (name-trim → `save_recipe` RPC → id) to a module-level `saveRecipeForm` in
+  `lib/hooks/use-recipes.ts`; both the editor and the import review screen call
+  it. Behavior-neutral (proven by `verify-recipes-pass` 22/22 + a live
+  round-trip). The import route **never** writes the DB — saving stays the
+  client `auth.uid()` RPC path.
+- **`draftToFormState` lives in a client-free module** (`lib/hooks/draft-to-form.ts`),
+  not spread from `blankIngredient()` as the spec suggested. Reason: the browser
+  Supabase client throws at load without `NEXT_PUBLIC` env, and vitest sets none —
+  so the pure mapper is isolated (type-only imports) to stay unit-testable. Rows
+  match `blankIngredient`'s shape with a fresh id.
+- **`ImportFlow` takes the `useImport()` return as a `flow` prop.** The page owns
+  the hook so it can drive the `import-open` container class and the `?import=1`
+  deep link, and keep the editor/import surfaces mutually exclusive
+  (`ImportFlow` renders only when `!showEditor`).
+- **Paste imports show no "Imported from" line** (no host to name) — the
+  "saved with the recipe" note still shows; avoids inventing provenance copy.
+- **No-em-dash copy:** the parsing status is "Reading the recipe. This can take
+  about 15 seconds." (period, not the spec's em-dash) — the owner house rule,
+  matching PR 1's error-copy treatment.
+- **Two unpinned CSS values** chosen and flagged in
+  [design-flags.md](design-flags.md): `.import-textarea` min-height `9rem`,
+  `.import-progress` sweep `1.1s`.
+
 ### Recipe Import — architectural firsts ADR (PR 1, `codex/import-api`, 2026-07-03)
 
 As-built record for the two firsts introduced by the import API route. Built on
