@@ -9,6 +9,21 @@ function isIpLiteral(host: string): boolean {
   return h.includes(":"); // IPv6 literal
 }
 
+// Resolve IPv4-mapped / -compatible IPv6 forms to their dotted quad so the v4
+// private-range check applies. WHATWG serializes [::ffff:127.0.0.1] to the hex
+// form ::ffff:7f00:1, so both textual and hex encodings are handled.
+function embeddedIpv4(v6: string): string | null {
+  const dotted = v6.match(/(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (dotted) return dotted[1];
+  const hex = v6.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (hex) {
+    const hi = parseInt(hex[1], 16);
+    const lo = parseInt(hex[2], 16);
+    return `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+  }
+  return null;
+}
+
 function isPrivateIp(host: string): boolean {
   let h = host;
   if (h.startsWith("[") && h.endsWith("]")) h = h.slice(1, -1);
@@ -16,8 +31,10 @@ function isPrivateIp(host: string): boolean {
   if (h.includes(":")) {
     const lower = h.toLowerCase();
     if (lower === "::1" || lower === "::") return true; // loopback / unspecified
-    if (lower.startsWith("fe80:")) return true; // link-local fe80::/10
-    if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // fc00::/7
+    const mapped = embeddedIpv4(lower);
+    if (mapped) return isPrivateIp(mapped); // ::ffff:127.0.0.1, ::ffff:7f00:1, etc.
+    if (/^fe[89ab]/.test(lower)) return true; // link-local fe80::/10 (fe80–febf)
+    if (/^f[cd]/.test(lower)) return true; // unique-local fc00::/7
     return false;
   }
 
@@ -50,7 +67,8 @@ export function assertSafeUrl(url: string): void {
   const proto = parsed.protocol.toLowerCase();
   if (proto !== "http:" && proto !== "https:") throw importError("fetch_failed");
 
-  const host = parsed.hostname.toLowerCase();
+  let host = parsed.hostname.toLowerCase();
+  if (host.endsWith(".")) host = host.slice(0, -1); // FQDN root: "localhost." -> "localhost"
   if (
     host === "localhost" ||
     host.endsWith(".local") ||
@@ -66,17 +84,12 @@ export function assertSafeUrl(url: string): void {
 const PAYWALL_RE =
   /subscri(be|ption)|log in to continue|create a free account|already a subscriber/i;
 
-// Heuristic paywall detection on the text-fallback path (never on JSON-LD).
-// Takes the extracted text (not just its length) so it can scan the first 1500
-// chars for paywall phrasing, per §B7. (Plan listed the param as
-// `extractedTextLen: number`, which cannot satisfy the phrase-scan clause —
-// widened to the text itself; flagged in docs/design-flags.md.)
-export function detectPaywall(
-  html: string,
-  extractedText: string,
-  hasJsonLd: boolean,
-): boolean {
-  if (hasJsonLd) return false;
+// Heuristic paywall detection. The caller only invokes this on the text-fallback
+// path (never when JSON-LD was found). Takes the extracted text (not just its
+// length) so it can scan the first 1500 chars for paywall phrasing, per §B7.
+// (Plan listed the param as `extractedTextLen: number`, which cannot satisfy the
+// phrase-scan clause — widened to the text itself; flagged in docs/design-flags.md.)
+export function detectPaywall(html: string, extractedText: string): boolean {
   if (extractedText.length < 400 && html.length > 50_000) return true;
   return PAYWALL_RE.test(extractedText.slice(0, 1500));
 }
@@ -122,15 +135,37 @@ async function readCapped(response: Response, cap: number): Promise<string> {
 export async function fetchRecipePage(
   url: string,
 ): Promise<{ html: string; finalUrl: string }> {
+  // Follow redirects manually so every hop is re-run through assertSafeUrl.
+  // With redirect:"follow", a public URL that 302s to an internal address would
+  // be fetched with only the original hostname ever validated (SSRF via
+  // redirect). One shared deadline caps the whole chain at 10s.
+  const signal = AbortSignal.timeout(10_000);
+  let currentUrl = url;
   let response: Response;
-  try {
-    response = await fetch(url, {
-      headers: CHROME_HEADERS,
-      redirect: "follow",
-      signal: AbortSignal.timeout(10_000),
-    });
-  } catch {
-    throw importError("fetch_failed"); // network error or timeout
+  for (let hop = 0; ; hop++) {
+    if (hop > 5) throw importError("fetch_failed"); // redirect loop / too many hops
+    assertSafeUrl(currentUrl);
+    try {
+      response = await fetch(currentUrl, {
+        headers: CHROME_HEADERS,
+        redirect: "manual",
+        signal,
+      });
+    } catch {
+      throw importError("fetch_failed"); // network error or timeout
+    }
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (location) {
+        try {
+          currentUrl = new URL(location, currentUrl).toString();
+        } catch {
+          throw importError("fetch_failed");
+        }
+        continue;
+      }
+    }
+    break;
   }
 
   if (response.status === 401 || response.status === 403) {
@@ -161,5 +196,5 @@ export async function fetchRecipePage(
     throw importError("paywall_or_blocked");
   }
 
-  return { html, finalUrl: response.url || url };
+  return { html, finalUrl: currentUrl };
 }

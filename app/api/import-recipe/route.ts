@@ -63,7 +63,7 @@ export async function POST(req: Request): Promise<Response> {
         content = extracted.content;
         extraction = "json-ld";
       } else {
-        if (detectPaywall(html, extracted.content, false)) {
+        if (detectPaywall(html, extracted.content)) {
           throw importError("paywall_or_blocked");
         }
         kind = "text";
@@ -75,7 +75,7 @@ export async function POST(req: Request): Promise<Response> {
     } else {
       source = "paste";
       kind = "paste";
-      content = (text ?? "").slice(0, 25000);
+      content = text ?? ""; // schema already enforces presence + the 25k cap
       originalText = content;
       extraction = null;
     }

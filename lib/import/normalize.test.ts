@@ -150,6 +150,19 @@ describe("normalizeDraft", () => {
     expect(draft.instructions_raw).toBe("orig text");
   });
 
+  it("keeps a leading numeric range in a step (not treated as numbering)", () => {
+    const draft = normalizeDraft(
+      { ...raw, steps: ["3-4 minutes per side, then flip.", "10-15 minutes at 400F."] },
+      [],
+      null,
+      "t",
+    );
+    expect(draft.steps).toEqual([
+      "3-4 minutes per side, then flip.",
+      "10-15 minutes at 400F.",
+    ]);
+  });
+
   it("prepends the Source line when a URL is given", () => {
     const draft = normalizeDraft(raw, [], "https://x.com/r", "orig text");
     expect(draft.instructions_raw).toBe("Source: https://x.com/r\n\norig text");

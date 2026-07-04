@@ -3,6 +3,7 @@
 // units are aliased, tags are intersected with the allowed set, and the whole
 // thing is re-validated with the strict zod schema at the end.
 import { z } from "zod";
+import { roundAmount } from "../grocery";
 import { recipeDraftSchema, type RecipeDraft, type UnitCode } from "./schema";
 import { importError } from "./errors";
 
@@ -64,7 +65,7 @@ export function clampUnitCode(u: string): UnitCode {
 export function normalizeAmount(n: unknown): number {
   const v = typeof n === "number" ? n : Number(n);
   if (!Number.isFinite(v) || v < 0) return 0;
-  return Math.round(v * 1000) / 1000;
+  return roundAmount(v); // shared 3-decimal rounding with grocery generation
 }
 
 export function normalizeServings(n: unknown): number {
@@ -109,9 +110,11 @@ export function dedupeIngredients<T extends { name: string; unit_code: string }>
   return out;
 }
 
-// Strip leading step numbering: "1. ", "1) ", "Step 1:", "Step 1 -", etc.
+// Strip leading step numbering ("1. ", "1) ", "Step 1:", "Step 1 -") but NOT a
+// leading numeric range like "3-4 minutes" — the negative lookahead refuses to
+// strip when a digit immediately follows the delimiter.
 function stripStepNumbering(step: string): string {
-  return step.replace(/^\s*(?:step\s*)?\d+\s*[.):\-]\s*/i, "");
+  return step.replace(/^\s*(?:step\s*)?\d+\s*[.):\-]\s*(?!\d)/i, "");
 }
 
 const lenientIngredient = z.object({

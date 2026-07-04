@@ -27,7 +27,12 @@ describe("assertSafeUrl", () => {
     "http://0.0.0.0/x",
     "http://[::1]/x",
     "http://[fe80::1]/x",
+    "http://[fea0::1]/x", // fe80::/10 spans fe80–febf
     "http://[fc00::1]/x",
+    "http://[::ffff:127.0.0.1]/x", // IPv4-mapped IPv6 loopback
+    "http://[::ffff:169.254.169.254]/x", // IPv4-mapped IPv6 metadata
+    "http://localhost./x", // FQDN root
+    "http://127.0.0.1./x", // FQDN root, IP literal
     "not a url",
   ];
   it.each(blocked)("blocks %s", (url) => {
@@ -37,7 +42,7 @@ describe("assertSafeUrl", () => {
 
 describe("detectPaywall", () => {
   it("flags short extracted text on a large page (branch 1)", () => {
-    expect(detectPaywall("x".repeat(60_000), "tiny", false)).toBe(true);
+    expect(detectPaywall("x".repeat(60_000), "tiny")).toBe(true);
   });
 
   it("flags paywall phrasing in the extracted text (branch 2)", () => {
@@ -45,7 +50,6 @@ describe("detectPaywall", () => {
       detectPaywall(
         "<html></html>",
         "Please subscribe to continue reading this recipe.",
-        false,
       ),
     ).toBe(true);
   });
@@ -55,12 +59,7 @@ describe("detectPaywall", () => {
       detectPaywall(
         "<html></html>",
         "Preheat the oven to 400F and roast the vegetables. ".repeat(20),
-        false,
       ),
     ).toBe(false);
-  });
-
-  it("never flags when JSON-LD was found", () => {
-    expect(detectPaywall("x".repeat(60_000), "tiny", true)).toBe(false);
   });
 });
