@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (backlog fully cleared — round-1 board pins signed off, CI baseline drift guard, schema.sql consolidation, mcp/ npm-audit fix; iPad-support plan drafted, awaiting go-ahead)
+Last reviewed: 2026-07-03 (iPad-coherence implemented on branch `codex/ipad-coherence` — CSS-only orientation-routed chrome, all local checks green, awaiting commit approval + real-device check. Prior: backlog fully cleared — round-1 board pins signed off, CI baseline drift guard, schema.sql consolidation, mcp/ npm-audit fix)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -100,26 +100,30 @@ awaiting the owner's go-ahead** (see Active Handoff).
 
 ## Active Handoff
 
-- **In progress:** None. This session cleared the entire remaining backlog —
-  round-1 pin sign-off (`ca0c131`), CI baseline drift guard (PR #24), schema.sql
-  consolidation (PR #25), mcp/ npm-audit fix (`443c9c6`) — all shipped and
-  deployed; every branch merged, tree clean.
-- **Next action:** **owner decides the next unit — the backlog is empty.** The
-  strongest candidate is the drafted **iPad-coherence plan at
-  `docs/plans/ipad-support.md`** (status: proposed, awaiting go-ahead) — a
-  CSS-only, no-schema/no-deps pass that routes portrait iPads to phone chrome
-  and landscape to desktop chrome via a `(pointer: coarse) and (max-width:
-  1024px)` breakpoint, shipped as a branch → PR with a full-screen Playwright
-  sweep + a "Needs Mitchell" real-Safari digest. It has **two open questions
-  for the owner** (landscape content width; 12.9" portrait hybrid, both listed
-  at the plan's end) — answer those, then Phase 0 baselines the defect at iPad
-  viewports. Alternatively pick a deferred item from [roadmap.md](roadmap.md)
-  (auth-flow completion, optimistic UI, route-level `error.tsx`/`loading.tsx`
-  boundaries, richer empty states / dark mode). The **ten round-1 pins are all
-  signed off** (defaults kept; C2 mark-cooked can still become a schema change
-  if a consumer appears — see [design-flags.md](design-flags.md)). For any new
-  UI round, the rhythm is mocks-first on the review board (same artifact URL;
-  toolkit + templates in `scripts/review-board/`, README has the flow).
+- **In progress:** **iPad coherence on branch `codex/ipad-coherence`** (not
+  committed/pushed — awaiting the owner's word). CSS-only orientation-routed
+  chrome per [plans/ipad-support.md](plans/ipad-support.md): portrait iPads →
+  phone tabbar, landscape → desktop nav, via the shared
+  `(max-width: 700px), (pointer: coarse) and (max-width: 1024px)` trigger + a
+  `(pointer: coarse)` nav-pill touch bump. Only `app/globals.css` changed
+  (behavioral); docs updated (design-system, CLAUDE.md, decisions, this file,
+  progress-log); new sweep tool `scripts/review-board/capture-ipad.mjs`.
+  Phase 3 skipped by design. **All local checks green** (eslint / tsc / vitest
+  16 / `next build` 11/11; DB untouched). A 6-viewport × 6-screen Chromium sweep
+  + a boundary regression probe confirm the split with no phone/desktop
+  regression.
+- **Next action:** **owner reviews the branch → commit approval → open the PR**
+  (broad style change = the right risk tool), then work the **"Needs Mitchell"
+  real-device digest**: verify on real iPad Safari (portrait + landscape) and
+  iPadOS home-screen standalone, since Playwright WebKit ≠ real Safari. Merge =
+  deploy, so it needs explicit approval. After that the backlog is empty again —
+  pick a deferred item from [roadmap.md](roadmap.md) (auth-flow completion,
+  optimistic UI, route-level `error.tsx`/`loading.tsx` boundaries, richer empty
+  states / dark mode). The **ten round-1 pins are all signed off** (defaults
+  kept; C2 mark-cooked can still become a schema change if a consumer appears —
+  see [design-flags.md](design-flags.md)). For any new UI round, the rhythm is
+  mocks-first on the review board (same artifact URL; toolkit + templates in
+  `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth

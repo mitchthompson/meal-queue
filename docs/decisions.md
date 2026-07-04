@@ -277,3 +277,37 @@ replaced decisions as superseded rather than silently deleting them.
 - Resolved 2026-07-01: prod is Postgres 17.6 (confirmed with
   `SHOW server_version;`), and `supabase/config.toml` `major_version` is set
   to 17 so CI/local tests run the same engine as prod.
+
+### iPad coherence — orientation-routed chrome, CSS-only (2026-07-03)
+
+- **Decision:** iPad becomes a supported target by **reusing the existing phone
+  and desktop layouts**, routed by orientation — no new tablet layouts, no
+  master-detail. Portrait iPads get the phone bottom-tabbar chrome; landscape
+  iPads keep the desktop top-nav. Scope chosen by the owner: "make it coherent."
+  Full plan: [plans/ipad-support.md](plans/ipad-support.md).
+- **Mechanism:** the tabbar/nav-pills/safe-area swap fires on
+  `(max-width: 700px), (pointer: coarse) and (max-width: 1024px)` — the coarse
+  clause catches every portrait iPad (744–1024px) while landscape iPads
+  (≥1180px) stay on desktop chrome. Only nav chrome moves to the shared query;
+  the phone **content**-layout rules stay gated at `≤700px`. A separate
+  `@media (pointer: coarse)` rule sizes the landscape nav-pills to 44px.
+- **Grounded in a Phase-0 sweep** (Chromium, 6 iPad viewports × 6 screens):
+  the entire iPad-unique touch-target gap was the four 39px nav-pills; every
+  other sub-44px control matched the phone treatment exactly. Only three
+  `:hover` rules exist, all with usable resting states, and the one hover-only
+  reveal (`.quick-add-hint`) was already `@media (hover: none)`-guarded — so no
+  hover work was needed.
+- **Owner's answers to the two open questions (accepted, 2026-07-03):**
+  1. *Landscape content width* — **accept the desktop 960px shell with side
+     gutters** (the minimal choice; revisit only if it reads broken on a real
+     device). No landscape-only shell widening.
+  2. *12.9″ portrait (1024px)* — **accept the hybrid**: tabbar chrome + desktop
+     multi-column content. `max-width: 1024px` is inclusive, so it gets the
+     tabbar while keeping desktop content.
+- **Phase 3 (content-width sanity) was skipped by design:** the single-column
+  content uses `.page-col` (`max-width: 640px`, no centering), which is
+  left-aligned identically on desktop and iPad — the app's established column,
+  not an iPad-specific marooning.
+- **Not verified on real hardware yet:** the Chromium sweep is necessary but not
+  sufficient (WebKit ≠ real Safari). Ships behind a "Needs Mitchell" real-iPad
+  digest before the decision is considered proven on-device.

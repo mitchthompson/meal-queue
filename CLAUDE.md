@@ -1,6 +1,8 @@
 # Meal Queue
 
-Single-household meal planning and grocery generation. Optimized for personal/household use; no multi-user, sharing, or public-product features. Primary targets: desktop browsers and iPhone Safari.
+Single-household meal planning and grocery generation. Optimized for personal/household use; no multi-user, sharing, or public-product features. Primary targets: desktop browsers and iPhone Safari; iPad Safari is supported
+(portrait → phone tabbar chrome, landscape → desktop chrome; CSS-only, see
+[docs/plans/ipad-support.md](docs/plans/ipad-support.md)).
 
 ## Start here, every session
 

@@ -148,13 +148,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 
 ## Breakpoints
 
-Design is **desktop-first** with two `max-width` overrides; there are no `min-width`
-(desktop-up) queries.
+Design is **desktop-first** with `max-width` overrides plus a **pointer-aware
+chrome trigger** for tablets; there are no `min-width` (desktop-up) queries.
 
 | Query | Target | What changes |
 | --- | --- | --- |
 | `@media (max-width: 900px)` | tablet / landscape | Multi-column grids collapse to one column (`split-layout`, `recipe-view-layout`); `ingredient-row` → 2 cols; `recipe-overview-panel` goes static; `section-head` stacks; section-action buttons bump to `min-height: 2.75rem`; small muted text bumps to `0.9rem`/`1.45`. |
-| `@media (max-width: 700px)` | mobile / phone | `.shell` adds safe-area + ~6rem bottom space; `.panel` gains a soft shadow and radius `12px` (skin stays `var(--surface)`/`var(--line)` — the cream literals retired in the v2 sweep); `.nav-pills` hidden and `.mobile-tabbar` shown (fixed bottom, 4-col icon+label, `blur(6px)`, `z-index: 20`); rows stack to one column; recipe-title actions → 2-col grid; pills `min-height: 2.5rem`, font `0.92rem`. |
+| `@media (max-width: 700px), (pointer: coarse) and (max-width: 1024px)` | phones **and portrait tablets** | The bottom-tabbar chrome: `.nav-pills` hidden, `.mobile-tabbar` shown (fixed bottom, 4-col icon+label, `blur(6px)`, `z-index: 20`), and `.shell` gains ~6rem + safe-area bottom clearance. Portrait iPads (coarse pointer, ≤1024px incl. the 12.9″ 1024px width) join phones here; landscape iPads (≥1180px) stay on the desktop top-nav. Content layout is **not** changed here — only nav chrome — so a 12.9″ portrait keeps its desktop multi-column content (the accepted hybrid). |
+| `@media (pointer: coarse)` | any touch device | `.nav-pills .pill` → `min-height: 2.75rem` so the landscape-iPad top-nav is touch-sized (pills render 39px otherwise). No-op where `.nav-pills` is hidden (phones / portrait tablets). |
+| `@media (max-width: 700px)` | mobile / phone only | `.shell` tightens to `1rem 0.7rem` horizontal (+ the shared bottom clearance); `.panel` gains a soft shadow and radius `12px` (skin stays `var(--surface)`/`var(--line)` — the cream literals retired in the v2 sweep); rows stack to one column; recipe-title actions → 2-col grid; pills `min-height: 2.5rem`, font `0.92rem`. |
 
 ---
 
@@ -334,8 +336,11 @@ styled entirely from the `--color-slate-*` tokens and the global amber:
 - `details`/`summary` power collapsibles (recipe danger menu, recipe details,
   home next-week) with `list-style: none` and a hidden webkit marker.
 - **Navigation** is centralized in [`components/app-shell.tsx`](../components/app-shell.tsx):
-  desktop `.nav-pills` is hidden under 700px and replaced by the fixed bottom
-  `.mobile-tabbar` (5-col, blurred, safe-area aware) with `.mobile-tab` / `.mobile-tab.active`.
+  desktop `.nav-pills` is replaced by the fixed bottom `.mobile-tabbar` (4-col,
+  blurred, safe-area aware) with `.mobile-tab` / `.mobile-tab.active` on phones
+  **and portrait tablets** — the shared `(max-width: 700px), (pointer: coarse) and
+  (max-width: 1024px)` chrome trigger (see Breakpoints). Landscape iPads keep the
+  pills, touch-sized via the `(pointer: coarse)` rule.
 
 ---
 
@@ -361,8 +366,9 @@ inputs you confirm *before* writing markup.
    project's only class-composition tool — there is no Tailwind). Reuse existing class
    names (`.card`, `.panel`, `.primary-btn`, `.pill`, `.chip`, …) before inventing new ones.
 4. **View it locally.** Run `npm run dev` and open the page in a desktop browser and at
-   the iPhone Safari width — the two primary targets. Check both breakpoints (≤900px,
-   ≤700px) and the page's empty / loading / error states.
+   the iPhone Safari width — the primary targets. Check the breakpoints (≤900px, ≤700px,
+   and the `(pointer: coarse) and (max-width: 1024px)` portrait-tablet chrome trigger) and
+   the page's empty / loading / error states.
 5. **Verify against tokens, then run the gate.** Confirm no raw hex/font/spacing leaked in
    and that the result matches this doc and the page doc. Then run `npm run lint`,
    `npm run typecheck`, and `npm run test` (add `npm run build` for build-affecting

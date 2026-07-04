@@ -1620,28 +1620,14 @@ textarea {
   }
 }
 
-@media (max-width: 700px) {
-  .shell {
-    padding: 1rem 0.7rem calc(6rem + env(safe-area-inset-bottom));
-  }
-
-  .panel {
-    margin-top: 0.75rem;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: var(--surface);
-    box-shadow: 0 4px 12px rgba(31, 35, 31, 0.04);
-    padding: 0.75rem 0.85rem;
-  }
-
-  .topbar {
-    align-items: stretch;
-  }
-
-  .topbar .secondary-btn {
-    width: 100%;
-  }
-
+/* Navigation-chrome coherence (docs/plans/ipad-support.md).
+   The bottom-tabbar chrome is shared by phones (max-width: 700px) and portrait
+   tablets — any coarse-pointer device up to the 1024px 12.9" iPad-Pro portrait
+   width. Landscape iPads (≥1180px) stay >1024px and keep the desktop top-nav.
+   Only the nav chrome and the tabbar's bottom clearance live here; the phone
+   content-layout rules stay gated at 700px below, so 12.9" portrait keeps the
+   desktop multi-column content (the accepted hybrid). */
+@media (max-width: 700px), (pointer: coarse) and (max-width: 1024px) {
   .nav-pills {
     display: none;
   }
@@ -1691,6 +1677,47 @@ textarea {
     background: var(--brand);
     border-color: var(--brand);
     color: var(--surface);
+  }
+
+  /* Clear the fixed tabbar + home-indicator inset. Phones re-set full padding
+     (tighter horizontal) in the 700px block below; tablets keep base horizontal. */
+  .shell {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Landscape iPads keep the desktop top-nav, so its pills must be touch-sized
+   (they render at 39px otherwise — the only sub-44px target unique to the
+   tablet-on-desktop-chrome path; every other small control matches the phone
+   treatment). Harmless on portrait/phone where .nav-pills is hidden. */
+@media (pointer: coarse) {
+  .nav-pills .pill {
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 700px) {
+  .shell {
+    padding: 1rem 0.7rem calc(6rem + env(safe-area-inset-bottom));
+  }
+
+  .panel {
+    margin-top: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 4px 12px rgba(31, 35, 31, 0.04);
+    padding: 0.75rem 0.85rem;
+  }
+
+  .topbar {
+    align-items: stretch;
+  }
+
+  .topbar .secondary-btn {
+    width: 100%;
   }
 
   .ingredient-row {
