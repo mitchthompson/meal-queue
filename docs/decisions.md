@@ -53,6 +53,63 @@ for the architectural firsts lands with PR 1):
 - Build handoff pattern: spec is written for a lower-capability builder model,
   with STOP gates and a senior-model review (Phase D) before any merge.
 
+### Recipe Import — round-5 board verdicts (2026-07-04, gate Phase C UI)
+
+Owner verdicts on the IM1–IM7 direction mocks (🍳 artifact). These lock the
+import-screen UI before Phase C (`codex/import-ui`) is coded:
+
+- **IM1 (entry surface): B.** Paste / Link mode pills, one input at a time
+  (paste-first), rather than A's stacked paste + "or" + URL layout.
+- **IM2 (parsing wait): confirmed as shown.** Locked inputs, "Reading recipe…",
+  indeterminate bar, Cancel, aria-live at 15s.
+- **IM3 (blocked/paywalled URL): A, amber.** Fail soft into paste as an amber
+  redirect that keeps the URL and moves focus to the paste box, not a plain red
+  error.
+- **IM4 (original text on the review screen): B.** Parsed / Original toggle
+  pills, rather than A's collapsible panel above the form.
+- **IM5 (save cluster): confirmed as shown.** Provenance line + "saved with the
+  recipe" note + full-width teal Save.
+- **IM6 (what is stored as the original): not explicitly ruled on.** Taking the
+  spec default pending owner confirmation: `instructions_raw` holds the original
+  text verbatim with a `Source: <url>` first line, not editable at review. See
+  [design-flags](design-flags.md). This matches the Phase B build, so no code
+  hinges on it.
+- **IM7 (Import button placement): A.** Secondary "Import" button beside "New
+  recipe" inside the library panel, rather than B's page-head placement by the
+  title.
+
+### Recipe Import — architectural firsts ADR (PR 1, `codex/import-api`, 2026-07-03)
+
+As-built record for the two firsts introduced by the import API route. Built on
+`codex/import-api`; verification gate green (lint, typecheck, vitest 114/114,
+`next build` with `/api/import-recipe` as a node route and no build-time key
+read). Not committed, smoke-tested, or merged: pending the owner's
+`ANTHROPIC_API_KEY` (STOP ②) and senior review (Phase D).
+
+- **Broken invariant (deliberate):** the app was 100% client components with zero
+  API routes ([routes](routes.md)). `POST /api/import-recipe` is the first
+  server-side code. Why now: NYT Cooking is paywalled (paste is the primary
+  path) and turning messy paste/HTML into structured recipe rows needs an LLM,
+  whose API key must never reach the browser.
+- **First paid external dependency:** the Anthropic API, Claude Haiku 4.5, pinned
+  `claude-haiku-4-5-20251001`, called via plain `fetch` (no SDK, no new npm
+  dependency) with structured JSON output (`output_config.format`, verified GA
+  for Haiku with no beta header). No `effort` param (unsupported on Haiku).
+- **Parse-only:** the route never reads or writes app tables. It auth-gates on
+  the caller's Supabase token and returns a draft; saving stays client-side
+  through `save_recipe` (auth.uid RLS), unchanged. Reuses the `NEXT_PUBLIC_*`
+  vars server-side (no new Supabase env).
+- **Cost posture:** ~$0.006–0.01 per import; hard ceiling ~$0.03 (input caps +
+  `max_tokens` 4096). Perimeter = auth gate + Anthropic Console monthly spend cap
+  as the abuse backstop; no rate limiter (single household, no KV in the stack).
+  Key is server-only (no `NEXT_PUBLIC_` prefix).
+- **Relationship to `mcp/`:** separate lifecycle; the extraction, schema, and
+  pantry logic is **copied into `lib/import/` (provenance-headered), not shared
+  or imported**, and the two are not merged now.
+- **Deviation flagged:** four error-message strings had their em-dashes replaced
+  with periods to honor the owner's no-em-dash-in-copy rule; wording is otherwise
+  verbatim from the spec. See [design-flags](design-flags.md).
+
 ### Grocery State
 
 - Grocery rows are persisted so checklist state survives page navigation.

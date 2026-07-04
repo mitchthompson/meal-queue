@@ -1,6 +1,6 @@
 # Routes
 
-Sitemap for Meal Queue. Every route is an App Router page under `app/`. There are no API routes or route handlers — all data access is client-side via the browser supabase-js client, scoped by owner-based RLS.
+Sitemap for Meal Queue. Almost every route is an App Router page under `app/`, with data access client-side via the browser supabase-js client and owner-based RLS. The one server-side exception is the route handler `POST /api/import-recipe` (recipe-import parsing, milestone 8), documented in the API routes section below; it parses only and never writes the database.
 
 ## Route table
 
@@ -14,6 +14,16 @@ Sitemap for Meal Queue. Every route is an App Router page under `app/`. There ar
 | `/settings` | `app/settings/page.tsx` | Account + planning defaults: signed-in email, sign-out, and a form for default plan length, week start, and default grocery order/pickup weekdays. | Reads `user_settings`. Writes `user_settings` (upsert). Auth: `supabase.auth.signOut()`. |
 
 Schema for the tables above is defined in `supabase/schema.sql` and described in [data model](data-model.md).
+
+## API routes
+
+The app is otherwise 100% client components; `POST /api/import-recipe` is the first and only server-side route handler (`app/api/import-recipe/route.ts`, `runtime = "nodejs"`, `maxDuration = 60`, milestone 8).
+
+| Path | File | Purpose | Reads / Writes |
+| --- | --- | --- | --- |
+| `POST /api/import-recipe` | `app/api/import-recipe/route.ts` | Parse a recipe from pasted text or an open URL into a review-ready draft, via Claude Haiku 4.5 (`lib/import/*`). Paste-first; a paywalled or blocked URL fails soft to a `paywall_or_blocked` response. | Verifies the caller's Supabase access token (`auth.getUser`) as an auth gate only. **No database reads or writes** — saving stays client-side through the `save_recipe` RPC. Calls the Anthropic API. |
+
+Request body: `{ text?: string, url?: string, tags: string[] }`, with exactly one of `text`/`url`. Success (200): `{ draft, original_text, meta }`. Failure: `{ error: { code, message } }` with a mapped HTTP status (taxonomy in `lib/import/errors.ts`). Full contract: [plans/recipe-import.md](plans/recipe-import.md) §5 (Phase B).
 
 ## Page docs
 

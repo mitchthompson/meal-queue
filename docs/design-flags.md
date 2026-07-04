@@ -6,6 +6,21 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Open
 
+### Recipe Import IM6 — original-text storage (round-5 board, awaiting owner confirm)
+- **Where it's used:** the review screen (Phase C, `codex/import-ui`); underlying write already built in `lib/import/` / `save_recipe` path.
+- **What's needed:** IM6 was the one round-5 pin not explicitly ruled on (2026-07-04). Taking the spec default: `instructions_raw` stores the original text verbatim with a `Source: <url>` first line for URL imports, not editable at review (it is the provenance record; structured steps are separate). Confirm "OK" or flag a change. No code hinges on it (matches the Phase B build), so it does not block Phase C.
+- **Source:** Round-5 board verdicts, 2026-07-04; see [decisions.md](decisions.md).
+
+### Recipe Import (PR 1, `codex/import-api`) — Phase D outcome (2026-07-04)
+- **Where it's used:** `lib/import/errors.ts`, `lib/import/fetch-page.ts`, `lib/import/schema.ts`, `app/api/import-recipe/route.ts`.
+- **Deviation verdicts (owner + senior review, 2026-07-04):**
+  1. **Em-dashes → periods in four error messages** (`text_too_long`, `unauthorized`, `llm_failure`, `llm_output_invalid`): **accepted, kept** (owner's no-em-dash-in-copy rule; wording otherwise verbatim).
+  2. **`detectPaywall` takes the extracted text, not its length:** **accepted, kept** (the spec's `number` param cannot satisfy the "first 1500 chars" scan; behavior matches intent). The now-vestigial `hasJsonLd` param was also dropped (the sole caller only invokes it on the text path).
+  3. **`assertSafeUrl` throws `fetch_failed` for unsafe URLs:** **accepted, kept** (not advertising the SSRF policy is the right posture; a blocked host reads as "couldn't fetch").
+  4. **`DRAFT_JSON_SCHEMA` root-level `anyOf`:** **RESOLVED (2026-07-04 B13 smoke)** — the live Anthropic API accepted the non-object root and returned a valid draft (paste + URL paths both parsed). The `{result:{anyOf:[…]}}` wrapper fallback was not needed.
+- **Code-review fixes applied this pass (all gate-green):** SSRF guard hardened (redirect targets now re-validated via `redirect:"manual"` + per-hop `assertSafeUrl`; IPv4-mapped IPv6 like `::ffff:127.0.0.1` resolved and blocked; `fe80::/10` masked correctly; FQDN-root `localhost.` blocked); `stripStepNumbering` no longer corrupts steps beginning with a numeric range ("3-4 minutes"); `normalizeAmount` reuses `roundAmount` from `lib/grocery.ts`; redundant paste-branch `.slice(25000)` removed.
+- **Source:** Recipe Import Phase B build 2026-07-03 + Phase D review 2026-07-04; branch `codex/import-api`.
+
 ### Per-page docs are stubs
 - **Where it's used:** [docs/pages/*.md](pages/) — [today](pages/today.md), [recipes](pages/recipes.md), [plans](pages/plans.md), [grocery](pages/grocery.md), [settings](pages/settings.md)
 - **What's needed:** These are skeletons; flesh out as each page is worked. Update (2026-07-02): [settings](pages/settings.md) was rewritten with the v2 Settings pass (PR #20), and [recipes](pages/recipes.md) was de-rotted with the v2 Recipes/detail passes (PRs #21–#22 — it had still described pre-M2 non-atomic saves, the removed sample-data seeder, and the pre-reflow "focus mode"). [today](pages/today.md), [plans](pages/plans.md), and [grocery](pages/grocery.md) remain stubs (the redesign brief supersedes them for future-state intent).
