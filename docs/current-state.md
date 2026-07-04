@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-04 (execution session: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped; only the Needs-Mitchell real-device pass remains. See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
+Last reviewed: 2026-07-04 (execution session: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -68,7 +68,7 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Stable Baseline
 
-- **`main`:** at `88a6bc5` (**Recipe Import PR 2 / Phase C merged this session** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
+- **`main`:** at `cbb1c57` (**import tags-cap hotfix, PR #31** — `codex/fix-import-tags-cap`: raised the request-schema `tags` cap 50→500 and added the `conflicting_source` error code so validation failures stop reading as "(not both)"; server-only, deployed) atop `88a6bc5` (**Recipe Import PR 2 / Phase C** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
   reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
@@ -97,14 +97,20 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   before `supabase start` and fails if the baseline migration and `schema.sql`
   diverge (2026-07-03). Lint runs
   `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
-  longer lints (`eslint.ignoreDuringBuilds`). Twenty-nine PRs merged plus several
+  longer lints (`eslint.ignoreDuringBuilds`). Thirty-one PRs merged plus several
   direct-to-main follow-up merges; CI has been green (one transient
   `supabase start` port-bind flake on `main` — `54322 already in use` — cleared
   by a job rerun, not a repo issue).
   `actions/checkout` and `actions/setup-node` are now on `@v5` (2026-07-03,
   merge `2e8bc09`), clearing the Node-20 runtime deprecation;
   `supabase/setup-cli@v1` stays (no v5) and `node-version: 20` is unchanged.
-- **Latest verification:** 2026-07-04 (Recipe Import PR 2 / Phase C, PR #29):
+- **Latest verification:** 2026-07-04 (import tags-cap hotfix, PR #31): eslint /
+  tsc clean, **vitest 128/128** (125 + 3 tag-cap/refine-shape tests), `next build`
+  12 routes, `verify-import-pass` 26/26; **live-route probes on the local and prod
+  route** (no LLM spend — validation runs before the auth gate): 82 tags + text →
+  401 (validation passes; was 400 before the fix), both/neither →
+  `conflicting_source`, tag>40 → generic `invalid_request`, text>25k →
+  `text_too_long`. Prior — 2026-07-04 (Recipe Import PR 2 / Phase C, PR #29):
   eslint / tsc clean, **vitest 125/125** (119 + 6 new `draftToFormState`),
   `next build` **12 routes** (`/recipes` 8.08 kB with the import UI added;
   `/api/import-recipe` node fn unchanged); **`verify-recipes-pass.mjs` 22/22**
@@ -171,7 +177,13 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   `verify-recipes-pass` 22/22 (C1 neutral) + `verify-import-pass` 26/26. The same
   PR carried the PR-1 docs-wrap `9601b1f`. **Milestone 8 (Recipe Import) is
   functionally complete** (phases A/B/C/D done). Zero schema changes, zero new
-  npm deps.
+  npm deps. **Post-merge hotfix (PR #31, `main` `cbb1c57`): the first real import
+  (owner, NYT paste) hit a tags-cap bug — the request schema capped `tags` at 50
+  but the household has 82, so the whole request 400'd with a misleading
+  "(not both)" message. Fixed server-side (cap 50→500; new `conflicting_source`
+  code so field errors read clearly; +3 tests). Verified on the live prod route
+  and owner-confirmed working end to end — this was the first live in-app
+  import.**
 - **Next action:** **No approved milestone is queued** — Recipe Import (milestone
   8) was the last active one and is now done. `/onboard`, then **await owner
   direction** for the next build. The one open item is owner-run, not an agent
@@ -275,12 +287,13 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
   no-auth probe can't verify it; costs one paid call), and **key rotation** (the
   raw key value was briefly exposed in a session transcript; owner chose to leave
   it for now).
-- Recipe Import Phase C (PR #29): one tail — the **Needs-Mitchell real-device
-  import pass** (owner-run on `npm run dev:phone`: actual NYT paste, one URL
-  import, the paywall redirect, keyboard-over-textarea, safe-area under the teal
-  save bar; Playwright WebKit ≠ real Safari). Two unpinned CSS values were
-  chosen and flagged for owner eyes — `.import-textarea` min-height `9rem` and
-  the `.import-progress` `1.1s` sweep (see [design-flags.md](design-flags.md)).
+- Recipe Import Phase C: **the owner confirmed a live NYT paste import works end
+  to end** (after the PR #31 tags-cap hotfix). Remaining real-device tails
+  (owner-run on `npm run dev:phone`, not blocking): one **open-URL import**, the
+  **paywall redirect** path, and **keyboard-over-textarea / safe-area** under the
+  teal save bar (Playwright WebKit ≠ real Safari). Two unpinned CSS values remain
+  flagged for owner eyes — `.import-textarea` min-height `9rem` and the
+  `.import-progress` `1.1s` sweep (see [design-flags.md](design-flags.md)).
 - `npm audit`: **both packages clean (0 vulns)** as of 2026-07-03 — root via
   the supabase-js lockfile bump (`ws` chain), and `mcp/` via an in-range
   lockfile-only `npm audit fix` (9 → 0: `undici`/`ws`/`hono`/`express`/`qs`/
