@@ -66,6 +66,40 @@ export const blankForm = (): RecipeFormState => ({
   tags: [],
 });
 
+// Persist a recipe form through the atomic save_recipe RPC (parent +
+// ingredients + steps + tags in one transaction). Extracted from the editor's
+// saveRecipe (C1, recipe-import) so the import review screen saves through the
+// exact same path; the behavior is byte-identical to the former inline block.
+// Returns the saved recipe id; throws on validation or RPC failure (the caller
+// maps the error via toErrorMessage).
+export async function saveRecipeForm(form: RecipeFormState): Promise<string> {
+  const name = form.name.trim();
+  if (!name) {
+    throw new Error("Recipe name is required.");
+  }
+
+  const { data: savedId, error: saveError } = await supabase.rpc("save_recipe", {
+    p_recipe_id: form.id,
+    p_name: name,
+    p_base_servings: Number(form.base_servings || 2),
+    p_instructions_raw: form.instructions_raw,
+    p_ingredients: form.ingredients.map((item) => ({
+      name: item.name,
+      amount: Number(item.amount || 0),
+      unit_code: item.unit_code,
+      is_pantry_staple: item.is_pantry_staple,
+    })),
+    p_steps: form.steps.map((step) => step.body),
+    p_tags: form.tags,
+  });
+
+  if (saveError) throw saveError;
+
+  const recipeId = (savedId as string | null) ?? form.id;
+  if (!recipeId) throw new Error("Unable to determine recipe id.");
+  return recipeId;
+}
+
 export function useRecipes(userId: string, editRecipeId: string | null) {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [knownTags, setKnownTags] = useState<string[]>([]);
@@ -215,34 +249,12 @@ export function useRecipes(userId: string, editRecipeId: string | null) {
     setMessage(null);
 
     try {
-      const name = form.name.trim();
-      if (!name) {
-        throw new Error("Recipe name is required.");
-      }
-
-      // Single transactional upsert (parent + ingredients + steps + tags) via the
-      // save_recipe RPC. Any invalid child row rolls back the whole save, and the
-      // function bumps the version of plans referencing this recipe when its
-      // ingredient set changes so their grocery lists are detected as stale.
-      const { data: savedId, error: saveError } = await supabase.rpc("save_recipe", {
-        p_recipe_id: form.id,
-        p_name: name,
-        p_base_servings: Number(form.base_servings || 2),
-        p_instructions_raw: form.instructions_raw,
-        p_ingredients: form.ingredients.map((item) => ({
-          name: item.name,
-          amount: Number(item.amount || 0),
-          unit_code: item.unit_code,
-          is_pantry_staple: item.is_pantry_staple,
-        })),
-        p_steps: form.steps.map((step) => step.body),
-        p_tags: form.tags,
-      });
-
-      if (saveError) throw saveError;
-
-      const recipeId = (savedId as string | null) ?? form.id;
-      if (!recipeId) throw new Error("Unable to determine recipe id.");
+      // Single transactional upsert (parent + ingredients + steps + tags) via
+      // the save_recipe RPC. Any invalid child row rolls back the whole save,
+      // and the function bumps the version of plans referencing this recipe
+      // when its ingredient set changes so their grocery lists are detected as
+      // stale. Extracted to saveRecipeForm (C1) and shared with import.
+      const recipeId = await saveRecipeForm(form);
 
       await loadData();
       setShowEditor(true);

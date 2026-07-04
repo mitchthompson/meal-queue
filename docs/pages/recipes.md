@@ -74,6 +74,56 @@ load.
 - Collapsible "Raw Instructions" `<details>` when `instructions_raw` is
   present.
 
+## Recipe import (milestone 8, Phase C)
+
+In-app import lives beside the editor on `/recipes`: an **"Import"**
+`.secondary-btn` next to "New recipe" (IM7: A), and the `?import=1` deep link,
+both open the flow (`components/recipe-import.tsx`, `ImportFlow`) over the
+`useImport` hook (`lib/hooks/use-import.ts`). Import and the editor are mutually
+exclusive — opening one closes the other. On ≤700px the import panel takes over
+the screen exactly like the editor (`.import-open`, list + page head hidden).
+
+The flow is a three-phase state machine (`phase`: `entry` → `parsing` →
+`review`; `closed` when not open):
+
+- **Entry** (IM1: B) — **Paste text / Link** mode pills, one input at a time,
+  paste-first. Paste is a `.import-textarea` ("Copy the recipe in NYT Cooking,
+  then paste it here."); Link is a `type="url"` input. Full-width teal
+  "Import recipe" (`.import-submit`), disabled until the active field is
+  non-empty.
+- **Parsing** (IM2) — inputs/submit disabled, button relabelled
+  "Reading recipe…", indeterminate `.import-progress` bar, a Cancel `.text-btn`
+  (aborts the fetch), and an `aria-live` line "Reading the recipe. This can take
+  about 15 seconds."
+- **Review** (IM4: B / IM5 / IM6) — an optional muted provenance line
+  ("Imported from `<host>`", URL imports only), a **Parsed / Original** toggle
+  (Original shows the verbatim imported text in a scrollable `.import-original`),
+  the editable form in the **exact editor idiom** (name, base servings,
+  ingredient rows, step rows, tag chips + your-tag suggestions), the muted note
+  "The original text is saved with the recipe.", and a full-width teal
+  "Save recipe". A `window.confirm("Discard this import?")` guards Close /
+  Start over once the review form has been edited.
+
+**How it saves.** The parsing call is `POST /api/import-recipe` (the Phase B
+server route — parses via Claude Haiku, never writes the DB). The parsed draft
+is mapped to the editor's `RecipeFormState` by the pure, unit-tested
+`draftToFormState` (`lib/hooks/draft-to-form.ts`), then **saved through the same
+`save_recipe` RPC path as the editor** via the shared `saveRecipeForm`
+(`lib/hooks/use-recipes.ts`, extracted in C1 — the editor's behavior is
+unchanged). On success the flow routes to `/recipes/<id>`.
+
+**Error copy** (verbatim from the route, shown via `StatusMessage`; the
+paywall case is the one amber redirect):
+
+| Code | Treatment | Message |
+| --- | --- | --- |
+| `paywall_or_blocked` | **Amber** `.import-callout`, flips to paste, keeps URL, focuses textarea | That site blocked the request (likely a paywall). Copy the recipe text from the page and paste it instead. |
+| `no_recipe_found` | Red `.error-text` | Couldn't find a recipe in that content. Try pasting just the recipe text. |
+| `fetch_failed` | Red `.error-text` | Couldn't fetch that page. Check the URL, or paste the recipe text instead. |
+| `text_too_long` / `invalid_request` | Red `.error-text` | (400 validation copy from the route) |
+| `unauthorized` | Red `.error-text` | Your session has expired. Sign in again. |
+| `llm_failure` / `llm_output_invalid` / `not_configured` | Red `.error-text` | (502/500 copy from the route) |
+
 ## Data
 
 Supabase tables, accessed from the client via the browser supabase-js

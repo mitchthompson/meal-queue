@@ -6,6 +6,11 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Open
 
+### Recipe Import UI (PR 2, `codex/import-ui`) — unpinned CSS values (2026-07-04)
+- **Where it's used:** `app/globals.css` (`.import-textarea`, `.import-progress`), documented in [design-system.md](design-system.md) Import surface.
+- **What's needed:** Two values were not pinned on the round-5 board, so Phase C chose sensible defaults to flag for owner eyes on the as-built screenshots: (1) the paste-box `.import-textarea` **`min-height: 9rem`** (roomy enough for a full pasted recipe on a 390px phone without dominating the panel); (2) the indeterminate `.import-progress` sweep at **`1.1s` ease-in-out infinite** (`@keyframes import-progress-sweep`). Both are token/convention-consistent (no new palette). Adjust on owner feedback; otherwise they stand as the pinned values. `prefers-reduced-motion` disables the sweep.
+- **Source:** Recipe Import Phase C build 2026-07-04, branch `codex/import-ui`; round-5 board (IM1/IM2) did not pin exact dimensions.
+
 ### Recipe Import (PR 1, `codex/import-api`) — Phase D outcome (2026-07-04)
 - **Where it's used:** `lib/import/errors.ts`, `lib/import/fetch-page.ts`, `lib/import/schema.ts`, `app/api/import-recipe/route.ts`.
 - **Deviation verdicts (owner + senior review, 2026-07-04):**
