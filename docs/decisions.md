@@ -53,6 +53,31 @@ for the architectural firsts lands with PR 1):
 - Build handoff pattern: spec is written for a lower-capability builder model,
   with STOP gates and a senior-model review (Phase D) before any merge.
 
+### Recipe Import — round-5 board verdicts (2026-07-04, gate Phase C UI)
+
+Owner verdicts on the IM1–IM7 direction mocks (🍳 artifact). These lock the
+import-screen UI before Phase C (`codex/import-ui`) is coded:
+
+- **IM1 (entry surface): B.** Paste / Link mode pills, one input at a time
+  (paste-first), rather than A's stacked paste + "or" + URL layout.
+- **IM2 (parsing wait): confirmed as shown.** Locked inputs, "Reading recipe…",
+  indeterminate bar, Cancel, aria-live at 15s.
+- **IM3 (blocked/paywalled URL): A, amber.** Fail soft into paste as an amber
+  redirect that keeps the URL and moves focus to the paste box, not a plain red
+  error.
+- **IM4 (original text on the review screen): B.** Parsed / Original toggle
+  pills, rather than A's collapsible panel above the form.
+- **IM5 (save cluster): confirmed as shown.** Provenance line + "saved with the
+  recipe" note + full-width teal Save.
+- **IM6 (what is stored as the original): not explicitly ruled on.** Taking the
+  spec default pending owner confirmation: `instructions_raw` holds the original
+  text verbatim with a `Source: <url>` first line, not editable at review. See
+  [design-flags](design-flags.md). This matches the Phase B build, so no code
+  hinges on it.
+- **IM7 (Import button placement): A.** Secondary "Import" button beside "New
+  recipe" inside the library panel, rather than B's page-head placement by the
+  title.
+
 ### Recipe Import — architectural firsts ADR (PR 1, `codex/import-api`, 2026-07-03)
 
 As-built record for the two firsts introduced by the import API route. Built on
