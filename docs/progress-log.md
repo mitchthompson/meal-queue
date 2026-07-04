@@ -3,7 +3,49 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - iPad Pro content width: portrait tablets fill the shell (follow-up to PR #26)
+## 2026-07-03 (latest) - Recipe Import planned: owner-interviewed scope, builder-ready spec (no code)
+
+Planning-only session. The owner picked the next unit — **in-app recipe
+adding** (today recipes enter via the MCP server in a Claude Code session) —
+and asked for an interview-driven scoping, with the explicit requirement that
+the resulting plan be executable by a **lower-capability builder model** and
+come back to a senior model for review before merging. Output:
+[plans/recipe-import.md](plans/recipe-import.md), a phase-gated build spec
+with exact contracts, ground rules, and STOP points.
+
+- **Owner decisions (locked, §1 of the spec):** LLM parser — Claude Haiku 4.5,
+  pinned `claude-haiku-4-5-20251001`, plain `fetch` to the Messages API with
+  structured outputs (no SDK dep); **both** paste-text and URL avenues in v1,
+  paste-first (NYT Cooking is paywalled — server-side fetch fails too, so
+  paste is the primary path); iPhone-first; **dedicated review screen** (not
+  editor prefill) with a collapsible original-text panel; **no schema change**
+  (provenance = `Source: <url>` prefix in `instructions_raw`); tags suggested
+  only from the existing vocabulary; **mocks-first board round 5** (IM1–IM7).
+- **Key architecture calls:** the app's **first server-side code** — one
+  route, `POST /api/import-recipe` (auth-gated via Supabase bearer-token
+  `getUser`, never writes the DB; saving stays client-side through the
+  existing `save_recipe` RPC). `mcp/` extraction logic (`html-extract`,
+  `recipe-schema`, `pantry-staples`) is **copied, not imported** (MCP boundary),
+  with the cheerio dependency eliminated (regex JSON-LD scan + crude text
+  fallback — the LLM tolerates messy input; char caps bound token cost).
+  **Zero new npm deps, zero schema changes by design.** Verified refactor
+  seam: `use-recipes.ts` L218–245 extracts cleanly into a shared
+  `saveRecipeForm()` (no hook-state coupling).
+- **Cost posture:** ~$0.006–0.009/import typical, ~$0.03 ceiling (input caps +
+  max_tokens 4096); Console monthly spend limit (~$10) as the abuse backstop;
+  no rate limiter (auth-gated, single household — will be recorded in the ADR).
+- **Delivery:** Phase A board round 5 (no PR) ∥ Phase B PR 1 `codex/import-api`
+  (route merges inert) → Phase C PR 2 `codex/import-ui` (gated on verdicts +
+  PR 1) → Phase D senior `/code-review` + spec-compliance pass before any
+  merge, then the real-iPhone Needs-Mitchell digest.
+- **Owner TODO:** Anthropic Console setup (account, ~$5 credit, $10/mo cap,
+  key → Vercel env + `.env.local`) — blocks Phase B smoke tests, not Phase A/B
+  coding.
+- **Verification this session:** docs-only; `npm run typecheck` clean, vitest
+  16/16 (baseline unchanged). Roadmap: recipe import promoted out of Deferred
+  Ideas into milestone 8.
+
+## 2026-07-03 - iPad Pro content width: portrait tablets fill the shell (follow-up to PR #26)
 
 The chrome work (below) **merged as PR #26 / commit `e0a6a3c` and deployed** —
 verified live by reading the production CSS bundle at `meal-queue.vercel.app`

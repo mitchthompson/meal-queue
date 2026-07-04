@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (iPad coherence **shipped & deployed** in two CSS-only PRs — chrome PR #26 (`e0a6a3c`) + portrait content-width PR #27 (`a40b90a`); both verified live in the production CSS bundle. Owner confirmed on iPad Pro. Backlog empty again; only open item is real-device sign-off + an optional landscape-column centering. Prior: backlog cleared — round-1 board pins signed off, CI baseline drift guard, schema.sql consolidation, mcp/ npm-audit fix)
+Last reviewed: 2026-07-03 (planning session: **Recipe Import feature fully scoped and spec'd** — owner interviewed, all design forks decided, and a builder-ready execution spec written to [plans/recipe-import.md](plans/recipe-import.md). No code changed. Prior: iPad coherence shipped & deployed in two CSS-only PRs — chrome PR #26 (`e0a6a3c`) + portrait content-width PR #27 (`a40b90a`), owner-confirmed on iPad Pro)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -42,12 +42,16 @@ iPad coherence** ([plans/ipad-support.md](plans/ipad-support.md)) in two CSS-onl
 PRs — **chrome PR #26** (portrait iPads → phone tabbar, landscape → desktop nav,
 via a `(pointer: coarse) and (max-width: 1024px)` trigger) and **content-width
 PR #27** (portrait tablets fill the shell instead of stranding a right gutter) —
-both deployed and confirmed on an iPad Pro. **Backlog empty again** (see Active
-Handoff).
+both deployed and confirmed on an iPad Pro. This session (2026-07-03, evening)
+was **planning only**: the owner chose the next unit — **in-app Recipe Import**
+(paste text or URL → LLM parse → dedicated review screen → save) — and it was
+scoped via owner interview into a locked, builder-ready spec at
+[plans/recipe-import.md](plans/recipe-import.md). See Active Handoff.
 
 ## Stable Baseline
 
-- **`main`:** at `a40b90a` — the full reflow (PRs #13–#16), review round 1
+- **`main`:** at `81340be` (docs wrap on top of merge `a40b90a`) — the full
+  reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
   standing-follow-up cleanup** (CI actions v5 merge `2e8bc09`; ws advisory +
@@ -116,29 +120,31 @@ Handoff).
 
 ## Active Handoff
 
-- **In progress:** None. iPad coherence shipped in full — chrome (PR #26,
-  `e0a6a3c`) and portrait content-width (PR #27, `a40b90a`), both merged,
-  deployed, and confirmed live (production CSS bundle grep + owner on iPad Pro).
-  Tree clean, backlog empty.
-- **Next action:** **owner decides the next unit — the backlog is empty.** Two
-  small iPad tails remain, both optional and owner-gated: (1) a final real-device
-  pass on iPad Pro (portrait fill + landscape + iPadOS home-screen standalone —
-  Playwright WebKit ≠ real Safari; owner already eyeballed portrait and approved);
-  (2) **centre the landscape 640 column** — landscape iPads keep the desktop
-  reading column left-pinned (probe: gutters 133/421), which the owner accepted;
-  if revisited, mirror the portrait fix but gate on landscape (`(pointer: coarse)
-  and (min-width: 1025px)` or orientation) and edit `.page-col` in
-  `app/globals.css` near the existing coarse-pointer rules (~line 1700). Otherwise
-  pick a deferred item from [roadmap.md](roadmap.md) (auth-flow completion,
-  optimistic UI, route-level `error.tsx`/`loading.tsx` boundaries, richer empty
-  states / dark mode). The **ten round-1 pins are all signed off** (defaults kept;
-  C2 mark-cooked can still become a schema change if a consumer appears — see
-  [design-flags.md](design-flags.md)). For any new UI round, the rhythm is
-  mocks-first on the review board (same artifact URL; toolkit + templates in
-  `scripts/review-board/`, README has the flow).
-- **Blockers:** None.
+- **In progress:** **Recipe Import — planned, not started.** The complete
+  execution spec (written for handoff to a lower-capability builder model, with
+  a senior-model review gate before any merge) is
+  [plans/recipe-import.md](plans/recipe-import.md). All design forks are
+  **owner-decided and locked** in its §1 table: LLM parser (Claude Haiku 4.5,
+  pinned id, plain-fetch server call), both paste+URL avenues in v1
+  (paste-first — NYT Cooking is paywalled and unfetchable), iPhone-first,
+  dedicated review screen, no schema change (provenance via `Source:` line in
+  `instructions_raw`), tags only from the existing vocabulary, mocks-first
+  board round 5. Zero new npm deps, zero schema changes by design.
+- **Next action:** **execute [plans/recipe-import.md](plans/recipe-import.md)
+  from Phase A** (review-board round-5 mocks, IM1–IM7 pin questions) **and
+  Phase B in parallel** (branch `codex/import-api`: the app's first API route
+  `app/api/import-recipe/route.ts` + `lib/import/*` per the file-by-file spec
+  B1–B13). Builder must read the spec's §2 ground rules first and honor its
+  STOP points. **Owner gate before Phase B smoke-testing:** provision
+  `ANTHROPIC_API_KEY` (Console account + ~$5 credit + $10/mo spend cap → Vercel
+  env + `.env.local` — spec §8). The iPad tails (real-device pass, landscape
+  640-column centring) remain optional and owner-gated, unchanged.
+- **Blockers:** Phase B curl smoke + deploy blocked on the owner's Anthropic
+  key setup (spec §8). Phase C (UI PR) gated on round-5 board verdicts +
+  PR 1 merge. Nothing blocks starting Phase A / Phase B code today.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
-  PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
+  PG 17.6); `ANTHROPIC_API_KEY` does **not** exist yet anywhere (owner setup
+  pending — recipe-import spec §8); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
   pending first use); `gh` holds both accounts (`2a-webteam` active machine-
   wide, `mitchthompson` pinned per command via
   `GH_TOKEN=$(gh auth token --user mitchthompson)`); local Supabase stack runs
@@ -181,6 +187,7 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); all 10 board pins signed off 2026-07-03 (defaults kept) |
 | 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
 | — | iPad coherence | **Done (2026-07-03)** — orientation-routed chrome (PR #26) + portrait content-width fill (PR #27); CSS-only, deployed & confirmed on iPad Pro ([plans/ipad-support.md](plans/ipad-support.md)) |
+| 8 | Recipe Import (in-app) | **Planned (2026-07-03)** — paste/URL → LLM parse → review → save; spec locked at [plans/recipe-import.md](plans/recipe-import.md); awaiting execution (board round 5 + `codex/import-api`) |
 
 ## Architecture snapshot
 

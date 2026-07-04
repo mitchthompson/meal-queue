@@ -30,6 +30,29 @@ replaced decisions as superseded rather than silently deleting them.
   pantry classification match exactly. Unit conversion is deferred.
 - Tags are user-created, with starter suggestions supplied by the app.
 
+### Recipe Import (planned 2026-07-03 — spec: [plans/recipe-import.md](plans/recipe-import.md))
+
+Owner-decided at the planning interview; locked for the build (the full ADR
+for the architectural firsts lands with PR 1):
+
+- Parsing is LLM-powered: Claude Haiku 4.5 (pinned `claude-haiku-4-5-20251001`)
+  called server-side via plain `fetch` — no SDK, no new npm dependency.
+- One new API route (`POST /api/import-recipe`) — the app's first server-side
+  code. It parses only and never writes the database; saving stays client-side
+  through `save_recipe` (auth.uid RLS path).
+- Both avenues ship in v1, paste-first: NYT Cooking is paywalled, so pasted
+  text is the primary path and a paywalled URL fails soft into paste.
+- Dedicated review screen (not editor prefill), fully editable in the editor
+  idiom, with the original text in a collapsible panel.
+- No schema change: provenance is a `Source: <url>` first line inside
+  `instructions_raw`, which also captures the original text.
+- Imported tags come only from the user's existing tag vocabulary (LLM may not
+  invent tags).
+- `mcp/` stays a walled-off separate package: its extraction logic is copied
+  into `lib/import/`, never imported.
+- Build handoff pattern: spec is written for a lower-capability builder model,
+  with STOP gates and a senior-model review (Phase D) before any merge.
+
 ### Grocery State
 
 - Grocery rows are persisted so checklist state survives page navigation.

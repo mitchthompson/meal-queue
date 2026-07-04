@@ -266,6 +266,42 @@ Acceptance (all met, 2026-07-02):
 - [x] Behavior neutral throughout, with three owner-approved exceptions
   (serves line removed, sample-data seeder removed, save-confirmation fix).
 
+### 8. Recipe Import (in-app)
+
+**Status: planned (2026-07-03) — spec locked, not started.** Full builder-ready
+execution spec: [plans/recipe-import.md](plans/recipe-import.md) (owner
+interviewed; all design forks decided and recorded in its §1 table).
+
+Add recipes from the app itself (today they enter via the MCP server in a
+Claude Code session): paste recipe text (primary — NYT Cooking is paywalled
+and unfetchable) or fetch an open-site URL → LLM parse (Claude Haiku 4.5,
+server-side) → dedicated review/edit screen → save via the existing
+`save_recipe` RPC. iPhone-first. Zero new npm dependencies, zero schema
+changes by design.
+
+- Phase A — review-board round 5 mocks (IM1–IM7), gates the UI PR only.
+- Phase B — PR 1 `codex/import-api`: the app's first API route
+  (`POST /api/import-recipe`) + `lib/import/*` helpers with vitest; merges
+  inert. ADR for the two architectural firsts (server code, LLM dependency).
+- Phase C — PR 2 `codex/import-ui`: import flow + review screen +
+  behavior-neutral `saveRecipeForm` extraction.
+- Phase D — senior-model review + spec-compliance pass before any merge;
+  real-iPhone Needs-Mitchell digest.
+
+Owner gate: Anthropic Console setup (`ANTHROPIC_API_KEY`, ~$10/mo spend cap)
+before Phase B smoke tests.
+
+Acceptance:
+
+- A recipe pasted from NYT Cooking on the iPhone reaches the review screen
+  parsed (13-unit vocabulary, pantry flags, tags from the existing list only)
+  and saves through `save_recipe` with the original text captured in
+  `instructions_raw`.
+- An open-site URL import round-trips the same way; a paywalled URL fails
+  soft into the paste path (amber redirect, not an error).
+- The existing editor's behavior is byte-identical after the
+  `saveRecipeForm` extraction (existing verify script re-run green).
+
 ## Deferred Fixes (from the 2026-06-11 audit)
 
 Real issues confirmed in code but deliberately excluded from the current
@@ -308,7 +344,8 @@ Details in [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 
 ## Deferred Ideas
 
-- Recipe import from URL or pasted text.
+- ~~Recipe import from URL or pasted text.~~ — promoted to milestone 8
+  (2026-07-03, spec: [plans/recipe-import.md](plans/recipe-import.md)).
 - OCR-assisted recipe capture.
 - Unit conversions during grocery grouping.
 - Meal-plan templates.
