@@ -359,7 +359,8 @@ textarea {
   margin-top: 1rem;
 }
 
-.recipes-layout.editor-open {
+.recipes-layout.editor-open,
+.recipes-layout.import-open {
   margin-top: 0;
 }
 
@@ -1394,7 +1395,8 @@ textarea {
 
 .settings-save,
 .recipes-save,
-.recipe-cook-btn {
+.recipe-cook-btn,
+.import-submit {
   display: block;
   width: 100%;
   margin-top: 0.85rem;
@@ -1414,6 +1416,90 @@ textarea {
    than the save bars' top margin. */
 .recipe-cook-btn {
   margin: 0.15rem 0 0.35rem;
+}
+
+/* Recipe import surface (milestone 8, Phase C). Entry (paste/link mode pills,
+   IM1: B), parsing wait (IM2), and the review screen (IM4: B parsed/original
+   toggle) live in components/recipe-import.tsx; the review form reuses the
+   editor's ingredient/step/tag classes. All color comes from the v2 tokens —
+   the amber callout mirrors the .pantry-badge palette. */
+.import-modes {
+  margin-bottom: 0.1rem;
+}
+
+.import-provenance {
+  margin: 0;
+}
+
+/* Generous paste area for a full recipe (min-height unpinned on the round-5
+   board — recorded in docs/design-flags.md). */
+.import-textarea {
+  min-height: 9rem;
+}
+
+.import-cancel {
+  min-height: 2.75rem;
+}
+
+/* IM3: A — a blocked/paywalled URL fails soft into the paste box as an amber
+   callout (the .pantry-badge amber set), not a red error. */
+.import-callout {
+  margin: 0.1rem 0;
+  border: 1px solid var(--color-accent);
+  border-radius: 12px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-deep);
+  padding: 0.7rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Indeterminate parsing bar (IM2). The 1.1s sweep is a new value — recorded in
+   docs/design-system.md and docs/design-flags.md. */
+.import-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  overflow: hidden;
+}
+
+.import-progress span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand);
+  animation: import-progress-sweep 1.1s ease-in-out infinite;
+}
+
+@keyframes import-progress-sweep {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(360%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .import-progress span {
+    animation: none;
+    width: 100%;
+  }
+}
+
+/* IM4: B — the "Original" toggle shows the imported text verbatim, scrollable. */
+.import-original {
+  max-height: 40vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 0.7rem 0.8rem;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .cook-mode {
@@ -1789,7 +1875,9 @@ textarea {
      stack above it and force a scroll-hunt (owner request 2026-07-02). The
      page head hides with it so the editor title leads. */
   .recipes-layout.editor-open aside.panel,
-  .recipes-screen.editor-open .recipes-head {
+  .recipes-layout.import-open aside.panel,
+  .recipes-screen.editor-open .recipes-head,
+  .recipes-screen.import-open .recipes-head {
     display: none;
   }
 

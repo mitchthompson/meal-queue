@@ -3,7 +3,61 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - Recipe Import Phase A + B executed: board round 5 deployed, codex/import-api built & gate-green (uncommitted)
+## 2026-07-04 (latest) - Recipe Import PR 1 shipped: Phase D review, live smoke, merged to main & deployed
+
+Closed out Recipe Import PR 1 end to end: collected the round-5 board verdicts,
+ran the Phase D senior review, applied the fixes, smoke-tested against the live
+Anthropic API, and merged `codex/import-api` (PR #28) to `main`.
+
+- **Round-5 board verdicts (IM1–IM7), recorded in [decisions.md](decisions.md) + [design-flags.md](design-flags.md):**
+  IM1 **B** (Paste/Link mode pills, paste-first), IM2 **as shown** (locked
+  inputs, "Reading recipe…", indeterminate bar), IM3 **A/amber** (paywall fails
+  soft into paste, amber redirect, focus to paste), IM4 **B** (Parsed/Original
+  toggle), IM5 **as shown** (provenance line + note + full-width teal Save), IM6
+  **OK** (`instructions_raw` = verbatim original + `Source:` line for URL
+  imports, not editable at review), IM7 **A** (Import beside "New recipe" in the
+  library panel). These gate Phase C UI.
+- **Phase D review — 7 findings, all fixed, gate-green.** A `/code-review` (8
+  finder angles) + spec-compliance pass surfaced: (1) `stripStepNumbering`
+  corrupting steps that begin with a numeric range ("3-4 minutes" → "4 minutes")
+  — fixed with a negative-lookahead; (2) SSRF via redirect (`redirect:"follow"`
+  never re-validated the target) — fixed with `redirect:"manual"` + per-hop
+  `assertSafeUrl`; (3) IPv4-mapped IPv6 (`::ffff:127.0.0.1`) bypassing
+  `isPrivateIp` — fixed by resolving mapped forms; (4) `fe80::/10` only partly
+  matched + FQDN-root `localhost.` bypass — fixed; (5) `normalizeAmount`
+  re-implementing `roundAmount` — reused `lib/grocery` helper; (6) dead
+  `hasJsonLd` param on `detectPaywall` — dropped; (7) redundant paste-branch
+  `.slice(25000)` — removed. Added regression tests for the range case and the
+  new SSRF vectors. Severity note: the SSRF gaps are bounded (auth-gated,
+  single-household) but were real holes in the built guard.
+- **Deviations resolved:** #1 em-dashes→periods (kept, owner rule), #2
+  `detectPaywall` takes text not length (kept), #3 `assertSafeUrl` throws
+  `fetch_failed` (kept), **#4 root-level `anyOf` — confirmed accepted by the
+  live API** in the smoke (wrapper fallback not needed).
+- **Live B13 smoke (all pass), against prod Supabase auth + live Anthropic:**
+  paste path → flour 2 cup, milk **1.5** cup (fraction), salt/butter 0 +
+  pantry-true, tags ⊆ allowed, model `claude-haiku-4-5-20251001`; URL path
+  (budgetbytes) → 20 ingredients, `meta.extraction:"json-ld"`; negatives → no
+  auth 401, gibberish 422 `no_recipe_found`, text+url 400 `invalid_request`.
+  Token obtained from the owner's browser session (never stored; scratch file
+  deleted after).
+- **Verification:** eslint clean, `tsc` clean, **vitest 119/119** (+5:
+  step-range + 4 new SSRF vectors, −1 dead detectPaywall json-ld case), `next
+  build` green (11 pages + the route as a `ƒ` node function, no key present).
+  PR #28 CI green (app-checks 48s, db-tests 1m4s); `main` post-merge CI green
+  (1m8s). Prod route live on `meal-queue.vercel.app` (401 no-auth liveness
+  probe; full authed prod verification deferred — costs a paid call).
+- **Merged & deployed.** PR #28 → `main` (`11834f9`, merge commit), Vercel prod
+  deploy live. Owner set `ANTHROPIC_API_KEY` in Vercel (Production + Preview)
+  before the merge, so the deploy picked it up.
+- **Security note:** the owner's IDE selection briefly pasted the raw
+  `ANTHROPIC_API_KEY` value into the session transcript. Flagged and rotation
+  recommended; **owner chose to leave the key as-is for now** (no rotation).
+- **Remaining:** Phase C (`codex/import-ui`, the import UI) is now unblocked
+  (PR 1 merged + verdicts in). Two optional prod tails: an authed prod smoke to
+  confirm the key wiring, and the deferred key rotation.
+
+## 2026-07-03 - Recipe Import Phase A + B executed: board round 5 deployed, codex/import-api built & gate-green (uncommitted)
 
 Executed [plans/recipe-import.md](plans/recipe-import.md) Phase A (board mocks)
 and Phase B (server route) in one session. Both reached their spec STOP points,

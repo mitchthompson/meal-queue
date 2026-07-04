@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
+import { ImportFlow } from "@/components/recipe-import";
 import { StatusMessage } from "@/components/status-message";
 import { blankForm, blankIngredient, blankStep, useRecipes } from "@/lib/hooks/use-recipes";
 import type { RecipeSortOption } from "@/lib/hooks/use-recipes";
+import { useImport } from "@/lib/hooks/use-import";
 
 export default function RecipesPage() {
   return (
@@ -20,8 +22,10 @@ export default function RecipesPage() {
 function RecipesScreen({ userId }: { userId: string }) {
   const searchParams = useSearchParams();
   const editRecipeId = searchParams.get("edit");
+  const importParam = searchParams.get("import");
   const {
     recipes,
+    knownTags,
     units,
     form,
     setForm,
@@ -41,7 +45,32 @@ function RecipesScreen({ userId }: { userId: string }) {
     saveRecipe,
     deleteRecipe,
   } = useRecipes(userId, editRecipeId);
+  const importFlow = useImport(units, knownTags);
+  const importing = importFlow.phase !== "closed";
   const [tagDraft, setTagDraft] = useState("");
+
+  // ?import=1 opens the import flow (mirrors the ?edit= deep link). Opening
+  // import closes the editor — the two surfaces are mutually exclusive.
+  useEffect(() => {
+    if (importParam === "1" && importFlow.phase === "closed") {
+      setShowEditor(false);
+      importFlow.openImport();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [importParam]);
+
+  function openEditor(prepare: () => void) {
+    importFlow.closeImport();
+    prepare();
+    setShowEditor(true);
+    jumpToEditorOnMobile();
+  }
+
+  function openImport() {
+    setShowEditor(false);
+    importFlow.openImport();
+    jumpToEditorOnMobile();
+  }
 
   // On phones the editor replaces the list (it stacks below it on desktop
   // widths), so land the viewport on the form instead of mid-list.
@@ -51,25 +80,36 @@ function RecipesScreen({ userId }: { userId: string }) {
 
   return (
     <AppShell>
-      <div className={showEditor ? "recipes-screen editor-open" : "recipes-screen"}>
+      <div
+        className={
+          showEditor
+            ? "recipes-screen editor-open"
+            : importing
+              ? "recipes-screen import-open"
+              : "recipes-screen"
+        }
+      >
       <section className="recipes-head">
         <h1>Recipes</h1>
       </section>
-      <section className={showEditor ? "split-layout recipes-layout editor-open" : "recipes-layout"}>
+      <section
+        className={
+          showEditor
+            ? "split-layout recipes-layout editor-open"
+            : importing
+              ? "split-layout recipes-layout import-open"
+              : "recipes-layout"
+        }
+      >
         <aside className="panel">
           <div className="section-head">
             <h2 className="recipes-card-label">Your recipes</h2>
             <div className="section-actions">
-              <button
-                className="secondary-btn"
-                onClick={() => {
-                  setForm(blankForm());
-                  setShowEditor(true);
-                  jumpToEditorOnMobile();
-                }}
-                type="button"
-              >
+              <button className="secondary-btn" onClick={() => openEditor(() => setForm(blankForm()))} type="button">
                 New recipe
+              </button>
+              <button className="secondary-btn" onClick={openImport} type="button">
+                Import
               </button>
               {showEditor ? (
                 <button className="text-btn" onClick={() => setShowEditor(false)} type="button">
@@ -96,15 +136,7 @@ function RecipesScreen({ userId }: { userId: string }) {
               <div className={form.id === recipe.id ? "list-item active" : "list-item"} key={recipe.id}>
                 <strong>{recipe.name}</strong>
                 <div className="section-actions">
-                  <button
-                    className="text-btn"
-                    onClick={() => {
-                      setShowEditor(true);
-                      selectRecipe(recipe.id);
-                      jumpToEditorOnMobile();
-                    }}
-                    type="button"
-                  >
+                  <button className="text-btn" onClick={() => openEditor(() => selectRecipe(recipe.id))} type="button">
                     Edit
                   </button>
                   <Link href={`/recipes/${recipe.id}`}>View recipe</Link>
@@ -360,6 +392,8 @@ function RecipesScreen({ userId }: { userId: string }) {
           <StatusMessage error={error} message={message} />
           </section>
         ) : null}
+
+        {importing && !showEditor ? <ImportFlow flow={importFlow} units={units} knownTags={knownTags} /> : null}
       </section>
       </div>
     </AppShell>

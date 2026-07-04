@@ -310,6 +310,33 @@ round-2 board verdicts ST1: B / ST2 / ST3, 2026-07-02). Column capped by
   weight 700) — the same chunky-exit language as `.plan-generate`.
 - `.settings-signout`: bumps the secondary sign-out button to `2.75rem`.
 
+### Import surface
+
+`components/recipe-import.tsx` + the `.import-*` selectors (milestone 8, Phase C;
+round-5 board verdicts). Lives inside `.recipes-layout` on `/recipes`, so its
+inputs/selects inherit the 44px bumps and it mirrors the editor's `.import-open`
+mobile takeover. Reuses existing patterns wherever possible — `.pill` /
+`.pill.active` for the mode and Parsed/Original toggles, and the whole editor
+ingredient/step/tag markup in the review form.
+
+- `.import-submit`: the full-width teal action bar — joined to the shared
+  `.settings-save, .recipes-save, .recipe-cook-btn` group (radius `12px`,
+  `0.9rem` padding, weight 700, `var(--brand)`). Used for both "Import recipe"
+  (entry) and "Save recipe" (review).
+- `.import-callout`: the amber soft-fail callout for a blocked/paywalled URL
+  (IM3: A) — the `.pantry-badge` amber set (`var(--color-accent)` border,
+  `var(--color-accent-soft)` bg, `var(--color-accent-deep)` text), radius `12px`.
+- `.import-progress`: 4px `999px` bar on `var(--color-primary-soft)` with a
+  `40%`-wide `var(--brand)` sweep (`.import-progress span`), animated by
+  `@keyframes import-progress-sweep` at **`1.1s` ease-in-out infinite** — a new
+  value (see [design flags](design-flags.md); no board-pinned duration). Honors
+  `prefers-reduced-motion: reduce` (bar fills static, no sweep).
+- `.import-textarea`: paste box `min-height: 9rem` (new value, unpinned — see
+  [design flags](design-flags.md)).
+- `.import-original`: the "Original" toggle body — `max-height: 40vh`,
+  `overflow-y: auto`, `white-space: pre-wrap`, `var(--surface)`/`var(--line)`
+  skin, muted `0.9rem`.
+
 ### Cook-mode takeover
 
 `components/cook-mode.tsx` + the `.cook-*` selectors. A `position: fixed;
