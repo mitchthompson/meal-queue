@@ -69,11 +69,11 @@ import-screen UI before Phase C (`codex/import-ui`) is coded:
   pills, rather than A's collapsible panel above the form.
 - **IM5 (save cluster): confirmed as shown.** Provenance line + "saved with the
   recipe" note + full-width teal Save.
-- **IM6 (what is stored as the original): not explicitly ruled on.** Taking the
-  spec default pending owner confirmation: `instructions_raw` holds the original
-  text verbatim with a `Source: <url>` first line, not editable at review. See
-  [design-flags](design-flags.md). This matches the Phase B build, so no code
-  hinges on it.
+- **IM6 (what is stored as the original): OK (owner-confirmed 2026-07-04).**
+  `instructions_raw` holds the original text verbatim with a `Source: <url>`
+  first line for URL imports (paste imports have no source line), not editable
+  at review; it is the provenance record and the structured `recipe_steps` are
+  canonical. Matches the Phase B build, so no code change.
 - **IM7 (Import button placement): A.** Secondary "Import" button beside "New
   recipe" inside the library panel, rather than B's page-head placement by the
   title.

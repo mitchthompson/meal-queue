@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (execution session: **Recipe Import Phase A + B executed**. Board round 5 (IM1–IM7 mocks) deployed to the 🍳 artifact for owner verdicts; `codex/import-api` (PR 1 — the app's first API route + `lib/import/*`, vitest 114/114) built to a green gate and **committed locally on `codex/import-api` (2 commits, not pushed)**; not smoke-tested. See Active Handoff. Prior: the planning session that spec'd this to [plans/recipe-import.md](plans/recipe-import.md); iPad coherence PRs #26–#27 shipped)
+Last reviewed: 2026-07-04 (execution session: **Recipe Import PR 1 shipped**. Round-5 board verdicts (IM1–IM7) collected + recorded; Phase D senior review applied 7 fixes (SSRF hardening, step-range corruption, reuse); live B13 smoke passed against the Anthropic API (all 4 deviations resolved); **PR #28 (`codex/import-api`) merged to `main` (`11834f9`) and deployed to Vercel prod**, route live on `meal-queue.vercel.app`. `ANTHROPIC_API_KEY` provisioned locally + in Vercel. Phase C (import UI, `codex/import-ui`) now unblocked. See Active Handoff. Prior: Phase A+B build; iPad coherence PRs #26–#27)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -45,15 +45,20 @@ PR #27** (portrait tablets fill the shell instead of stranding a right gutter) �
 both deployed and confirmed on an iPad Pro. A planning session then scoped
 **in-app Recipe Import** (paste text or URL → LLM parse → dedicated review
 screen → save) into a locked, builder-ready spec at
-[plans/recipe-import.md](plans/recipe-import.md), and **this session (2026-07-03)
-executed its Phase A + Phase B**: the review-board round-5 mocks (IM1–IM7) are
-deployed for owner verdicts, and the server route (PR 1, branch
-`codex/import-api`) is built, gate-green, and **committed locally (2 commits,
-not pushed)** but unsmoketested. Phases C (UI) and D (senior review) are open. See Active Handoff.
+[plans/recipe-import.md](plans/recipe-import.md); Phase A (board mocks) + Phase B
+(server route) were built 2026-07-03; and **this session (2026-07-04) shipped PR
+1 end to end**: round-5 board verdicts (IM1–IM7) collected + recorded, Phase D
+senior review applied 7 fixes (SSRF guard hardened against redirect/mapped-IPv6/
+FQDN-root bypasses, step-range corruption fixed, `roundAmount` reuse), the live
+B13 smoke passed against the Anthropic API (all 4 spec deviations resolved,
+including the root-level `anyOf` schema confirmed live), and **PR #28
+(`codex/import-api`) merged to `main` (`11834f9`) and deployed to Vercel prod**
+(route live on `meal-queue.vercel.app`; `ANTHROPIC_API_KEY` set locally + in
+Vercel). Phase C (the import UI, `codex/import-ui`) is the open next step. See Active Handoff.
 
 ## Stable Baseline
 
-- **`main`:** at `45d5260` (recipe-import spec commit atop the iPad-coherence merges; **unchanged this session** — the import work is committed on branch `codex/import-api` (2 commits, not pushed)) — the full
+- **`main`:** at `11834f9` (**Recipe Import PR 1 merged this session** — merge of `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert, deployed to Vercel prod) atop `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
   reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
@@ -82,14 +87,25 @@ not pushed)** but unsmoketested. Phases C (UI) and D (senior review) are open. S
   before `supabase start` and fails if the baseline migration and `schema.sql`
   diverge (2026-07-03). Lint runs
   `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
-  longer lints (`eslint.ignoreDuringBuilds`). Twenty-seven PRs merged plus several
+  longer lints (`eslint.ignoreDuringBuilds`). Twenty-eight PRs merged plus several
   direct-to-main follow-up merges; CI has been green (one transient
   `supabase start` port-bind flake on `main` — `54322 already in use` — cleared
   by a job rerun, not a repo issue).
   `actions/checkout` and `actions/setup-node` are now on `@v5` (2026-07-03,
   merge `2e8bc09`), clearing the Node-20 runtime deprecation;
   `supabase/setup-cli@v1` stays (no v5) and `node-version: 20` is unchanged.
-- **Latest verification:** 2026-07-03 (iPad coherence): chrome **PR #26** —
+- **Latest verification:** 2026-07-04 (Recipe Import PR 1, PR #28): eslint /
+  tsc clean, **vitest 119/119**, `next build` 11 pages + `/api/import-recipe` as
+  a `ƒ` node function (built with no key present); PR #28 CI green (app-checks
+  48s, db-tests 1m4s), `main` post-merge CI green (1m8s), DB layer untouched
+  (pgTAP unchanged at 108). **Live B13 smoke** against prod Supabase auth + the
+  Anthropic API: paste path (fraction/range/to-taste normalization correct), URL
+  path (`meta.extraction:"json-ld"`, 20 ingredients), negatives (401 / 422
+  no_recipe_found / 400 invalid_request) — all pass; root-level `anyOf` schema
+  confirmed accepted by the live API. Prod route liveness confirmed on
+  `meal-queue.vercel.app` (401 no-auth; a full authed prod call to confirm the
+  key wiring is deferred — it costs a paid request). Prior — 2026-07-03 (iPad
+  coherence): chrome **PR #26** —
   6-viewport × 6-screen Chromium sweep on the local stack (portrait 744/820/834/
   1024 → tabbar on, pills hidden; landscape 1194/1366 → pills kept, touch-sized)
   + a boundary regression probe (phone-390 and desktop-1280-mouse unchanged);
@@ -123,45 +139,45 @@ not pushed)** but unsmoketested. Phases C (UI) and D (senior review) are open. S
 
 ## Active Handoff
 
-- **In progress:** **Recipe Import — Phase A + B executed, uncommitted.** On
-  branch `codex/import-api`, the working tree holds Phase B (PR 1): `lib/import/`
-  (9 modules + 5 vitest suites, **114/114**) and
-  `app/api/import-recipe/route.ts` — the app's first server-side code — plus 6
-  doc updates and the two Phase A scripts
-  (`scripts/review-board/capture-import-variants.mjs`, `gen-board-r5.mjs`).
-  Gate is green (eslint / tsc / vitest / `next build` with the route as a node
-  function and no build-time key read); zero new deps, zero schema changes.
-  **Committed locally on `codex/import-api` (2 commits: feat + docs), not
-  pushed, not smoke-tested, not merged** — held for Phase D review before
-  push/PR. Phase A: the round-5 board (IM1–IM7 mocks) is deployed to the
-  🍳 artifact (`af261057…`) for verdicts. Spec:
-  [plans/recipe-import.md](plans/recipe-import.md).
-- **Next action:** **`/onboard`, then Recipe Import Phase D (senior review) on
-  branch `codex/import-api`.** In order: (1) collect the owner's **IM1–IM7
-  verdicts** from the 🍳 board and record them in [decisions.md](decisions.md) +
-  [design-flags.md](design-flags.md) — they gate Phase C; (2) run `/code-review`
-  + a spec-compliance pass against [plans/recipe-import.md](plans/recipe-import.md)
-  §5, and resolve the **4 flagged deviations** (design-flags.md → em-dashes,
-  `detectPaywall` signature, `assertSafeUrl` code, root-`anyOf`); (3) once the
-  owner provisions **`ANTHROPIC_API_KEY`** (spec §8) into `.env.local`, run the
-  B13 curl smoke tests on `npm run dev`; (4) on the owner's word, **push**
-  `codex/import-api` and open PR 1 (the branch is already committed locally: 2
-  commits, feat + docs). Phase C (`codex/import-ui`) unblocks once verdicts are
-  in and PR 1 merges.
-- **Blockers:** Phase B curl smoke blocked on the owner's `ANTHROPIC_API_KEY`
-  (spec §8, STOP ②); the **push + PR are held for Phase D review** + owner word
-  (branch is committed locally, 2 commits). Phase C (UI PR) gated on round-5
-  board verdicts + PR 1 merge.
-- **Environment notes:** Recipe Import work is committed on branch
-  `codex/import-api` (2 commits, **not pushed**; main untouched); the local
-  Supabase stack is left **up** on
-  Colima (this session used it for the Phase A capture). `.env.local` exists
-  (prod DB access verified, PG 17.6); `ANTHROPIC_API_KEY` does **not** exist yet
-  anywhere (owner setup pending — recipe-import spec §8); read-only Supabase MCP
-  configured in `.mcp.json` (owner OAuth pending first use); `gh` holds both accounts (`2a-webteam` active machine-
-  wide, `mitchthompson` pinned per command via
+- **Just shipped:** **Recipe Import PR 1 — merged & deployed.** PR #28
+  (`codex/import-api`) is merged to `main` (`11834f9`) and live on Vercel prod:
+  `POST /api/import-recipe` (the app's first server-side route) + `lib/import/*`
+  (9 modules), vitest **119/119**, all four Phase D spec deviations resolved,
+  live B13 smoke green (paste + URL + negatives, against the Anthropic API).
+  Round-5 board verdicts (IM1–IM7) are recorded in [decisions.md](decisions.md);
+  IM6 resolved in [design-flags.md](design-flags.md) Resolved. Zero schema
+  changes, zero new npm deps.
+- **Next action:** **`/onboard`, then Recipe Import Phase C on a fresh
+  `codex/import-ui` branch off `main`.** Build the import UI per
+  [plans/recipe-import.md](plans/recipe-import.md) §6 (C1–C7), applying the
+  board verdicts (IM1 **B** mode pills paste-first · IM2 wait as shown · IM3
+  **A** amber paywall redirect · IM4 **B** Parsed/Original toggle · IM5 save
+  cluster as shown · IM6 provenance stored as built · IM7 **A** Import beside
+  "New recipe"). In order: (1) C1 — a **behavior-neutral** refactor seam in
+  `lib/hooks/use-recipes.ts` (verify clean, no UX change); (2) C2
+  `lib/hooks/use-import.ts` (calls `POST /api/import-recipe` with the Bearer
+  token); (3) C3 `components/recipe-import.tsx` (the entry surface + wait + review
+  screen — reuse the recipe-editor idiom); (4) C4 wire into
+  `app/recipes/page.tsx`; (5) C5 `app/globals.css` **tokens only** (any missing
+  value → [design-flags.md](design-flags.md), never inline); (6) C7 gate: eslint
+  / tsc / vitest / `next build`, then drive it on `npm run dev` (the key is set
+  locally). Open PR 2 on the owner's word. Confirm live values against
+  `app/globals.css` + [docs/pages/recipes.md](pages/recipes.md) before building.
+- **Blockers:** none for Phase C — PR 1 is merged and all verdicts are in.
+- **Environment notes:** `main` is the working branch again (feature branch
+  `codex/import-api` merged; can be deleted). `.env.local` now includes
+  `ANTHROPIC_API_KEY` (sk-ant-, present locally); **Vercel has `ANTHROPIC_API_KEY`
+  set for Production + Preview** (owner-provisioned; prod deploy picked it up).
+  **Key rotation:** the raw key value was briefly exposed in a session transcript
+  (IDE selection) — rotation was recommended but the owner chose to **leave it
+  as-is for now**; rotate if that changes (Console → API Keys → revoke
+  `meal-queue-vercel` → recreate → update `.env.local` + Vercel). `.env.local`
+  prod DB access verified (PG 17.6); read-only Supabase MCP configured in
+  `.mcp.json` (owner OAuth pending first use); `gh` holds both accounts
+  (`2a-webteam` active machine-wide, `mitchthompson` pinned per command via
   `GH_TOKEN=$(gh auth token --user mitchthompson)`); local Supabase stack runs
-  on Colima (`supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,mailpit,supavisor`).
+  on Colima (`supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,mailpit,supavisor`),
+  left up this session.
 
 ## Page status
 
@@ -200,7 +216,7 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); all 10 board pins signed off 2026-07-03 (defaults kept) |
 | 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
 | — | iPad coherence | **Done (2026-07-03)** — orientation-routed chrome (PR #26) + portrait content-width fill (PR #27); CSS-only, deployed & confirmed on iPad Pro ([plans/ipad-support.md](plans/ipad-support.md)) |
-| 8 | Recipe Import (in-app) | **In progress (2026-07-03)** — Phase A board round 5 (IM1–IM7) deployed for verdicts; Phase B `codex/import-api` (API route + `lib/import/*`, vitest 114/114, gate-green) built, **committed locally (not pushed)**, unsmoketested; Phases C/D open. Spec: [plans/recipe-import.md](plans/recipe-import.md) |
+| 8 | Recipe Import (in-app) | **In progress (2026-07-04)** — **PR 1 merged** (`codex/import-api` → `main` `11834f9`, PR #28): `POST /api/import-recipe` + `lib/import/*`, vitest 119/119, Phase D review + live smoke done, deployed to prod. Phases A/B/D done; **Phase C (import UI, `codex/import-ui`) is next**. Spec: [plans/recipe-import.md](plans/recipe-import.md) |
 
 ## Architecture snapshot
 
@@ -232,6 +248,11 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 - iPad: two optional tails (owner's call, not blocking) — a final real-device
   pass (portrait fill + landscape + iPadOS standalone), and centring the
   landscape 640px reading column (currently left-pinned, owner-accepted).
+- Recipe Import PR 1: two optional tails (owner's call, not blocking) — an
+  **authed prod smoke** to confirm the Vercel `ANTHROPIC_API_KEY` wiring (a
+  no-auth probe can't verify it; costs one paid call), and **key rotation** (the
+  raw key value was briefly exposed in a session transcript; owner chose to leave
+  it for now).
 - `npm audit`: **both packages clean (0 vulns)** as of 2026-07-03 — root via
   the supabase-js lockfile bump (`ws` chain), and `mcp/` via an in-range
   lockfile-only `npm audit fix` (9 → 0: `undici`/`ws`/`hono`/`express`/`qs`/

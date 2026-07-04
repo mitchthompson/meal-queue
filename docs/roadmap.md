@@ -268,8 +268,8 @@ Acceptance (all met, 2026-07-02):
 
 ### 8. Recipe Import (in-app)
 
-**Status: in progress (2026-07-03) — spec locked; Phase B built, Phases A/C/D
-open.** Full builder-ready execution spec:
+**Status: in progress (2026-07-04) — PR 1 (Phases A/B/D) merged & deployed;
+Phase C (import UI) is the open next step.** Full builder-ready execution spec:
 [plans/recipe-import.md](plans/recipe-import.md) (owner interviewed; all design
 forks decided and recorded in its §1 table).
 
@@ -280,18 +280,18 @@ server-side) → dedicated review/edit screen → save via the existing
 `save_recipe` RPC. iPhone-first. Zero new npm dependencies, zero schema
 changes by design.
 
-- Phase A — review-board round 5 mocks (IM1–IM7), gates the UI PR only.
+- Phase A — review-board round 5 mocks (IM1–IM7). **Done; verdicts collected
+  2026-07-04 and recorded in [decisions.md](decisions.md) (IM1 B · IM2 as
+  shown · IM3 A amber · IM4 B · IM5 as shown · IM6 OK · IM7 A).**
 - Phase B — PR 1 `codex/import-api`: the app's first API route
   (`POST /api/import-recipe`) + `lib/import/*` helpers with vitest; merges
   inert. ADR for the two architectural firsts (server code, LLM dependency).
-  **Built 2026-07-03; gate green (lint / typecheck / vitest 114/114 / `next
-  build` with the route as a node function and no build-time key read).
-  Awaiting owner `ANTHROPIC_API_KEY` for curl smoke (STOP ②) and senior
-  review before merge.**
+  **Done — merged 2026-07-04 (PR #28, `11834f9`), deployed to Vercel prod.**
+- Phase D — senior review + spec-compliance pass. **Done 2026-07-04: 7 fixes
+  (SSRF hardening, step-range, reuse), all 4 deviations resolved, live B13
+  smoke green; vitest 119/119.**
 - Phase C — PR 2 `codex/import-ui`: import flow + review screen +
-  behavior-neutral `saveRecipeForm` extraction.
-- Phase D — senior-model review + spec-compliance pass before any merge;
-  real-iPhone Needs-Mitchell digest.
+  behavior-neutral `saveRecipeForm` extraction. **Open — next step, unblocked.**
 
 Owner gate: Anthropic Console setup (`ANTHROPIC_API_KEY`, ~$10/mo spend cap)
 before Phase B smoke tests.

@@ -6,11 +6,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Open
 
-### Recipe Import IM6 — original-text storage (round-5 board, awaiting owner confirm)
-- **Where it's used:** the review screen (Phase C, `codex/import-ui`); underlying write already built in `lib/import/` / `save_recipe` path.
-- **What's needed:** IM6 was the one round-5 pin not explicitly ruled on (2026-07-04). Taking the spec default: `instructions_raw` stores the original text verbatim with a `Source: <url>` first line for URL imports, not editable at review (it is the provenance record; structured steps are separate). Confirm "OK" or flag a change. No code hinges on it (matches the Phase B build), so it does not block Phase C.
-- **Source:** Round-5 board verdicts, 2026-07-04; see [decisions.md](decisions.md).
-
 ### Recipe Import (PR 1, `codex/import-api`) — Phase D outcome (2026-07-04)
 - **Where it's used:** `lib/import/errors.ts`, `lib/import/fetch-page.ts`, `lib/import/schema.ts`, `app/api/import-recipe/route.ts`.
 - **Deviation verdicts (owner + senior review, 2026-07-04):**
@@ -62,6 +57,10 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
 
 ## Resolved
+
+### Recipe Import IM6 — original-text storage (round-5 board)
+- **Resolution (2026-07-04):** owner confirmed "IM6: OK" — keep as built. `instructions_raw` stores the imported text verbatim with a `Source: <url>` first line for URL imports (paste imports have no source line), not editable at review. It is the provenance record; the structured `recipe_steps` are the canonical instructions. No code change (matches the Phase B build).
+- **Source:** Round-5 board verdicts, 2026-07-04; see [decisions.md](decisions.md).
 
 ### `mcp/` npm-audit findings (9: 2 moderate, 7 high)
 - **Resolution (2026-07-03, direct to `main`):** All 9 were **transitive** (none of the four direct deps — `@modelcontextprotocol/sdk`, `@supabase/supabase-js`, `cheerio`, `zod` — were flagged). Resolved with an **in-range, lockfile-only `npm audit fix`** (9 → **0**; `package.json` unchanged), the same shape as the root `ws` fix: `undici`@7.28.0 (via cheerio), `ws`@8.21.0 (via supabase-js realtime), plus the MCP SDK's HTTP stack `hono`@4.12.27 / `@hono/node-server` / `express-rate-limit` / `path-to-regexp` / `qs` / `fast-uri` / `ip-address`. **Exposure was low regardless:** the server runs over **stdio** (`StdioServerTransport`), so the SDK's HTTP/SSE transport that pulls the 7 hono/express advisories is never instantiated — dead code; only `undici` (recipe-URL fetch) was a live surface. **Verification:** `npm audit` 0; `tsc` rebuild clean (`dist/` byte-identical, source untouched); the server loads over stdio and answers a real MCP `initialize` handshake (correct `serverInfo` + tools capability). Note: `mcp/` has no CI coverage (root CI doesn't build it, ESLint ignores `mcp/**`), so this was local-verify + direct-to-main.
