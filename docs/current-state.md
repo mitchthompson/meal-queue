@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (four standing follow-ups cleared — CI actions v5, ws advisory → 0 vulns, settings-defaults SoT, userEmail cleanup; round-1 board pins signed off, all defaults kept)
+Last reviewed: 2026-07-03 (four standing follow-ups cleared — CI actions v5, ws advisory → 0 vulns, settings-defaults SoT, userEmail cleanup; round-1 board pins signed off, all defaults kept; CI baseline drift guard + schema.sql consolidation)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -50,7 +50,10 @@ remaining lower-priority loose ends** (see Active Handoff).
 - **Prod database:** all four migrations in `supabase/migrations/` are applied
   and verified (`save_recipe`, Data API grants, plan-integrity triggers,
   grocery state preservation). `supabase/schema.sql` is canonical and in sync;
-  the timestamped baseline copy is CI/local-only.
+  the timestamped baseline copy is CI/local-only. schema.sql was consolidated
+  2026-07-03 (historical inline `ALTER`s folded into the base DDL, 735 → 699
+  lines) — proven effect-identical by a fresh-build `pg_dump` diff, so prod is
+  unaffected.
 - **CI:** GitHub Actions on every PR — app checks (**lint** / typecheck /
   vitest / build) and DB tests (ephemeral Supabase stack, 108 pgTAP assertions
   across three suites), CLI pinned 2.109.0, NOTESTS guard. The db-tests job
@@ -93,10 +96,11 @@ remaining lower-priority loose ends** (see Active Handoff).
   rails if a consumer appears). See the Resolved section of
   [design-flags.md](design-flags.md). With the standing follow-ups also
   cleared (CI Actions `@v5`, `ws` advisory 3 high -> 0, settings-defaults SoT,
-  `userEmail` cleanup, and the **CI baseline-vs-`schema.sql` guard**, 2026-07-03),
-  what remains are two **lower-priority loose ends**: the `mcp/` npm-audit
-  findings (9, separate package) and the `schema.sql` baseline/ALTER
-  consolidation (see [design-flags.md](design-flags.md)). For any new UI round,
+  `userEmail` cleanup, the **CI baseline-vs-`schema.sql` guard**, and the
+  **`schema.sql` baseline/ALTER consolidation** — all 2026-07-03), the only
+  remaining **lower-priority loose end** is the `mcp/` npm-audit findings (9,
+  separate package; `mcp/` is out-of-scope-by-default, triage before heavy MCP
+  use). For any new UI round,
   the rhythm is mocks-first on the review board (same artifact URL; toolkit +
   templates in `scripts/review-board/`, README has the flow).
 - **Blockers:** None.

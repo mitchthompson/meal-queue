@@ -26,11 +26,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** Update (2026-07-02): mini-M5 added `lib/errors.ts` (friendly mapping for common constraint/permission codes; our own P0001 trigger messages pass through — they are written to be human-readable) and an `aria-live` `StatusMessage` component adopted across all screens. Still open: route-level `error.tsx` / `loading.tsx` boundaries, and unmapped errors still surface raw messages.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes
 
-### schema.sql mixes baseline DDL with historical inline ALTER migrations
-- **Where it's used:** [`supabase/schema.sql`](../supabase/schema.sql)
-- **What's needed:** The canonical schema file interleaves baseline DDL with historical inline ALTER statements, making the canonical schema hard to read. Needs the baseline DDL consolidated/cleaned so `schema.sql` reflects the current canonical schema, with historical ALTERs moved into the forward-only migrations directory.
-- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes
-
 ### Auth flow incomplete: no sign-up confirmation messaging, no password reset, unfriendly errors
 - **Where it's used:** Auth UI (`components/auth-gate.tsx` and sign-up/sign-in flow)
 - **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Needs sign-up confirmation messaging, a password-reset flow, and friendlier auth error handling. Explicitly deferred (out of milestone 5 scope).
@@ -52,6 +47,10 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
 
 ## Resolved
+
+### schema.sql baseline/ALTER consolidation
+- **Resolution (2026-07-03):** `schema.sql` interleaved baseline DDL with historical inline `ALTER`s (redundant `add column if not exists` for columns the CREATE already declared — `groceries_version`, `slot_type`, `leftover_from_item_id`, `note`, `is_on_hand`; a `recipe_id drop not null`; a legacy `drop index`; a `set slot_type='cook'` backfill; and two `add constraint` blocks). Cleaned so the file reads as a current-state snapshot: dropped the redundant/no-op statements and **folded the two substantive named CHECK constraints** (`meal_plan_items_slot_recipe_check`, `meal_plan_items_leftover_link_check`) into the `meal_plan_items` CREATE TABLE. Deliberately **not** moved into `migrations/` — these predate the forward-only directory and are already applied to prod; a canonical snapshot reflects state, not a changelog. schema.sql 735 → 699 lines. **Prod untouched** (schema.sql is a reference, never `db push`ed). **Proven schema-neutral:** built a fresh local DB from the old baseline and from the new, `pg_dump --schema-only` of both is byte-identical (only pg_dump 18's random `\restrict` session nonce differs); pgTAP 108/108; the baseline copy was regenerated so the new CI drift guard stays green.
+- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md); resolved 2026-07-03
 
 ### Reflow round-1 board pins T1–T4 (Today), P1–P3 (Plan), S1–S2 (Shop): all defaults kept
 - **Resolution (2026-07-03):** Owner signed off on every round-1 judgment-call default — no code changes. **T1** settings gear in the Today header (kept off the 4-tab bar); **T2** plan-less Today teal hero "Plan your week to get started" → `/plans` + recipes pointer; **T3** link hover stays v2 **amber** `#e8a13d` (`--brand-2`) — a flip back to teal (`--brand`) remains a one-line token change if it ever reads as two competing accents; **T4** desktop column capped at 640px (`.page-col`); **P1** inline collapsible edit panel (not a modal); **P2** "Generate grocery list" is a link to `/grocery` (Shop's staleness regen does the work on arrival); **P3** filter pills (Current/Upcoming/Past/All) + compact plan picker kept above the day rows; **S1** manual Regenerate ghost button kept as the escape hatch alongside auto-regen; **S2** On-hand section defaults collapsed. Supersedes the open "Today reflow judgment calls", "Plan reflow judgment calls", and "Shop reflow judgment calls" flags.
