@@ -1698,6 +1698,18 @@ textarea {
   }
 }
 
+/* Portrait tablets run the phone chrome on a wide screen, so the desktop-tier
+   640px reading column (`.page-col`, left-pinned) strands a large gutter on the
+   right of an iPad. In this band only, let the column fill the shell and centre
+   it — no new layout, just the existing shell width. Landscape iPads (desktop
+   chrome, >1024px) keep the 640px column. (docs/plans/ipad-support.md Phase 3) */
+@media (pointer: coarse) and (max-width: 1024px) {
+  .page-col {
+    max-width: none;
+    margin-inline: auto;
+  }
+}
+
 @media (max-width: 700px) {
   .shell {
     padding: 1rem 0.7rem calc(6rem + env(safe-area-inset-bottom));

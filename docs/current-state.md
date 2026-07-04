@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (iPad-coherence implemented on branch `codex/ipad-coherence` — CSS-only orientation-routed chrome, all local checks green, awaiting commit approval + real-device check. Prior: backlog fully cleared — round-1 board pins signed off, CI baseline drift guard, schema.sql consolidation, mcp/ npm-audit fix)
+Last reviewed: 2026-07-03 (iPad coherence: chrome **merged & deployed** (PR #26, `e0a6a3c`); owner on-device found a right-gutter on iPad Pro portrait, so a content-width follow-up — portrait tablets fill the shell — is on branch `codex/ipad-content-width`, all local checks green, awaiting CI+merge. Prior: backlog fully cleared — round-1 board pins signed off, CI baseline drift guard, schema.sql consolidation, mcp/ npm-audit fix)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -100,30 +100,29 @@ awaiting the owner's go-ahead** (see Active Handoff).
 
 ## Active Handoff
 
-- **In progress:** **iPad coherence on branch `codex/ipad-coherence`** (not
-  committed/pushed — awaiting the owner's word). CSS-only orientation-routed
-  chrome per [plans/ipad-support.md](plans/ipad-support.md): portrait iPads →
-  phone tabbar, landscape → desktop nav, via the shared
-  `(max-width: 700px), (pointer: coarse) and (max-width: 1024px)` trigger + a
-  `(pointer: coarse)` nav-pill touch bump. Only `app/globals.css` changed
-  (behavioral); docs updated (design-system, CLAUDE.md, decisions, this file,
-  progress-log); new sweep tool `scripts/review-board/capture-ipad.mjs`.
-  Phase 3 skipped by design. **All local checks green** (eslint / tsc / vitest
-  16 / `next build` 11/11; DB untouched). A 6-viewport × 6-screen Chromium sweep
-  + a boundary regression probe confirm the split with no phone/desktop
-  regression.
-- **Next action:** **owner reviews the branch → commit approval → open the PR**
-  (broad style change = the right risk tool), then work the **"Needs Mitchell"
-  real-device digest**: verify on real iPad Safari (portrait + landscape) and
-  iPadOS home-screen standalone, since Playwright WebKit ≠ real Safari. Merge =
-  deploy, so it needs explicit approval. After that the backlog is empty again —
-  pick a deferred item from [roadmap.md](roadmap.md) (auth-flow completion,
-  optimistic UI, route-level `error.tsx`/`loading.tsx` boundaries, richer empty
-  states / dark mode). The **ten round-1 pins are all signed off** (defaults
-  kept; C2 mark-cooked can still become a schema change if a consumer appears —
-  see [design-flags.md](design-flags.md)). For any new UI round, the rhythm is
-  mocks-first on the review board (same artifact URL; toolkit + templates in
-  `scripts/review-board/`, README has the flow).
+- **In progress:** **iPad content-width follow-up on branch
+  `codex/ipad-content-width`** (awaiting CI + merge). The chrome work shipped and
+  deployed (PR #26, `e0a6a3c`); on-device the owner found the `.page-col` reading
+  column (Today/Plan/Shop/Settings) stranded a big right gutter on iPad Pro
+  portrait. Fix is one scoped rule — `@media (pointer: coarse) and (max-width:
+  1024px) { .page-col { max-width: none; margin-inline: auto } }` — so portrait
+  tablets fill the centered 960 shell; **landscape + desktop keep the 640px
+  column unchanged**. CSS-only; docs corrected (the earlier "Phase 3 skipped"
+  claim reversed). **All local checks green** (eslint / tsc / vitest 16 / `next
+  build` 11/11; DB untouched); page-col width probe confirms portrait 640→802/928
+  and landscape/desktop still 640.
+- **Next action:** **land the follow-up** (commit → PR → CI → merge = deploy),
+  then the **real-device confirmation is still open**: check portrait fills
+  cleanly, landscape unchanged, and the iPadOS home-screen standalone on a real
+  iPad Pro (Playwright WebKit ≠ real Safari). Optional, owner's call: centre the
+  **landscape** 640 column too (currently left-pinned, accepted). After that the
+  backlog is empty again — pick a deferred item from [roadmap.md](roadmap.md)
+  (auth-flow completion, optimistic UI, route-level `error.tsx`/`loading.tsx`
+  boundaries, richer empty states / dark mode). The **ten round-1 pins are all
+  signed off** (defaults kept; C2 mark-cooked can still become a schema change
+  if a consumer appears — see [design-flags.md](design-flags.md)). For any new UI
+  round, the rhythm is mocks-first on the review board (same artifact URL;
+  toolkit + templates in `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth

@@ -304,10 +304,18 @@ replaced decisions as superseded rather than silently deleting them.
   2. *12.9″ portrait (1024px)* — **accept the hybrid**: tabbar chrome + desktop
      multi-column content. `max-width: 1024px` is inclusive, so it gets the
      tabbar while keeping desktop content.
-- **Phase 3 (content-width sanity) was skipped by design:** the single-column
-  content uses `.page-col` (`max-width: 640px`, no centering), which is
-  left-aligned identically on desktop and iPad — the app's established column,
-  not an iPad-specific marooning.
+- **Phase 3 (content-width sanity) — initially skipped, then implemented after
+  on-device feedback (2026-07-03):** the single-column content uses `.page-col`
+  (`max-width: 640px`, no centering), left-aligned. That reads as intentional on
+  desktop (a constrained column inside the centered 960 shell), but on an iPad
+  Pro running the *phone* chrome it stranded a large right gutter (~384px on the
+  12.9″). Fix, scoped to the portrait-tablet band only
+  (`@media (pointer: coarse) and (max-width: 1024px)`): `.page-col { max-width:
+  none; margin-inline: auto }` so the column fills the shell (960 max, centred).
+  Portrait now fills — 802px on the 11″, 928px on the 12.9″, balanced gutters.
+  **Landscape iPads and desktop keep the 640px reading column unchanged** (the
+  rule is capped at 1024px and landscape is ≥1180px). Owner's Q1 acceptance of
+  landscape gutters still stands.
 - **Not verified on real hardware yet:** the Chromium sweep is necessary but not
   sufficient (WebKit ≠ real Safari). Ships behind a "Needs Mitchell" real-iPad
   digest before the decision is considered proven on-device.
