@@ -3,7 +3,34 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - schema.sql baseline/ALTER consolidation (proven schema-neutral)
+## 2026-07-03 (latest) - mcp/ npm-audit cleared (9 → 0, in-range lockfile-only) — backlog empty
+
+Cleared the final backlog loose end. `mcp/` (the separate recipe-import MCP
+server) reported 9 npm-audit findings (2 moderate, 7 high).
+
+- **Triage:** all 9 were **transitive** — none of the four direct deps
+  (`@modelcontextprotocol/sdk`, `@supabase/supabase-js`, `cheerio`, `zod`) were
+  flagged. 7 of them (`hono`, `@hono/node-server`, `express-rate-limit`,
+  `path-to-regexp`, `fast-uri`, `qs`, `ip-address`) come from the MCP SDK's
+  **HTTP/SSE transport, which this server never instantiates** — it runs over
+  **stdio** (`StdioServerTransport` in `src/index.ts`), so that stack is dead
+  code. Only `undici` (via cheerio, Node fetch for recipe-URL import) was a
+  live surface; `ws` (via supabase-js realtime) is unused here.
+- **Fix:** in-range **lockfile-only** `npm audit fix` (like the root `ws` fix) —
+  `npm audit` 9 → **0**, `package.json` unchanged. New transitive versions:
+  `undici`@7.28.0, `ws`@8.21.0, `hono`@4.12.27, `path-to-regexp`@8.4.2,
+  `qs`@6.15.3, `express-rate-limit`@8.5.2, `fast-uri`@3.1.3, `ip-address`@10.2.0.
+  No `--force`, no breaking major bumps.
+- **Verification:** `tsc` rebuild clean and `dist/` byte-identical (source
+  untouched — confirms a pure dep bump); the server loads over stdio (exit 0 on
+  EOF) and answers a real MCP `initialize` handshake with correct `serverInfo`
+  and tools capability, clean stderr. `mcp/` has **no CI coverage** (root CI
+  doesn't build it, ESLint ignores `mcp/**`), so this was local-verify +
+  **direct-to-main** per owner choice.
+- **Backlog:** now **empty** — all standing follow-ups and audit-identified
+  loose ends are cleared.
+
+## 2026-07-03 - schema.sql baseline/ALTER consolidation (proven schema-neutral)
 
 Cleared the last-but-one backlog loose end. `supabase/schema.sql` had
 accumulated historical inline `ALTER`s interleaved with the baseline `CREATE`s,

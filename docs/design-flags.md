@@ -48,6 +48,10 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Resolved
 
+### `mcp/` npm-audit findings (9: 2 moderate, 7 high)
+- **Resolution (2026-07-03, direct to `main`):** All 9 were **transitive** (none of the four direct deps — `@modelcontextprotocol/sdk`, `@supabase/supabase-js`, `cheerio`, `zod` — were flagged). Resolved with an **in-range, lockfile-only `npm audit fix`** (9 → **0**; `package.json` unchanged), the same shape as the root `ws` fix: `undici`@7.28.0 (via cheerio), `ws`@8.21.0 (via supabase-js realtime), plus the MCP SDK's HTTP stack `hono`@4.12.27 / `@hono/node-server` / `express-rate-limit` / `path-to-regexp` / `qs` / `fast-uri` / `ip-address`. **Exposure was low regardless:** the server runs over **stdio** (`StdioServerTransport`), so the SDK's HTTP/SSE transport that pulls the 7 hono/express advisories is never instantiated — dead code; only `undici` (recipe-URL fetch) was a live surface. **Verification:** `npm audit` 0; `tsc` rebuild clean (`dist/` byte-identical, source untouched); the server loads over stdio and answers a real MCP `initialize` handshake (correct `serverInfo` + tools capability). Note: `mcp/` has no CI coverage (root CI doesn't build it, ESLint ignores `mcp/**`), so this was local-verify + direct-to-main.
+- **Source:** flagged in the root-`ws` and MCP-save-recipe resolutions; resolved 2026-07-03
+
 ### schema.sql baseline/ALTER consolidation
 - **Resolution (2026-07-03):** `schema.sql` interleaved baseline DDL with historical inline `ALTER`s (redundant `add column if not exists` for columns the CREATE already declared — `groceries_version`, `slot_type`, `leftover_from_item_id`, `note`, `is_on_hand`; a `recipe_id drop not null`; a legacy `drop index`; a `set slot_type='cook'` backfill; and two `add constraint` blocks). Cleaned so the file reads as a current-state snapshot: dropped the redundant/no-op statements and **folded the two substantive named CHECK constraints** (`meal_plan_items_slot_recipe_check`, `meal_plan_items_leftover_link_check`) into the `meal_plan_items` CREATE TABLE. Deliberately **not** moved into `migrations/` — these predate the forward-only directory and are already applied to prod; a canonical snapshot reflects state, not a changelog. schema.sql 735 → 699 lines. **Prod untouched** (schema.sql is a reference, never `db push`ed). **Proven schema-neutral:** built a fresh local DB from the old baseline and from the new, `pg_dump --schema-only` of both is byte-identical (only pg_dump 18's random `\restrict` session nonce differs); pgTAP 108/108; the baseline copy was regenerated so the new CI drift guard stays green.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md); resolved 2026-07-03
@@ -69,7 +73,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** ESLint setup 2026-07-03; resolved 2026-07-03
 
 ### `npm audit` root high-severity `ws` advisory (was 3 high, docs once said 1)
-- **Resolution (2026-07-03, direct to `main`, merge `aada18f`):** `npm audit fix` bumped the `@supabase/*` chain 2.95.3 -> 2.110.0 (inside the declared `^2.49.1` range), so newer `@supabase/realtime-js` drops the vulnerable `ws`. Lockfile-only, `package.json` unchanged; root `npm audit` went 3 high -> **0**. Not a major bump, so no owner-gated dependency upgrade beyond applying the fix. `mcp/` still reports 9 findings of its own (separate package, triage before heavy MCP use).
+- **Resolution (2026-07-03, direct to `main`, merge `aada18f`):** `npm audit fix` bumped the `@supabase/*` chain 2.95.3 -> 2.110.0 (inside the declared `^2.49.1` range), so newer `@supabase/realtime-js` drops the vulnerable `ws`. Lockfile-only, `package.json` unchanged; root `npm audit` went 3 high -> **0**. Not a major bump, so no owner-gated dependency upgrade beyond applying the fix. (`mcp/`'s own 9 findings were later resolved the same way — see the `mcp/` npm-audit entry above.)
 - **Source:** Session 2026-06-27 baseline; resolved 2026-07-03
 
 ### `npm run lint` was non-functional (no ESLint config)
@@ -138,7 +142,7 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Resolution:** `npm run lint` + `npm run typecheck` + `npm run test` every session; `npm run build` when shipping a build-affecting change. See [qa](qa.md).
 
 ### MCP save-recipe tool non-atomic insert sequence
-- **Resolution (2026-07-01):** The tool was switched to the `save_recipe` RPC (service-role path via `p_user_id`), the migration was applied to prod the same day, and `mcp/dist/` was rebuilt — the MCP path is now atomic end to end. Still open separately: `mcp/` has 9 npm-audit findings of its own (2 moderate, 7 high) — triage before heavy MCP use.
+- **Resolution (2026-07-01):** The tool was switched to the `save_recipe` RPC (service-role path via `p_user_id`), the migration was applied to prod the same day, and `mcp/dist/` was rebuilt — the MCP path is now atomic end to end. (`mcp/`'s 9 npm-audit findings were resolved separately 2026-07-03 — see the `mcp/` npm-audit entry above.)
 
 ### Vercel deploy trigger
 - **Resolution (2026-07-01):** Confirmed by observation — merging PR #2 to `main` auto-deployed production on Vercel, and branch pushes produce preview deployments. `main` is the production branch; there is no manual promote step. Every merge to `main` is therefore a release: the deploy-order rule (apply DB migrations **before** merging dependent client code) is mandatory, not theoretical — this is exactly how the `save_recipe` client reached prod ahead of its function.

@@ -96,11 +96,10 @@ remaining lower-priority loose ends** (see Active Handoff).
   rails if a consumer appears). See the Resolved section of
   [design-flags.md](design-flags.md). With the standing follow-ups also
   cleared (CI Actions `@v5`, `ws` advisory 3 high -> 0, settings-defaults SoT,
-  `userEmail` cleanup, the **CI baseline-vs-`schema.sql` guard**, and the
-  **`schema.sql` baseline/ALTER consolidation** — all 2026-07-03), the only
-  remaining **lower-priority loose end** is the `mcp/` npm-audit findings (9,
-  separate package; `mcp/` is out-of-scope-by-default, triage before heavy MCP
-  use). For any new UI round,
+  `userEmail` cleanup, the **CI baseline-vs-`schema.sql` guard**, the
+  **`schema.sql` baseline/ALTER consolidation**, and the **`mcp/` npm-audit
+  fix** — all 2026-07-03), the **backlog loose ends are now fully cleared**.
+  For any new UI round,
   the rhythm is mocks-first on the review board (same artifact URL; toolkit +
   templates in `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
@@ -173,9 +172,11 @@ mini-M5).
   if a consumer appears — see [design-flags.md](design-flags.md).
 - No route-level `error.tsx` / `loading.tsx` boundaries; unmapped errors still
   surface raw messages (mini-M5 added friendly mapping + `aria-live`).
-- `npm audit`: root is clean (0 vulns as of 2026-07-03, the `ws` chain
-  resolved via the supabase-js lockfile bump); `mcp/` still reports 9
-  (separate package, triage before heavy MCP use).
+- `npm audit`: **both packages clean (0 vulns)** as of 2026-07-03 — root via
+  the supabase-js lockfile bump (`ws` chain), and `mcp/` via an in-range
+  lockfile-only `npm audit fix` (9 → 0: `undici`/`ws`/`hono`/`express`/`qs`/
+  etc., all transitive, `package.json` unchanged). Verified: server rebuilds
+  (`tsc`) and answers an MCP `initialize` handshake over stdio.
 - Full register: [design-flags.md](design-flags.md).
 
 ## Where to go next
