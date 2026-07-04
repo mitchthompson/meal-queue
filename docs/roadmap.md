@@ -288,8 +288,11 @@ reliability scope. Details in
 - Raw Supabase error strings render in the UI; no route-level error or loading
   boundaries.
 - No optimistic UI; plan mutations feel sluggish on mobile.
-- `supabase/schema.sql` mixes baseline DDL with historical inline `ALTER`
-  statements.
+- ~~`supabase/schema.sql` mixes baseline DDL with historical inline `ALTER`
+  statements.~~ — done 2026-07-03: redundant history dropped, the two real
+  CHECK constraints folded into the `meal_plan_items` CREATE TABLE (735 → 699
+  lines). Proven schema-neutral (fresh-build `pg_dump` diff empty, pgTAP
+  108/108); prod untouched; baseline copy regenerated for the CI drift guard.
 
 ## Deferred Fixes (from the 2026-06-11 UI audit)
 

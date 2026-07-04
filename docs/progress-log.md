@@ -3,7 +3,39 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-03 (latest) - CI guard: baseline migration must match schema.sql
+## 2026-07-03 (latest) - schema.sql baseline/ALTER consolidation (proven schema-neutral)
+
+Cleared the last-but-one backlog loose end. `supabase/schema.sql` had
+accumulated historical inline `ALTER`s interleaved with the baseline `CREATE`s,
+making the canonical file hard to read.
+
+- **What changed:** dropped statements that a fresh build treats as no-ops —
+  `add column if not exists` for columns the CREATE already declares
+  (`groceries_version`, `slot_type`, `leftover_from_item_id`, `note`,
+  `is_on_hand`), a `recipe_id drop not null` (CREATE is already nullable), a
+  legacy `drop index meal_plan_items_unique_slot_idx`, and a
+  `set slot_type='cook'` backfill. **Folded** the two substantive named CHECK
+  constraints (`meal_plan_items_slot_recipe_check`,
+  `meal_plan_items_leftover_link_check`) into the `meal_plan_items` CREATE
+  TABLE. schema.sql 735 → 699 lines.
+- **Decision (why fold, not migrate):** the design-flag floated "move historical
+  ALTERs into `migrations/`". Rejected — these predate the forward-only
+  directory and are already applied to prod; `schema.sql` is a canonical
+  *snapshot* (reflects current state), not a changelog. New changes still go in
+  as forward migrations; old pre-directory history belongs in the base DDL.
+- **Verification (the bar for touching the canonical schema):** built a fresh
+  local DB from the *old* baseline, `pg_dump --schema-only` → dump A; applied
+  the consolidation, regenerated the baseline copy, rebuilt, dumped → dump B.
+  **A and B are byte-identical** except pg_dump 18's per-run random `\restrict`
+  session nonce (2 lines) — i.e. the effective schema is unchanged. pgTAP
+  108/108 on the consolidated schema; typecheck + vitest 16/16. Both folded
+  constraints confirmed present in the built DB with correct names/definitions.
+- **Prod:** untouched. `schema.sql` is a reference file, never `db push`ed; prod
+  already has this exact schema hand-applied. The regenerated baseline copy
+  keeps the new CI drift guard green.
+- **Backlog now:** one loose end left — `mcp/` npm-audit (9, separate package).
+
+## 2026-07-03 - CI guard: baseline migration must match schema.sql
 
 Closed a standing CI follow-up. The CI/local-only baseline migration
 (`supabase/migrations/20260101000000_baseline_schema.sql`) is a **verbatim
