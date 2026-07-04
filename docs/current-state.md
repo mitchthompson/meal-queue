@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-03 (four standing follow-ups cleared — CI actions v5, ws advisory → 0 vulns, settings-defaults SoT, userEmail cleanup; round-1 board pins signed off, all defaults kept; CI baseline drift guard + schema.sql consolidation)
+Last reviewed: 2026-07-03 (backlog fully cleared — round-1 board pins signed off, CI baseline drift guard, schema.sql consolidation, mcp/ npm-audit fix; iPad-support plan drafted, awaiting go-ahead)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -34,19 +34,26 @@ threading removed from the shell + five screens. The **ten open round-1
 review-board pins were then signed off (2026-07-03): every default kept, no
 code changes** (T1–T4 Today, P1–P3 Plan, S1–S2 Shop, and C2 — mark-cooked
 stays a no-op exit). **All review-board pins (rounds 1–4) are now resolved**
-and the standing follow-up queue is drained. **Next: owner picks from the
-remaining lower-priority loose ends** (see Active Handoff).
+and the standing follow-up queue is drained. This session then **cleared the
+entire remaining backlog** (2026-07-03): the CI baseline-vs-`schema.sql` drift
+guard (PR #24), the `schema.sql` baseline/ALTER consolidation (PR #25), and the
+`mcp/` npm-audit fix (9 → 0, direct to `main`). **Next: a fresh unit — a
+proposed iPad-coherence plan is drafted at `docs/plans/ipad-support.md`,
+awaiting the owner's go-ahead** (see Active Handoff).
 
 ## Stable Baseline
 
-- **`main`:** at `aada18f` — the full reflow (PRs #13–#16), review round 1
+- **`main`:** at `443c9c6` — the full reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
-  **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, and the **2026-07-03
+  **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
   standing-follow-up cleanup** (CI actions v5 merge `2e8bc09`; ws advisory +
-  settings-defaults SoT + userEmail cleanup merge `aada18f`), all deployed on
-  Vercel. These last two landed as direct-to-main merges (low-risk, no PRs).
-  Merge to `main` auto-deploys (confirmed); Cook was owner-verified
-  on-device in prod.
+  settings-defaults SoT + userEmail cleanup merge `aada18f`), and the
+  **2026-07-03 backlog-clearing session**: round-1 pin sign-off docs
+  (`ca0c131`), the CI baseline drift guard (PR #24, merge `cbe424b`), the
+  `schema.sql` consolidation (PR #25, merge `5308e4a`), and the `mcp/`
+  npm-audit fix (`443c9c6`, direct to `main`) — all deployed on Vercel. The
+  direct-to-main merges were low-risk (docs / lockfile / CI). Merge to `main`
+  auto-deploys (confirmed); Cook was owner-verified on-device in prod.
 - **Prod database:** all four migrations in `supabase/migrations/` are applied
   and verified (`save_recipe`, Data API grants, plan-integrity triggers,
   grocery state preservation). `supabase/schema.sql` is canonical and in sync;
@@ -61,12 +68,21 @@ remaining lower-priority loose ends** (see Active Handoff).
   before `supabase start` and fails if the baseline migration and `schema.sql`
   diverge (2026-07-03). Lint runs
   `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
-  longer lints (`eslint.ignoreDuringBuilds`). Twenty-three PRs merged plus three
-  direct-to-main follow-up merges; every CI run has been green.
+  longer lints (`eslint.ignoreDuringBuilds`). Twenty-five PRs merged plus several
+  direct-to-main follow-up merges; CI has been green (one transient
+  `supabase start` port-bind flake on `main` — `54322 already in use` — cleared
+  by a job rerun, not a repo issue).
   `actions/checkout` and `actions/setup-node` are now on `@v5` (2026-07-03,
   merge `2e8bc09`), clearing the Node-20 runtime deprecation;
   `supabase/setup-cli@v1` stays (no v5) and `node-version: 20` is unchanged.
-- **Latest verification:** 2026-07-03 (standing-follow-up cleanup): eslint 0
+- **Latest verification:** 2026-07-03 (backlog-clearing session): CI baseline
+  guard PR #24 green (db-tests 1m1s; the guard step ran and passed; fail-on-drift
+  verified locally); schema.sql consolidation PR #25 — fresh-build
+  `pg_dump --schema-only` of old vs new baseline byte-identical (only pg_dump's
+  random session nonce differs), pgTAP 108/108, CI green; mcp/ npm-audit 9 → 0
+  (in-range lockfile-only), `tsc` clean + a live MCP `initialize` handshake over
+  stdio, `main` CI green after a rerun cleared a transient port-bind flake.
+  Prior (standing-follow-up cleanup, 2026-07-03): eslint 0
   warnings, typecheck clean, vitest 16/16, `next build` 11/11 pages, root
   `npm audit` 0; CI green on both `main` merges (actions-v5 1m12s, cleanup
   1m14s), pgTAP 108/108 (DB layer untouched). Prior same day (ESLint/CI gate,
@@ -84,24 +100,26 @@ remaining lower-priority loose ends** (see Active Handoff).
 
 ## Active Handoff
 
-- **In progress:** None. Milestone 7 (PRs #19-#22), the ESLint/CI lint gate
-  (PR #23), and the 2026-07-03 standing-follow-up cleanup (merges `2e8bc09`
-  and `aada18f`) are all shipped and deployed; all branches merged, tree clean.
-- **Next action:** **owner picks the next unit.** The **ten round-1 board pins
-  are now signed off** (2026-07-03): every default kept, no code changes —
-  T1–T4 (settings gear, plan-less Today, amber link hover, 640px desktop
-  column), P1–P3 (inline sheets, generate-is-a-link, filter pills), S1–S2
-  (Regenerate button, On-hand collapsed), and C2 (mark-cooked stays a no-op
-  exit; adding cooked state remains available as a schema change on the usual
-  rails if a consumer appears). See the Resolved section of
-  [design-flags.md](design-flags.md). With the standing follow-ups also
-  cleared (CI Actions `@v5`, `ws` advisory 3 high -> 0, settings-defaults SoT,
-  `userEmail` cleanup, the **CI baseline-vs-`schema.sql` guard**, the
-  **`schema.sql` baseline/ALTER consolidation**, and the **`mcp/` npm-audit
-  fix** — all 2026-07-03), the **backlog loose ends are now fully cleared**.
-  For any new UI round,
-  the rhythm is mocks-first on the review board (same artifact URL; toolkit +
-  templates in `scripts/review-board/`, README has the flow).
+- **In progress:** None. This session cleared the entire remaining backlog —
+  round-1 pin sign-off (`ca0c131`), CI baseline drift guard (PR #24), schema.sql
+  consolidation (PR #25), mcp/ npm-audit fix (`443c9c6`) — all shipped and
+  deployed; every branch merged, tree clean.
+- **Next action:** **owner decides the next unit — the backlog is empty.** The
+  strongest candidate is the drafted **iPad-coherence plan at
+  `docs/plans/ipad-support.md`** (status: proposed, awaiting go-ahead) — a
+  CSS-only, no-schema/no-deps pass that routes portrait iPads to phone chrome
+  and landscape to desktop chrome via a `(pointer: coarse) and (max-width:
+  1024px)` breakpoint, shipped as a branch → PR with a full-screen Playwright
+  sweep + a "Needs Mitchell" real-Safari digest. It has **two open questions
+  for the owner** (landscape content width; 12.9" portrait hybrid, both listed
+  at the plan's end) — answer those, then Phase 0 baselines the defect at iPad
+  viewports. Alternatively pick a deferred item from [roadmap.md](roadmap.md)
+  (auth-flow completion, optimistic UI, route-level `error.tsx`/`loading.tsx`
+  boundaries, richer empty states / dark mode). The **ten round-1 pins are all
+  signed off** (defaults kept; C2 mark-cooked can still become a schema change
+  if a consumer appears — see [design-flags.md](design-flags.md)). For any new
+  UI round, the rhythm is mocks-first on the review board (same artifact URL;
+  toolkit + templates in `scripts/review-board/`, README has the flow).
 - **Blockers:** None.
 - **Environment notes:** `.env.local` exists (prod DB access verified,
   PG 17.6); read-only Supabase MCP configured in `.mcp.json` (owner OAuth
@@ -142,7 +160,7 @@ mini-M5).
 | 5 | UI Feedback and Ergonomics | Rescoped — mini-M5 done (PR #6, 2026-07-02); rest folds into the redesign |
 | 6 | Component Hardening | Done — slices 1–4 (PRs #7, #9, #10, #12); settings-defaults single source of truth done 2026-07-03 |
 | — | The Reflow (redesign) | Done (2026-07-02) — Cook (PR #13), Today (PR #14), Shop (PR #15), Plan (PR #16); token set v2 live app-wide ([redesign-brief.md](redesign-brief.md)) |
-| — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); 10 board pins still open |
+| — | Reflow review round 1 | **Done (2026-07-02)** — quiet cook line + mobile recipe editor (PR #17); flat day lists, mobile quick-add, two-meal hero (PR #18); all 10 board pins signed off 2026-07-03 (defaults kept) |
 | 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
 
 ## Architecture snapshot
