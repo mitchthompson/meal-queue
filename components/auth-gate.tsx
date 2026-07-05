@@ -5,6 +5,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { ReactNode } from "react";
 import { StatusMessage } from "@/components/status-message";
 import { DEFAULT_USER_SETTINGS } from "@/lib/constants";
+import { toAuthErrorMessage } from "@/lib/errors";
 import { supabase } from "@/lib/supabase/client";
 
 type AuthGateProps = {
@@ -77,7 +78,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
     const { error: authError } = await authCall;
     if (authError) {
-      setError(authError.message);
+      setError(toAuthErrorMessage(authError));
     }
     // ensureUserSettings runs once per sign-in via the session effect below
     // (guarded by initializedUserId) — the duplicate call here is gone.

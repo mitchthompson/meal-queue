@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { CookMode } from "@/components/cook-mode";
 import { formatAmount } from "@/lib/grocery";
+import { toErrorMessage } from "@/lib/errors";
 import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
@@ -57,6 +58,7 @@ function RecipeDetailScreen() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooking, setCooking] = useState(false);
+  const [missing, setMissing] = useState(false);
 
   const pantryCount = useMemo(
     () => ingredients.filter((ingredient) => ingredient.is_pantry_staple).length,
@@ -78,6 +80,7 @@ function RecipeDetailScreen() {
   async function loadRecipe() {
     setLoading(true);
     setError(null);
+    setMissing(false);
 
     const [recipeRes, ingredientsRes, stepsRes, tagsRes, unitsRes] = await Promise.all([
       supabase.from("recipes").select("id, name, base_servings, instructions_raw").eq("id", recipeId).single(),
@@ -91,14 +94,26 @@ function RecipeDetailScreen() {
       supabase.from("units").select("code, label"),
     ]);
 
+    // A bad id makes .single() return PostgREST "no rows" (PGRST116). Route it
+    // to the not-found boundary instead of a raw error. notFound() has to be
+    // thrown during render, not from this async loader (the boundary wouldn't
+    // catch the async throw), so flag it and trip notFound() below.
+    if (recipeRes.error?.code === "PGRST116") {
+      setMissing(true);
+      setLoading(false);
+      return;
+    }
+
     if (recipeRes.error || ingredientsRes.error || stepsRes.error || tagsRes.error || unitsRes.error) {
       setError(
-        recipeRes.error?.message ||
-          ingredientsRes.error?.message ||
-          stepsRes.error?.message ||
-          tagsRes.error?.message ||
-          unitsRes.error?.message ||
+        toErrorMessage(
+          recipeRes.error ??
+            ingredientsRes.error ??
+            stepsRes.error ??
+            tagsRes.error ??
+            unitsRes.error,
           "Failed to load recipe.",
+        ),
       );
       setLoading(false);
       return;
@@ -141,12 +156,18 @@ function RecipeDetailScreen() {
 
     const { error: deleteError } = await supabase.from("recipes").delete().eq("id", recipe.id);
     if (deleteError) {
-      setError(deleteError.message);
+      setError(toErrorMessage(deleteError, "Failed to delete recipe."));
       setDeleting(false);
       return;
     }
 
     router.push("/recipes");
+  }
+
+  // Render-time notFound() (see loadRecipe): a missing recipe renders the root
+  // not-found boundary rather than a raw error string.
+  if (missing) {
+    notFound();
   }
 
   return (

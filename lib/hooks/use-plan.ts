@@ -209,7 +209,7 @@ export function usePlan(userId: string) {
     ]);
 
     if (plansRes.error || recipesRes.error || settingsRes.error) {
-      setError(plansRes.error?.message || recipesRes.error?.message || settingsRes.error?.message || "Failed loading plans.");
+      setError(toErrorMessage(plansRes.error ?? recipesRes.error ?? settingsRes.error, "Failed loading plans."));
       setLoading(false);
       return;
     }
@@ -245,7 +245,7 @@ export function usePlan(userId: string) {
       .order("created_at", { ascending: true });
 
     if (planItemsError) {
-      setError(planItemsError.message);
+      setError(toErrorMessage(planItemsError, "Failed loading the plan's meals."));
       return;
     }
 

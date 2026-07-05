@@ -82,7 +82,7 @@ export function useGroceryList() {
       .gte("end_date", todayYmd);
 
     if (plansError) {
-      setError(plansError.message);
+      setError(toErrorMessage(plansError, "Failed to load plans."));
       setLoading(false);
       return;
     }
@@ -113,7 +113,7 @@ export function useGroceryList() {
       .order("ingredient_name", { ascending: true });
 
     if (groceryError) {
-      setError(groceryError.message);
+      setError(toErrorMessage(groceryError, "Failed to load the grocery list."));
       return;
     }
 
@@ -167,7 +167,7 @@ export function useGroceryList() {
       .update({ is_checked: !item.is_checked })
       .eq("id", item.id);
     if (toggleError) {
-      setError(toggleError.message);
+      setError(toErrorMessage(toggleError, "Failed to update the item."));
       return;
     }
     setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_checked: !value.is_checked } : value)));
@@ -179,7 +179,7 @@ export function useGroceryList() {
     const idSet = new Set(ids);
     const { error: updateError } = await supabase.from("grocery_list_items").update({ is_checked: isChecked }).in("id", ids);
     if (updateError) {
-      setError(updateError.message);
+      setError(toErrorMessage(updateError, "Failed to update the items."));
       return;
     }
     setItems((current) =>
@@ -193,7 +193,7 @@ export function useGroceryList() {
       .update({ is_pantry_staple: false })
       .eq("id", item.id);
     if (moveError) {
-      setError(moveError.message);
+      setError(toErrorMessage(moveError, "Failed to move the item."));
       return;
     }
     setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_pantry_staple: false } : value)));
@@ -205,7 +205,7 @@ export function useGroceryList() {
       .update({ is_on_hand: isOnHand })
       .eq("id", item.id);
     if (updateError) {
-      setError(updateError.message);
+      setError(toErrorMessage(updateError, "Failed to update the item."));
       return;
     }
     setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_on_hand: isOnHand } : value)));

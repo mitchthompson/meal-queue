@@ -24,3 +24,21 @@ export function toErrorMessage(caught: unknown, fallback: string): string {
   if (message) return message;
   return fallback;
 }
+
+// Supabase auth errors arrive with human-ish but jargony messages
+// ("Invalid login credentials"). Map the common ones; fall back generically.
+// Milestone 9.
+const AUTH_MESSAGES: Record<string, string> = {
+  "Invalid login credentials": "Wrong email or password.",
+  "Email not confirmed": "This email hasn't been confirmed yet. Check your inbox.",
+  "User already registered": "An account with this email already exists. Sign in instead.",
+};
+
+export function toAuthErrorMessage(caught: unknown): string {
+  const message =
+    caught && typeof caught === "object" && "message" in caught && typeof caught.message === "string"
+      ? caught.message
+      : null;
+  if (message && AUTH_MESSAGES[message]) return AUTH_MESSAGES[message];
+  return "Sign-in failed. Check your email and password, then try again.";
+}
