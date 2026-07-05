@@ -6,6 +6,11 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Open
 
+### One color literal evades the hex-grep guard (2026-07-05)
+- **Where it's used:** `app/globals.css` (~line 1809): `box-shadow: 0 4px 12px rgba(31, 35, 31, 0.04)` on the mobile `.panel` override.
+- **What's needed:** The house guard (`grep -E '#[0-9a-fA-F]{3,8}' app/globals.css` must hit `:root` only) does not catch `rgba()` values, so this literal — deliberately kept in the PR #19 token sweep as "an elevation cue, not a palette value" — is invisible to the guard. It is also a dark-mode hazard (a dark shadow on a dark bg disappears). Fix is folded into **milestone 14** ([plans/dark-mode.md](plans/dark-mode.md) §4a.3): tokenize as `--shadow-panel` in both schemes and extend verification to grep `rgba(` as well. It was the ONLY literal outside `:root` in the whole file, and no component `.tsx` carries inline colors (full-repo sweep 2026-07-05).
+- **Source:** 2026-07-05 scoping-session research (token-system map).
+
 ### Recipe Import UI (PR 2, `codex/import-ui`) — unpinned CSS values (2026-07-04)
 - **Where it's used:** `app/globals.css` (`.import-textarea`, `.import-progress`), documented in [design-system.md](design-system.md) Import surface.
 - **What's needed:** Two values were not pinned on the round-5 board, so Phase C chose sensible defaults to flag for owner eyes on the as-built screenshots: (1) the paste-box `.import-textarea` **`min-height: 9rem`** (roomy enough for a full pasted recipe on a 390px phone without dominating the panel); (2) the indeterminate `.import-progress` sweep at **`1.1s` ease-in-out infinite** (`@keyframes import-progress-sweep`). Both are token/convention-consistent (no new palette). Adjust on owner feedback; otherwise they stand as the pinned values. `prefers-reduced-motion` disables the sweep.
@@ -28,27 +33,27 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ### Plan version bumps fire for grocery-irrelevant changes (over-triggered regeneration)
 - **Where it's used:** `app/plans/page.tsx` / `app/grocery/page.tsx`
-- **What's needed:** Update (2026-07-02): milestone 3 (on `codex/plan-integrity`) resolves the scoping half at the root — version bumps are now a database trigger scoped to grocery-relevant changes only (cook items added/removed; recipe or serving multiplier changed), so note/leftover/eat-out/date edits no longer invalidate the checklist. Remaining open (milestone 4/5 scope): the grocery page still regenerates silently on load rather than prompting.
+- **What's needed:** Update (2026-07-02): milestone 3 (on `codex/plan-integrity`) resolves the scoping half at the root — version bumps are now a database trigger scoped to grocery-relevant changes only (cook items added/removed; recipe or serving multiplier changed), so note/leftover/eat-out/date edits no longer invalidate the checklist. Remaining open: the grocery page still regenerates silently on load rather than prompting. Update (2026-07-05): the silent-regeneration half is **specced as milestone 10 PR 1** — a stale banner + explicit button replaces the on-load write ([plans/responsiveness.md](plans/responsiveness.md) §3); closes when that PR ships.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md); [roadmap](roadmap.md) milestone 3
 
 ### Five sequential round trips per plan mutation (no optimistic UI)
 - **Where it's used:** `app/plans/page.tsx` (plan mutation flow)
-- **What's needed:** Each plan mutation did insert, version read, version write, item reload, and plan reload sequentially, making planning sluggish on iPhone Safari (a primary target). Update (2026-07-02): milestone 3's trigger-based versioning removed the two version round trips (now insert + item reload + plan reload). Optimistic UI updates remain deferred (milestone 5).
+- **What's needed:** Each plan mutation did insert, version read, version write, item reload, and plan reload sequentially, making planning sluggish on iPhone Safari (a primary target). Update (2026-07-02): milestone 3's trigger-based versioning removed the two version round trips (now insert + item reload + plan reload). Update (2026-07-05): optimistic UI is **specced as milestone 10 PR 2** with a binding per-mutation treatment table ([plans/responsiveness.md](plans/responsiveness.md) §4); closes when that PR ships.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes ("No optimistic UI")
 
 ### Raw Supabase error strings render in the UI; no route-level error or loading boundaries
 - **Where it's used:** UI route components (`app/*`, e.g. `app/plans/page.tsx`, `app/recipes/page.tsx`, `app/grocery/page.tsx`)
-- **What's needed:** Update (2026-07-02): mini-M5 added `lib/errors.ts` (friendly mapping for common constraint/permission codes; our own P0001 trigger messages pass through — they are written to be human-readable) and an `aria-live` `StatusMessage` component adopted across all screens. Still open: route-level `error.tsx` / `loading.tsx` boundaries, and unmapped errors still surface raw messages.
+- **What's needed:** Update (2026-07-02): mini-M5 added `lib/errors.ts` (friendly mapping for common constraint/permission codes; our own P0001 trigger messages pass through — they are written to be human-readable) and an `aria-live` `StatusMessage` component adopted across all screens. Still open: route-level `error.tsx` / `loading.tsx` boundaries, and unmapped errors still surface raw messages. Update (2026-07-05): both halves are **specced as milestone 9** — root boundary files plus a sweep of the ~18 remaining raw `setError(x.message)` sites, enumerated file:line in [plans/error-boundaries.md](plans/error-boundaries.md) §5; closes when it ships.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes
 
 ### Auth flow incomplete: no sign-up confirmation messaging, no password reset, unfriendly errors
 - **Where it's used:** Auth UI (`components/auth-gate.tsx` and sign-up/sign-in flow)
-- **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Needs sign-up confirmation messaging, a password-reset flow, and friendlier auth error handling. Explicitly deferred (out of milestone 5 scope).
+- **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Update (2026-07-05): split by owner verdict — the **password-reset flow is specced as milestone 11** ([plans/password-reset.md](plans/password-reset.md)), **friendlier auth errors land with milestone 9** (`toAuthErrorMessage`), and **sign-up confirmation messaging stays deferred indefinitely** (single household, accounts already provisioned). Only that last third remains open once M9/M11 ship. Known constraint recorded in the M11 spec: the reset email opens in the default browser, not the installed standalone app (per-context sessions; accepted).
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Auth flow gaps, finding 6); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
 
 ### Thin empty states, no dark mode (wake-lock resolved)
 - **Where it's used:** New-user empty states across routes; global theming in [`app/globals.css`](../app/globals.css)
-- **What's needed:** Update (2026-07-02): the wake-lock half is done — Cook mode (`components/cook-mode.tsx`, reflow screen 1) holds a screen wake-lock while active, re-acquired on `visibilitychange`. Still open: richer empty states for new users, and dark-mode support beyond the Cook takeover (deferred per the brief; the v2 `--color-slate-*` set is a head start).
+- **What's needed:** Update (2026-07-02): the wake-lock half is done — Cook mode (`components/cook-mode.tsx`, reflow screen 1) holds a screen wake-lock while active, re-acquired on `visibilitychange`. Still open: richer empty states for new users, and dark-mode support beyond the Cook takeover. Update (2026-07-05): both halves specced — **dark mode as milestone 14** ([plans/dark-mode.md](plans/dark-mode.md); system-follow only, slate set as the base, values board-gated) and **empty states as milestone 15** ([plans/empty-states.md](plans/empty-states.md); shared `EmptyState` component, four weak states). Closes when both ship.
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Polish and structural notes, finding 15); also [roadmap](roadmap.md) Deferred Fixes (UI audit); [redesign-brief.md](redesign-brief.md)
 
 ### Cook mode: per-step ingredient chips use a name-match heuristic

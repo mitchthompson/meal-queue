@@ -1,6 +1,6 @@
 # Current State
 
-Last reviewed: 2026-07-04 (execution session: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
+Last reviewed: 2026-07-05 (planning session: **milestones 9-15 scoped** — seven builder-ready specs written to `docs/plans/` (error boundaries M9, responsiveness M10, password reset M11, grocery unit merge M12, plan copy M13, dark mode M14, empty states M15), each in the recipe-import handoff format for a lower-capability executor, all owner design forks interviewed and locked; roadmap gained a "Scoped Milestones" section with the recommended order 9 → 10 → 11 → 12 → 13 → 14 → 15. Docs-only — zero code changed. **None is approved to build**; see Active Handoff. Prior session 2026-07-04: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
@@ -68,7 +68,7 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Stable Baseline
 
-- **`main`:** at `cbb1c57` (**import tags-cap hotfix, PR #31** — `codex/fix-import-tags-cap`: raised the request-schema `tags` cap 50→500 and added the `conflicting_source` error code so validation failures stop reading as "(not both)"; server-only, deployed) atop `88a6bc5` (**Recipe Import PR 2 / Phase C** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
+- **`main`:** at `3dcf791` (**docs wrap of the tags-cap hotfix, PR #32** — merge of `codex/docs-import-hotfix`, docs-only) atop `cbb1c57` (**import tags-cap hotfix, PR #31** — `codex/fix-import-tags-cap`: raised the request-schema `tags` cap 50→500 and added the `conflicting_source` error code so validation failures stop reading as "(not both)"; server-only, deployed) atop `88a6bc5` (**Recipe Import PR 2 / Phase C** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
   reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
@@ -167,7 +167,28 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Active Handoff
 
-- **Just shipped:** **Recipe Import PR 2 / Phase C — merged & deployed.** PR #29
+- **Just done (2026-07-05, docs-only):** **Milestones 9-15 scoped.** Seven
+  builder-ready specs in `docs/plans/` — [error-boundaries.md](plans/error-boundaries.md)
+  (M9), [responsiveness.md](plans/responsiveness.md) (M10, two PRs),
+  [password-reset.md](plans/password-reset.md) (M11),
+  [unit-merge.md](plans/unit-merge.md) (M12 — **DB milestone**, fifth migration),
+  [plan-copy.md](plans/plan-copy.md) (M13), [dark-mode.md](plans/dark-mode.md)
+  (M14), [empty-states.md](plans/empty-states.md) (M15) — written for a
+  lower-capability executor (locked §1 decision tables, STOP points, verbatim
+  copy, file:line anchors, do-not-touch lists). Owner verdicts recorded in
+  [decisions.md](decisions.md) (2026-07-05). Roadmap has the recommended order
+  and dependencies.
+- **Next action:** **await the owner's per-milestone go-ahead** — nothing in
+  M9-M15 is approved to build. When the owner picks one: read its spec in
+  `docs/plans/` end to end, then follow it literally starting at its §2
+  ground-rule reading list, on the branch the spec names (recommended first:
+  **M9 on `codex/error-boundaries`**, spec
+  [plans/error-boundaries.md](plans/error-boundaries.md) — M10 and M11 build on
+  its error plumbing). Owner-side gates to raise at the right moments: board
+  pins (M9/M10/M11/M13/M15 can bundle into one round; M14 needs its own),
+  Supabase-dashboard redirect URLs before M11 live-testing, migration review +
+  "apply" for M12.
+- **Prior (2026-07-04):** **Recipe Import PR 2 / Phase C — merged & deployed.** PR #29
   (`codex/import-ui` → `main` `88a6bc5`, feature branch deleted) is live on Vercel
   prod: the in-app import UI — `components/recipe-import.tsx` (`ImportFlow`:
   entry/parsing/review), `lib/hooks/use-import.ts` + the pure
@@ -184,18 +205,11 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   code so field errors read clearly; +3 tests). Verified on the live prod route
   and owner-confirmed working end to end — this was the first live in-app
   import.**
-- **Next action:** **No approved milestone is queued** — Recipe Import (milestone
-  8) was the last active one and is now done. `/onboard`, then **await owner
-  direction** for the next build. The one open item is owner-run, not an agent
-  task: the **Needs-Mitchell real-device import pass** — on `npm run dev:phone`,
-  iPhone standalone (never prod), paste an actual NYT Cooking recipe end to end,
-  do one open-site URL import, trigger the paywall redirect, and check
-  keyboard-over-textarea + safe-area under the teal save bar (Playwright WebKit ≠
-  real Safari). When the owner picks the next milestone, unscoped candidates live
-  in [roadmap.md](roadmap.md) Deferred Fixes/Ideas: route-level
-  `error.tsx`/`loading.tsx` boundaries, optimistic UI, auth-flow completion
-  (sign-up confirmation / password reset), richer empty states / dark mode. None
-  are scoped yet — interview + spec first, per the house rhythm.
+- **Still open, owner-run (not an agent task):** the **Needs-Mitchell
+  real-device import pass** — on `npm run dev:phone`, iPhone standalone (never
+  prod), one open-site URL import, the paywall-redirect path, and
+  keyboard-over-textarea + safe-area under the teal save bar (Playwright
+  WebKit ≠ real Safari; the NYT paste path is already owner-confirmed live).
 - **Blockers:** none.
 - **Environment notes:** `main` is the working branch (feature branch
   `codex/import-ui` merged + deleted, local and remote). `.env.local` includes
@@ -211,7 +225,8 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   (`2a-webteam` active machine-wide, `mitchthompson` pinned per command via
   `GH_TOKEN=$(gh auth token --user mitchthompson)`); local Supabase stack runs
   on Colima (`supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,mailpit,supavisor`),
-  left up this session.
+  left up at the 2026-07-04 wrap (not touched by the 2026-07-05 docs-only
+  session; verify with `supabase status` before relying on it).
 
 ## Page status
 
@@ -251,6 +266,7 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | 7 | V2 Sweep | **Done (2026-07-02)** — token fix (PR #19), Settings (PR #20), Recipes library/editor (PR #21), recipe detail (PR #22); all board pins from rounds 2–4 resolved |
 | — | iPad coherence | **Done (2026-07-03)** — orientation-routed chrome (PR #26) + portrait content-width fill (PR #27); CSS-only, deployed & confirmed on iPad Pro ([plans/ipad-support.md](plans/ipad-support.md)) |
 | 8 | Recipe Import (in-app) | **Done (2026-07-04)** — PR 1 (server route, PR #28 `11834f9`) + **PR 2 / Phase C (import UI, PR #29 `codex/import-ui` → `main` `88a6bc5`)**: paste/URL → LLM parse → review → save via shared `saveRecipeForm`; vitest 125/125, verify-recipes-pass 22/22 (C1 neutral) + verify-import-pass 26/26, deployed to prod. Phases A/B/C/D all shipped; only the owner real-device pass remains. Spec: [plans/recipe-import.md](plans/recipe-import.md) |
+| 9-15 | Scoped batch (2026-07-05): resilience, responsiveness, password reset, unit merge (DB), plan copy, dark mode, empty states | **Specced, not started** — seven builder-ready specs in `docs/plans/`; owner picks order and gives per-milestone go-aheads. Recommended order and dependencies: [roadmap.md](roadmap.md) Scoped Milestones |
 
 ## Architecture snapshot
 
@@ -278,7 +294,9 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
   changes); C2 (mark-cooked no-op) can still be revisited as a schema change
   if a consumer appears — see [design-flags.md](design-flags.md).
 - No route-level `error.tsx` / `loading.tsx` boundaries; unmapped errors still
-  surface raw messages (mini-M5 added friendly mapping + `aria-live`).
+  surface raw messages (mini-M5 added friendly mapping + `aria-live`). Specced
+  as milestone 9 (2026-07-05, [plans/error-boundaries.md](plans/error-boundaries.md));
+  open until it ships.
 - iPad: two optional tails (owner's call, not blocking) — a final real-device
   pass (portrait fill + landscape + iPadOS standalone), and centring the
   landscape 640px reading column (currently left-pinned, owner-accepted).

@@ -360,33 +360,6 @@ read). Not committed, smoke-tested, or merged: pending the owner's
   mocks before any code is written (this picked chip variant B). Toolkit
   preserved in `scripts/review-board/`.
 
-## Superseded Decisions
-
-### CI/local-only baseline migration (2026-06-27)
-
-- Supersedes the "There is no synthetic baseline migration for the
-  already-live database" clause under **Dates and Migrations** above, but
-  ONLY for the local/CI testing path.
-- A new file `supabase/migrations/20260101000000_baseline_schema.sql` exists
-  purely so a fresh, EPHEMERAL local/CI database (created by
-  `supabase start` / `supabase db reset`) can build the full schema before the
-  `20260627222320_atomic_recipe_save.sql` migration validates. Without it,
-  applying only the `save_recipe` migration to an empty database fails:
-  the function body references tables that do not yet exist and
-  `check_function_bodies` (on by default) rejects it.
-- It is a verbatim, regenerable copy of `supabase/schema.sql`
-  (`cp supabase/schema.sql supabase/migrations/20260101000000_baseline_schema.sql`),
-  timestamped to sort BEFORE the `save_recipe` migration.
-- It is **NEVER applied to prod.** Prod predates the migrations directory and
-  stays hand-applied via the Supabase SQL editor; `supabase db push` is not
-  used. `schema.sql` remains the canonical full-schema reference.
-- Prod risk is negligible: the file never reaches prod, and `schema.sql` is
-  idempotent (every `create table` / `create policy` / trigger / constraint is
-  guarded with `if not exists` or `drop ... if exists`).
-- Resolved 2026-07-01: prod is Postgres 17.6 (confirmed with
-  `SHOW server_version;`), and `supabase/config.toml` `major_version` is set
-  to 17 so CI/local tests run the same engine as prod.
-
 ### iPad coherence — orientation-routed chrome, CSS-only (2026-07-03)
 
 - **Decision:** iPad becomes a supported target by **reusing the existing phone
@@ -428,3 +401,65 @@ read). Not committed, smoke-tested, or merged: pending the owner's
 - **Not verified on real hardware yet:** the Chromium sweep is necessary but not
   sufficient (WebKit ≠ real Safari). Ships behind a "Needs Mitchell" real-iPad
   digest before the decision is considered proven on-device.
+
+### Milestones 9-15 scoping verdicts (2026-07-05)
+
+One session scoped seven milestones into builder-ready specs (`docs/plans/`),
+written for a lower-capability executor (owner constraint). Owner verdicts,
+all locked in the specs' §1 tables:
+
+- **Dark mode (M14): follow the system only** — one
+  `prefers-color-scheme: dark` primitives-override block, no Settings toggle,
+  no schema column, no theme-flash JS. Dark token *values* are board-gated
+  (mock round DM1–DM3), nothing ships unapproved.
+- **Shop staleness (M10 PR 1): banner + explicit button** over silent
+  auto-regeneration and over a blocking dialog. The list never writes on load.
+- **Auth (M11): password reset only.** Sign-up confirmation messaging stays
+  deferred — single household, accounts already provisioned. Friendlier auth
+  errors land earlier via M9's `toAuthErrorMessage`.
+- **Optimistic UI (M10 PR 2): "everything client-writable"**, interpreted as
+  a binding per-mutation table: item-level mutations get true
+  apply-then-rollback optimism; `createPlan`/`savePlanMeta`/
+  `deleteSelectedPlan` stay pessimistic (rare, confirm-gated); recipe save
+  keeps the atomic RPC await but drops the post-save refetch chain; the C1
+  `saveRecipeForm` seam is never touched.
+- **Templates (M13): copy-a-previous-week at creation time**, chosen over a
+  `meal_plan_templates` table — zero schema, covers the household-rotation
+  use case. Out-of-range items are skipped and counted, never clamped.
+- **Grocery unit merge (M12): merge within dimension** (volume↔volume,
+  weight↔weight via the existing `units.unit_type`; count codes never merge),
+  displayed in the largest contributing unit. Owner chose this knowing it is
+  the fifth migration (full DB ritual). Conversion factors live in a new
+  `units.base_factor` column (data-driven, not hardcoded in the function);
+  old-key rows normalize state-intact with `bool_and` merge semantics.
+- **Execution rails:** none of M9–M15 is approved to build; per-milestone
+  go-ahead required. Recommended order 9 → 10 → 11 → 12 → 13 → 14 → 15
+  (dependencies in [roadmap.md](roadmap.md)); board pins for
+  M9/M10/M11/M13/M15 may bundle into one round, M14 gets its own.
+
+## Superseded Decisions
+
+### CI/local-only baseline migration (2026-06-27)
+
+- Supersedes the "There is no synthetic baseline migration for the
+  already-live database" clause under **Dates and Migrations** above, but
+  ONLY for the local/CI testing path.
+- A new file `supabase/migrations/20260101000000_baseline_schema.sql` exists
+  purely so a fresh, EPHEMERAL local/CI database (created by
+  `supabase start` / `supabase db reset`) can build the full schema before the
+  `20260627222320_atomic_recipe_save.sql` migration validates. Without it,
+  applying only the `save_recipe` migration to an empty database fails:
+  the function body references tables that do not yet exist and
+  `check_function_bodies` (on by default) rejects it.
+- It is a verbatim, regenerable copy of `supabase/schema.sql`
+  (`cp supabase/schema.sql supabase/migrations/20260101000000_baseline_schema.sql`),
+  timestamped to sort BEFORE the `save_recipe` migration.
+- It is **NEVER applied to prod.** Prod predates the migrations directory and
+  stays hand-applied via the Supabase SQL editor; `supabase db push` is not
+  used. `schema.sql` remains the canonical full-schema reference.
+- Prod risk is negligible: the file never reaches prod, and `schema.sql` is
+  idempotent (every `create table` / `create policy` / trigger / constraint is
+  guarded with `if not exists` or `drop ... if exists`).
+- Resolved 2026-07-01: prod is Postgres 17.6 (confirmed with
+  `SHOW server_version;`), and `supabase/config.toml` `major_version` is set
+  to 17 so CI/local tests run the same engine as prod.

@@ -312,6 +312,84 @@ Acceptance:
 - The existing editor's behavior is byte-identical after the
   `saveRecipeForm` extraction (existing verify script re-run green).
 
+## Scoped Milestones (2026-07-05 scoping session — specced, not started)
+
+All seven were interviewed and specced in one session (owner verdicts recorded
+in each spec's §1 table); each has a builder-ready spec in `docs/plans/`
+written for a lower-capability executor. **None is approved to build yet** —
+the owner picks the order and gives the go-ahead per milestone. Recommended
+order below (dependencies noted); board pins for M9/M10/M11/M13/M15 can bundle
+into one review round; M14 needs its own round.
+
+### 9. Resilience (error/loading boundaries + raw-error sweep)
+
+Spec: [plans/error-boundaries.md](plans/error-boundaries.md) · Branch `codex/error-boundaries`
+
+Root `error.tsx`/`global-error.tsx`/`not-found.tsx`/`loading.tsx`, a
+recipe-detail 404, a friendly auth-error mapper, and the sweep of ~18
+`setError(x.message)` sites through `toErrorMessage`. Zero schema, zero deps.
+**Build first — M10 and M11 assume its error plumbing.**
+
+### 10. Responsiveness (Shop stale banner + optimistic writes)
+
+Spec: [plans/responsiveness.md](plans/responsiveness.md) · Branches
+`codex/shop-stale-banner`, then `codex/optimistic-writes`
+
+PR 1 replaces the Shop page's silent regenerate-on-load with an amber
+banner + explicit button (closes the "prompting before regeneration" half of
+the old over-triggered-regeneration flag). PR 2 makes item-level mutations
+optimistic (apply-then-rollback) per the binding treatment table, with a
+latency-probe harness. Zero schema, zero deps. After M9.
+
+### 11. Password reset
+
+Spec: [plans/password-reset.md](plans/password-reset.md) · Branch `codex/password-reset`
+
+"Forgot password?" → `resetPasswordForEmail` → `/reset-password` route →
+`updateUser`. Owner gate: Supabase dashboard redirect-URL config. Sign-up
+confirmation messaging stays deferred (owner decision 2026-07-05). After M9
+(uses its auth-error mapper).
+
+### 12. Grocery unit merge (dimension-aware grouping)
+
+Spec: [plans/unit-merge.md](plans/unit-merge.md) · Branch `codex/grocery-unit-merge`
+
+**DB milestone (fifth migration; full ritual).** `units.base_factor` column +
+a rewritten `regenerate_grocery_list` that merges volume-with-volume and
+weight-with-weight (display in the largest contributing unit); count units
+never merge; old-key rows normalized state-intact (`bool_and`). pgTAP grows to
+≥130. Independent of M9–M11; pairs naturally after M10's banner.
+
+### 13. Plan copy ("Start from a previous week")
+
+Spec: [plans/plan-copy.md](plans/plan-copy.md) · Branch `codex/plan-copy`
+
+A "Start from" select in the create-plan sheet copies a previous week's items
+onto the new dates (offset-shifted; out-of-range items skipped and counted;
+leftover links remapped). Chosen over a templates table (owner decision
+2026-07-05) — zero schema. Pure mapping logic lands vitest-covered in
+`lib/plan-copy.ts`. After M10 (touches `createPlan`).
+
+### 14. Dark mode (system-follow)
+
+Spec: [plans/dark-mode.md](plans/dark-mode.md) · Branch `codex/dark-mode`
+
+One `@media (prefers-color-scheme: dark)` primitives-override block +
+scheme-aware `themeColor`; Cook takeover and Shop order bar stay verbatim.
+Dark token VALUES are board-gated (its own mock round, pins DM1–DM3) — nothing
+ships unapproved. Template-wide change: both-scheme sweep + Needs-Mitchell
+real-device digest required. Any time; best late so new UI (banners, empty
+states) is swept once.
+
+### 15. Richer empty states
+
+Spec: [plans/empty-states.md](plans/empty-states.md) · Branch `codex/empty-states`
+
+Shared `EmptyState` component (the Today-card pattern generalized) replacing
+the four weak page-level empties (Recipes ×2, Shop no-plan, Plan no-plans),
+copy locked in the spec pending board pins ES1–ES2. Zero schema, zero deps.
+Last; benefits from M13's sheet and M14's dark sweep.
+
 ## Deferred Fixes (from the 2026-06-11 audit)
 
 Real issues confirmed in code but deliberately excluded from the current
@@ -321,19 +399,22 @@ reliability scope. Details in
 - ~~Dashboard loads items for only the 4 newest plans~~ — fixed by the
   reflow's Today screen (2026-07-02): items load for the date-relevant
   current plan and its successor (`lib/hooks/use-today.ts`).
-- Plan version bumps fire for changes that do not affect groceries (eating-out
-  notes, leftover edits), and the grocery page regenerates silently on load.
-  Milestone 4 makes this harmless to user state; scoping the bumps and
-  prompting before regeneration remain open.
+- ~~Plan version bumps fire for changes that do not affect groceries (eating-out
+  notes, leftover edits), and the grocery page regenerates silently on load.~~
+  The scoping half was resolved by milestone 3's grocery-scoped triggers; the
+  prompting-before-regeneration half is promoted to milestone 10
+  ([plans/responsiveness.md](plans/responsiveness.md), 2026-07-05).
 - ~~`ensureUserSettings` runs twice per sign-in, and default settings values
   are duplicated across three files inconsistently with the SQL defaults.~~
   Both done: the duplicate call was fixed in mini-M5, and the defaults single
   source of truth landed 2026-07-03 (`DEFAULT_USER_SETTINGS` in
   `lib/constants.ts`, mirroring the SQL null/unset order/pickup defaults;
   direct to `main`, merge `aada18f`).
-- Raw Supabase error strings render in the UI; no route-level error or loading
-  boundaries.
-- No optimistic UI; plan mutations feel sluggish on mobile.
+- ~~Raw Supabase error strings render in the UI; no route-level error or loading
+  boundaries.~~ — promoted to milestone 9
+  ([plans/error-boundaries.md](plans/error-boundaries.md), 2026-07-05).
+- ~~No optimistic UI; plan mutations feel sluggish on mobile.~~ — promoted to
+  milestone 10 ([plans/responsiveness.md](plans/responsiveness.md), 2026-07-05).
 - ~~`supabase/schema.sql` mixes baseline DDL with historical inline `ALTER`
   statements.~~ — done 2026-07-03: redundant history dropped, the two real
   CHECK constraints folded into the `meal_plan_items` CREATE TABLE (735 → 699
@@ -344,20 +425,29 @@ reliability scope. Details in
 
 Details in [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 
-- Auth flow completion: sign-up confirmation messaging, password reset,
-  friendlier auth errors.
+- Auth flow completion: ~~password reset, friendlier auth errors~~ — promoted
+  2026-07-05: password reset to milestone 11
+  ([plans/password-reset.md](plans/password-reset.md)), friendlier auth errors
+  to milestone 9's `toAuthErrorMessage`. Sign-up confirmation messaging stays
+  deferred (owner decision 2026-07-05: single household, accounts already
+  provisioned).
 - ~~Mobile Lunch/Dinner labels rely on `nth-child` CSS coupling~~ — fixed by
   the reflow's Plan screen (2026-07-02): day rows carry explicit L/D labels
   in the markup; the `::before` injection was removed.
 - Screen wake-lock shipped with the reflow's Cook mode (PR #13, 2026-07-02);
-  richer empty states and dark mode beyond the Cook takeover remain open.
+  ~~richer empty states and dark mode beyond the Cook takeover remain open~~ —
+  both promoted 2026-07-05: dark mode to milestone 14
+  ([plans/dark-mode.md](plans/dark-mode.md)), empty states to milestone 15
+  ([plans/empty-states.md](plans/empty-states.md)).
 
 ## Deferred Ideas
 
 - ~~Recipe import from URL or pasted text.~~ — promoted to milestone 8
   (2026-07-03, spec: [plans/recipe-import.md](plans/recipe-import.md)).
 - OCR-assisted recipe capture.
-- Unit conversions during grocery grouping.
-- Meal-plan templates.
+- ~~Unit conversions during grocery grouping.~~ — promoted to milestone 12
+  (2026-07-05, spec: [plans/unit-merge.md](plans/unit-merge.md)).
+- ~~Meal-plan templates.~~ — promoted to milestone 13 as plan copy, the
+  no-schema variant (2026-07-05, spec: [plans/plan-copy.md](plans/plan-copy.md)).
 - Recipe sharing, nutrition data, and public-product features.
 - PWA and offline support.

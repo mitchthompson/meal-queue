@@ -3,7 +3,53 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-04 (latest) - Recipe Import hotfix: tags cap + validation-error clarity (PR #31)
+## 2026-07-05 (latest) - Scoping session: milestones 9-15 specced (docs-only, no code)
+
+With milestone 8 done and nothing queued, the owner asked to scope **all** the
+improvement candidates in one pass, with the explicit constraint that the
+resulting plans will be **executed by a lower-capability model** — so every
+spec is written in the recipe-import handoff style: locked §1 owner-decision
+tables, ground rules, phased builds with STOP points, verbatim copy strings,
+file:line anchors, per-spec do-not-touch lists.
+
+- **Method:** three parallel read-only research agents mapped the live code
+  (plans/grocery mutation flow; error/loading/auth/empty-state surfaces;
+  tokens/grouping/plan-creation), and the owner was interviewed on six design
+  forks before anything was written. All verdicts are recorded in
+  [decisions.md](decisions.md) (2026-07-05 entry) and in each spec.
+- **Deliverables (all new, in `docs/plans/`):** `error-boundaries.md` (M9),
+  `responsiveness.md` (M10: stale-banner PR + optimistic-writes PR),
+  `password-reset.md` (M11), `unit-merge.md` (M12 — **DB milestone**, fifth
+  migration), `plan-copy.md` (M13), `dark-mode.md` (M14), `empty-states.md`
+  (M15). [roadmap.md](roadmap.md) gained a "Scoped Milestones" section
+  (recommended order 9 → 10 → 11 → 12 → 13 → 14 → 15 with dependencies) and
+  six deferred items were struck through as promoted.
+- **Key research findings baked into the specs:** `buildGroceryRows` in
+  `lib/grocery.ts` is a vestige no app code calls (only `formatAmount` is
+  imported) — grocery aggregation truth is the DB `regenerate_grocery_list`
+  function, so M12 is a pure DB change; no optimistic patterns exist anywhere
+  in `lib/hooks/` (every state write follows its await); zero
+  `error.tsx`/`loading.tsx` files exist; ~18 raw `setError(x.message)` sites
+  enumerated (the M9 sweep table); exactly one color literal outside `:root`
+  (`rgba(...)` at `app/globals.css:1809`) — it evades the hex-grep guard, new
+  flag raised, fix folded into M14.
+- **Judgment calls (flagged to the owner, accepted):** "optimistic everything"
+  interpreted as a binding per-mutation table — item-level mutations truly
+  optimistic with rollback; `createPlan`/`savePlanMeta`/`deleteSelectedPlan`
+  stay pessimistic; recipe save keeps the atomic RPC await but drops its
+  post-save refetch chain. M12 conversion factors live in a new
+  `units.base_factor` column (data-driven), and old-key rows normalize
+  state-intact with `bool_and` semantics.
+- **Verification:** docs-only session — `npm run typecheck` clean and vitest
+  128/128 at session start and re-run at wrap (no code touched). No build run
+  (nothing build-affecting).
+- **Remaining work:** none of M9-M15 is approved to build — the owner picks
+  the order and gives per-milestone go-aheads. Owner-side gates: board pins
+  (M9/M10/M11/M13/M15 can bundle one round; M14 needs its own), the Supabase
+  dashboard redirect URLs for M11, migration review + "apply" for M12. The
+  M8 Needs-Mitchell real-device import pass is still open (owner-run).
+
+## 2026-07-04 - Recipe Import hotfix: tags cap + validation-error clarity (PR #31)
 
 First real use of the shipped import flow surfaced a bug: the owner pasted an NYT
 recipe and got **"Provide a recipe URL or pasted recipe text (not both)"** — a
