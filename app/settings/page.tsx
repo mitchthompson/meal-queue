@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { DEFAULT_USER_SETTINGS, WEEKDAYS } from "@/lib/constants";
+import { toErrorMessage } from "@/lib/errors";
 import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
 
@@ -40,7 +41,7 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
         .maybeSingle();
 
       if (loadError) {
-        setError(loadError.message);
+        setError(toErrorMessage(loadError, "Failed to load settings."));
         setLoading(false);
         return;
       }
@@ -75,7 +76,7 @@ function SettingsScreen({ userId, userEmail }: { userId: string; userEmail?: str
     });
 
     if (upsertError) {
-      setError(upsertError.message);
+      setError(toErrorMessage(upsertError, "Failed to save settings."));
       setSaving(false);
       return;
     }

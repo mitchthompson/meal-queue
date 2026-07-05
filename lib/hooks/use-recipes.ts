@@ -170,12 +170,12 @@ export function useRecipes(userId: string, editRecipeId: string | null) {
     ]);
 
     if (recipesRes.error) {
-      setError(recipesRes.error.message);
+      setError(toErrorMessage(recipesRes.error, "Failed to load recipes."));
       setLoading(false);
       return;
     }
     if (tagsRes.error) {
-      setError(tagsRes.error.message);
+      setError(toErrorMessage(tagsRes.error, "Failed to load tags."));
       setLoading(false);
       return;
     }
@@ -205,7 +205,7 @@ export function useRecipes(userId: string, editRecipeId: string | null) {
     ]);
 
     if (recipeRes.error || ingredientsRes.error || stepsRes.error || recipeTagsRes.error) {
-      setError(recipeRes.error?.message || ingredientsRes.error?.message || stepsRes.error?.message || recipeTagsRes.error?.message || "Failed to load recipe.");
+      setError(toErrorMessage(recipeRes.error ?? ingredientsRes.error ?? stepsRes.error ?? recipeTagsRes.error, "Failed to load recipe."));
       return;
     }
 
@@ -275,7 +275,7 @@ export function useRecipes(userId: string, editRecipeId: string | null) {
 
     const { error: deleteError } = await supabase.from("recipes").delete().eq("id", form.id);
     if (deleteError) {
-      setError(deleteError.message);
+      setError(toErrorMessage(deleteError, "Failed to delete recipe."));
       return;
     }
 

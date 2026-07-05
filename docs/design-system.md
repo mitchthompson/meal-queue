@@ -357,6 +357,32 @@ styled entirely from the `--color-slate-*` tokens and the global amber:
 - Safe-area aware top and bottom (`env(safe-area-inset-*)`); body scroll is
   locked behind the takeover; Escape exits.
 
+### Error & not-found boundaries
+
+The route-level boundaries (milestone 9): `app/error.tsx`, `app/not-found.tsx`,
+`app/global-error.tsx`, `app/loading.tsx`. They render **outside** `AppShell`
+(the shell lives below `AuthGate` inside each page, and a crash may be in the
+shell itself), as a standalone `.shell` > `.hero` panel that reuses the
+auth-panel language.
+
+- `.error-boundary-panel`: the panel wrapper — `max-width: 28rem` + `margin: 0
+  auto` (centered like `.auth-panel`), paired with the styleless `.hero` marker.
+  Holds the
+  `.eyebrow` "Meal Queue", an `h1`, a `.muted` line, and the actions row.
+- `.error-boundary-actions`: flex row (`gap: 0.75rem`, `margin-top: 1rem`) for
+  the recovery controls; its nested `.secondary-btn` is forced `inline-flex`
+  centered so the `<a>` "Go to Today" matches the `<button>` height. Controls
+  reuse `.primary-btn` / `.secondary-btn` (already ≥44px). `error.tsx` and
+  `not-found.tsx` use a plain `<a href="/">` (not `next/link`) so recovery is a
+  full reload that also clears the client state that caused the crash.
+- `app/loading.tsx` reuses the existing per-page language exactly — `.muted`
+  "Loading..." in a `.shell` (no skeletons; out of scope).
+- **`app/global-error.tsx` is the one sanctioned exception to the
+  no-inline-style rule**: it replaces the root layout and renders its own
+  `<html><body>`, so `globals.css` may not have loaded — its minimal styling
+  (`fontFamily`, `padding`, no color) is inlined by necessity. Nothing else in
+  the app carries an inline style.
+
 ### Status text & misc
 
 - `.error-text` → `var(--color-danger)`; `.success-text` → `var(--color-success)`.
