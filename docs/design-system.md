@@ -365,8 +365,9 @@ The route-level boundaries (milestone 9): `app/error.tsx`, `app/not-found.tsx`,
 shell itself), as a standalone `.shell` > `.hero` panel that reuses the
 auth-panel language.
 
-- `.error-boundary-panel`: the panel wrapper — `max-width: 28rem`, paired with
-  the styleless `.hero` marker exactly as `.auth-panel` is. Holds the
+- `.error-boundary-panel`: the panel wrapper — `max-width: 28rem` + `margin: 0
+  auto` (centered like `.auth-panel`), paired with the styleless `.hero` marker.
+  Holds the
   `.eyebrow` "Meal Queue", an `h1`, a `.muted` line, and the actions row.
 - `.error-boundary-actions`: flex row (`gap: 0.75rem`, `margin-top: 1rem`) for
   the recovery controls; its nested `.secondary-btn` is forced `inline-flex`

@@ -25,9 +25,11 @@ export function toErrorMessage(caught: unknown, fallback: string): string {
   return fallback;
 }
 
-// Supabase auth errors arrive with human-ish but jargony messages
-// ("Invalid login credentials"). Map the common ones; fall back generically.
-// Milestone 9.
+// Supabase auth errors arrive with human-ish but still readable messages
+// ("Invalid login credentials"). Map the common ones to friendlier copy, pass
+// any other message through (like toErrorMessage — raw beats hidden, and auth
+// messages such as rate limits are actionable), and fall back generically only
+// when there is no message at all. Milestone 9.
 const AUTH_MESSAGES: Record<string, string> = {
   "Invalid login credentials": "Wrong email or password.",
   "Email not confirmed": "This email hasn't been confirmed yet. Check your inbox.",
@@ -40,5 +42,6 @@ export function toAuthErrorMessage(caught: unknown): string {
       ? caught.message
       : null;
   if (message && AUTH_MESSAGES[message]) return AUTH_MESSAGES[message];
+  if (message) return message;
   return "Sign-in failed. Check your email and password, then try again.";
 }

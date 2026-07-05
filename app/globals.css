@@ -266,6 +266,7 @@ textarea:focus-visible {
    button classes only. */
 .error-boundary-panel {
   max-width: 28rem;
+  margin: 0 auto;
 }
 
 .error-boundary-actions {

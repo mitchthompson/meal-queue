@@ -20,8 +20,8 @@ describe("toAuthErrorMessage", () => {
     );
   });
 
-  it("falls back generically for an unmapped message", () => {
-    expect(toAuthErrorMessage({ message: "Network request failed" })).toBe(AUTH_FALLBACK);
+  it("passes an unmapped (still readable) auth message through", () => {
+    expect(toAuthErrorMessage({ message: "Email rate limit exceeded" })).toBe("Email rate limit exceeded");
   });
 
   it("falls back generically for a non-object throw", () => {
