@@ -432,10 +432,65 @@ all locked in the specs' §1 tables:
   the fifth migration (full DB ritual). Conversion factors live in a new
   `units.base_factor` column (data-driven, not hardcoded in the function);
   old-key rows normalize state-intact with `bool_and` merge semantics.
-- **Execution rails:** none of M9–M15 is approved to build; per-milestone
-  go-ahead required. Recommended order 9 → 10 → 11 → 12 → 13 → 14 → 15
-  (dependencies in [roadmap.md](roadmap.md)); board pins for
-  M9/M10/M11/M13/M15 may bundle into one round, M14 gets its own.
+- **Execution rails:** per-milestone go-ahead required. **M9 shipped
+  2026-07-05 (PR #33); M10–M15 remain unapproved.** Recommended order
+  10 → 11 → 12 → 13 → 14 → 15 (dependencies in [roadmap.md](roadmap.md));
+  board pins for M10/M11/M13/M15 may bundle into one round, M14 gets its own.
+
+### Milestone 9 build decisions (2026-07-05)
+
+M9 (Resilience) built and shipped from the locked spec
+([plans/error-boundaries.md](plans/error-boundaries.md)); PR #33 (`main`
+`8f1cd46`), deployed. Build-time decisions on top of the scoping verdicts above:
+
+- **`notFound()` is tripped at render time, not from the async loader
+  (deviation from spec §3e).** The spec said to call `notFound()` inside the
+  async `loadRecipe`, but the Next.js docs (checked via Context7) confirm an
+  async-thrown `notFound()` is not caught by the not-found boundary — it must be
+  thrown during render. So the `PGRST116` "no rows" case sets a `missing` state
+  flag and `notFound()` runs at render time. Same observable behavior the spec's
+  §6.5 acceptance requires (proven live: `/recipes/<bad-uuid>` → not-found
+  panel). The spec's intent stands; only the mechanism changed.
+- **`toAuthErrorMessage` passes unmapped-but-readable messages through** (owner
+  call, `/code-review` follow-up). The spec froze a generic fallback for all
+  unmapped auth errors; the owner chose to pass readable messages through
+  instead (rate limits, weak-password, etc.), keeping the generic line only for
+  the no-message case — consistent with `toErrorMessage`'s "raw beats hidden"
+  philosophy. The three friendly maps (bad credentials, unconfirmed email,
+  already-registered) stay.
+- **Board pin EB1 (error panel): signed off as built.** The 404 keeps a single
+  "Go to Today" (no "Try again", since there is no crashed state to retry).
+- **Boundary panels use a plain `<a href="/">` (not `next/link`)** so recovery
+  is a full reload that also clears the crashed client state; the
+  `@next/next/no-html-link-for-pages` lint rule is suppressed inline with a
+  reason on each. `global-error.tsx`'s inline `style` (font + padding, no color)
+  is the one sanctioned exception to the no-inline-style rule (globals.css may
+  not have loaded); documented in [design-system.md](design-system.md).
+
+### Milestone 10 PR 1 — Shop staleness UX (2026-07-05)
+
+M10 PR 1 built and shipped from the locked spec
+([plans/responsiveness.md](plans/responsiveness.md) §3); PR #34 (`main`
+`41fa28b`), deployed. Builds on the "Grocery Identity and Staleness (2026-07-02)"
+decision above.
+
+- **Staleness is surfaced, never auto-resolved.** The Shop page no longer
+  regenerates the grocery list on load when `groceries_version !== version`.
+  Instead it renders an amber banner + explicit Generate/Update button; the list
+  stays fully usable while stale and nothing writes until the button. This is the
+  locked owner decision (option A in the spec) — no auto-regeneration on load,
+  ever. The manual "Regenerate" ghost button stays as the escape hatch when the
+  banner is absent.
+- **Board pin SB1: A (amber).** The banner uses the accent-soft / accent-deep /
+  accent amber treatment (as built) rather than a quiet-neutral surface-muted
+  variant. Owner picked A for urgency/visibility; captured both variants in-situ
+  before the call.
+- **`stale` is component state reset at the top of `loadGroceryItems`** (senior
+  `/code-review` fix), not derived from `selectedPlan`. Deriving it would flip
+  the banner the instant `selectedPlanId` changes while `items` still holds the
+  previous plan's rows (async load, no `loading` toggle) — flashing the wrong
+  banner/copy on every plan switch. Resetting `setStale(false)` before the fetch
+  keeps `stale`/`items` a coherent snapshot.
 
 ## Superseded Decisions
 

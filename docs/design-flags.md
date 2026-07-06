@@ -31,24 +31,14 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** These are skeletons; flesh out as each page is worked. Update (2026-07-02): [settings](pages/settings.md) was rewritten with the v2 Settings pass (PR #20), and [recipes](pages/recipes.md) was de-rotted with the v2 Recipes/detail passes (PRs #21–#22 — it had still described pre-M2 non-atomic saves, the removed sample-data seeder, and the pre-reflow "focus mode"). [today](pages/today.md), [plans](pages/plans.md), and [grocery](pages/grocery.md) remain stubs (the redesign brief supersedes them for future-state intent).
 - **Source:** Session decision (canonical context)
 
-### Plan version bumps fire for grocery-irrelevant changes (over-triggered regeneration)
-- **Where it's used:** `app/plans/page.tsx` / `app/grocery/page.tsx`
-- **What's needed:** Update (2026-07-02): milestone 3 (on `codex/plan-integrity`) resolves the scoping half at the root — version bumps are now a database trigger scoped to grocery-relevant changes only (cook items added/removed; recipe or serving multiplier changed), so note/leftover/eat-out/date edits no longer invalidate the checklist. Remaining open: the grocery page still regenerates silently on load rather than prompting. Update (2026-07-05): the silent-regeneration half is **specced as milestone 10 PR 1** — a stale banner + explicit button replaces the on-load write ([plans/responsiveness.md](plans/responsiveness.md) §3); closes when that PR ships.
-- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md); [roadmap](roadmap.md) milestone 3
-
 ### Five sequential round trips per plan mutation (no optimistic UI)
 - **Where it's used:** `app/plans/page.tsx` (plan mutation flow)
 - **What's needed:** Each plan mutation did insert, version read, version write, item reload, and plan reload sequentially, making planning sluggish on iPhone Safari (a primary target). Update (2026-07-02): milestone 3's trigger-based versioning removed the two version round trips (now insert + item reload + plan reload). Update (2026-07-05): optimistic UI is **specced as milestone 10 PR 2** with a binding per-mutation treatment table ([plans/responsiveness.md](plans/responsiveness.md) §4); closes when that PR ships.
 - **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes ("No optimistic UI")
 
-### Raw Supabase error strings render in the UI; no route-level error or loading boundaries
-- **Where it's used:** UI route components (`app/*`, e.g. `app/plans/page.tsx`, `app/recipes/page.tsx`, `app/grocery/page.tsx`)
-- **What's needed:** Update (2026-07-02): mini-M5 added `lib/errors.ts` (friendly mapping for common constraint/permission codes; our own P0001 trigger messages pass through — they are written to be human-readable) and an `aria-live` `StatusMessage` component adopted across all screens. Still open: route-level `error.tsx` / `loading.tsx` boundaries, and unmapped errors still surface raw messages. Update (2026-07-05): both halves are **specced as milestone 9** — root boundary files plus a sweep of the ~18 remaining raw `setError(x.message)` sites, enumerated file:line in [plans/error-boundaries.md](plans/error-boundaries.md) §5; closes when it ships.
-- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes
-
 ### Auth flow incomplete: no sign-up confirmation messaging, no password reset, unfriendly errors
 - **Where it's used:** Auth UI (`components/auth-gate.tsx` and sign-up/sign-in flow)
-- **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Update (2026-07-05): split by owner verdict — the **password-reset flow is specced as milestone 11** ([plans/password-reset.md](plans/password-reset.md)), **friendlier auth errors land with milestone 9** (`toAuthErrorMessage`), and **sign-up confirmation messaging stays deferred indefinitely** (single household, accounts already provisioned). Only that last third remains open once M9/M11 ship. Known constraint recorded in the M11 spec: the reset email opens in the default browser, not the installed standalone app (per-context sessions; accepted).
+- **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Update (2026-07-05): split by owner verdict — the **password-reset flow is specced as milestone 11** ([plans/password-reset.md](plans/password-reset.md)); **friendlier auth errors are DONE (milestone 9, PR #33, 2026-07-05)** — `toAuthErrorMessage` in `lib/errors.ts` maps the common Supabase auth errors and passes other readable ones through, wired into `components/auth-gate.tsx`; and **sign-up confirmation messaging stays deferred indefinitely** (single household, accounts already provisioned). With M9 shipped, only **password reset (M11)** and the deferred sign-up-confirmation third remain open. Known constraint recorded in the M11 spec: the reset email opens in the default browser, not the installed standalone app (per-context sessions; accepted).
 - **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Auth flow gaps, finding 6); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
 
 ### Thin empty states, no dark mode (wake-lock resolved)
@@ -67,6 +57,35 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
 
 ## Resolved
+
+### Plan version bumps fire for grocery-irrelevant changes (over-triggered regeneration)
+- **Resolution (both halves now closed):** the **scoping half** was closed by
+  milestone 3 (2026-07-02, `codex/plan-integrity`) — version bumps became a
+  database trigger scoped to grocery-relevant changes only (cook items
+  added/removed; recipe or serving multiplier changed), so
+  note/leftover/eat-out/date edits no longer invalidate the checklist. The
+  **silent-regeneration half** was closed by **milestone 10 PR 1 (2026-07-05, PR
+  #34 `41fa28b`, deployed):** the grocery page no longer regenerates on load — a
+  stale plan shows an amber banner + explicit Generate/Update button (SB1: A),
+  the list stays usable while stale, and nothing writes until the button. Board
+  pin SB1 signed off A (amber); `verify-shop-pass` 22/22 proves no regen fires on
+  load. Spec [plans/responsiveness.md](plans/responsiveness.md) §3.
+- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md); [roadmap](roadmap.md) milestones 3 & 10
+
+### Raw Supabase error strings + no route-level error/loading boundaries
+- **Resolution (2026-07-05, milestone 9, PR #33 `8f1cd46`, deployed):** Shipped
+  root `app/error.tsx` / `app/global-error.tsx` / `app/not-found.tsx` /
+  `app/loading.tsx` boundaries (standalone panels outside `AppShell`, since a
+  crash may be in the shell), a recipe-detail 404 (`PGRST116` → render-time
+  `notFound()`), and swept all 17 raw `setError(x.message)` sites (Settings,
+  recipe detail, auth-gate, the plan/recipes/grocery hooks) through
+  `toErrorMessage` (`toAuthErrorMessage` for sign-in). `toErrorMessage` still
+  passes P0001/unknown messages through by design; the win is the code-mapped
+  classes plus a guaranteed fallback. Board pin EB1 signed off, senior review
+  clean, vitest 138/138, prod `/nonexistent` → 404 panel confirmed live.
+  mini-M5's `lib/errors.ts` mapping + `aria-live` `StatusMessage` were the
+  precursors. Supersedes the open flag.
+- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md); resolved 2026-07-05 (milestone 9)
 
 ### Recipe Import IM6 — original-text storage (round-5 board)
 - **Resolution (2026-07-04):** owner confirmed "IM6: OK" — keep as built. `instructions_raw` stores the imported text verbatim with a `Source: <url>` first line for URL imports (paste imports have no source line), not editable at review. It is the provenance record; the structured `recipe_steps` are the canonical instructions. No code change (matches the Phase B build).

@@ -3,7 +3,111 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-05 (latest) - Scoping session: milestones 9-15 specced (docs-only, no code)
+## 2026-07-05 (latest) - Milestone 10 PR 1 shipped: Shop staleness banner replaces silent regenerate-on-load
+
+Built and shipped M10 PR 1 from the locked spec
+([plans/responsiveness.md](plans/responsiveness.md) §3), owner-approved.
+**PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`) merged and deployed to
+Vercel prod.**
+
+- **What shipped:** the Shop page (`app/grocery/page.tsx`) no longer silently
+  regenerates the grocery list on load. `lib/hooks/use-grocery-list.ts` gained a
+  `stale` flag (computed in `loadGroceryItems`, replacing the old
+  auto-`regenerate(plan, true)` block); the `silent` param was removed from
+  `regenerate`. The page renders an amber `.shop-stale-banner` +
+  `.shop-stale-btn` (token-only CSS) with copy/label driven by whether a list
+  exists ("This plan doesn't have a grocery list yet." / "Generate list" vs
+  "Your meal plan changed since this list was made." / "Update list"). The list
+  stays fully usable while stale; nothing writes until the button is tapped.
+  Classes documented in [design-system.md](design-system.md).
+- **Design gate SB1: A (amber).** Captured amber vs quiet-neutral variants
+  in-situ on the local stack (`capture-shop-variants.mjs`), built a focused M10
+  board (`gen-board-sb1.mjs`), redeployed **in place** to the existing board
+  artifact URL (🍳). Owner picked **A** — amber, as built, no CSS change.
+- **Senior `/code-review` (high) — one real fix.** 8-angle review, each finding
+  verified. Correctness: the new banner introduced a regression — on a plan
+  switch (or an item-load error) it briefly rendered the *previous* plan's
+  `stale`/`items` because `loadGroceryItems` is async and never toggles
+  `loading`, so the `!loading` guard and `hasList` were unprotected during the
+  in-flight window. **Fixed** by resetting `setStale(false)` at the top of
+  `loadGroceryItems` (banner hidden until the new plan's staleness is computed).
+  Conventions clean. One cleanup noted + deferred: the amber-callout treatment
+  now lives in 3 places (`.import-callout`, `.pantry-badge`,
+  `.shop-stale-banner`) — a shared `.callout` base would dedup it, but that edits
+  the import surface (spec's do-not-touch list), so left as a follow-up. The
+  "derive `stale` from `selectedPlan`" simplification was **rejected** (it
+  reintroduces the exact flicker just fixed).
+- **Verification:** eslint / tsc clean, **vitest 138/138** (unchanged — behavior
+  is UI/hook, covered by a Playwright harness not vitest units), `next build` 12
+  routes. New **`verify-shop-pass.mjs` 22/22, 0 console errors** (self-contained:
+  seeds + tears down its own isolated plan/recipes): proves no
+  `regenerate_grocery_list` RPC fires on load, the Generate→Update banner states,
+  the list stays unchanged while stale, and **two checked items survive a
+  plan-triggered Update** (M4 state preservation, now user-initiated). Re-run
+  after the review fix: still 22/22.
+- **CI:** PR #34 green (app-checks 51s, db-tests 1m9s). **`main` post-merge CI
+  FAILED first run** — db-tests died at "Start local Supabase stack" with
+  `failed to bind host port for 0.0.0.0:54322 ... address already in use` (the
+  documented transient port-bind flake; app-checks passed, pgTAP never ran, our
+  PR touches zero DB/schema). **Cleared by `gh run rerun --failed`; second run
+  green.** Prod liveness `/grocery` 200, `/` 200.
+- **Scope:** zero schema, zero deps. New toolkit committed:
+  `scripts/review-board/{verify-shop-pass,capture-shop-variants,gen-board-sb1}.mjs`
+  (generated `shots-shop/` + `review-board-m10.html` are gitignored).
+- **Remaining:** M10 PR 2 (optimistic writes) — next action, on
+  `codex/optimistic-writes` per spec §4. No visual surface, no board pin.
+
+## 2026-07-05 - Milestone 9 (Resilience) shipped: error/loading/not-found boundaries + raw-error sweep
+
+Built and shipped M9 in one session from the locked spec
+([plans/error-boundaries.md](plans/error-boundaries.md)), owner-approved per
+milestone. **PR #33 (`codex/error-boundaries` → `main` `8f1cd46`) merged and
+deployed to Vercel prod.**
+
+- **What shipped:** four new route files (`app/error.tsx`,
+  `app/global-error.tsx`, `app/not-found.tsx`, `app/loading.tsx`) rendering a
+  standalone branded panel outside `AppShell` (a crash may be in the shell); a
+  recipe-detail 404 (bad `/recipes/[id]`); a `toAuthErrorMessage` mapper in
+  `lib/errors.ts` (+`lib/errors.test.ts`, 10 assertions); and the 17-site sweep
+  of raw `setError(x.message)` across Settings, recipe detail, auth-gate, and the
+  plan/recipes/grocery hooks through `toErrorMessage`/`toAuthErrorMessage`. New
+  `.error-boundary-*` CSS (tokens only) documented in
+  [design-system.md](design-system.md).
+- **Key decision — `notFound()` mechanism (deviation from the spec's literal
+  §3e):** the spec said to call `notFound()` inside the async `loadRecipe`.
+  Verified via the Next.js docs (Context7) that an async-thrown `notFound()` is
+  **not** caught by the not-found boundary — it must be thrown during render. So
+  the `PGRST116` case sets a `missing` state flag and `notFound()` is tripped at
+  render time. Same observable behavior the spec's §6.5 acceptance requires;
+  proven live (`/recipes/<bad-uuid>` → not-found panel). Recorded in
+  [decisions.md](decisions.md).
+- **Senior `/code-review` (high):** no correctness bugs. Three follow-ups
+  applied (`fae30a6`): (1) `global-error.tsx` now logs its `error` like
+  `error.tsx`; (2) `.error-boundary-panel` gains `margin: 0 auto` to center like
+  `.auth-panel` on desktop; (3) **owner chose** to have `toAuthErrorMessage` pass
+  unmapped-but-readable auth errors through (rate limits, etc.) rather than hide
+  them behind the generic line, consistent with `toErrorMessage`.
+- **Board pin EB1 (error panel):** signed off ("EB1: OK"); board redeployed in
+  place to the 🍳 artifact URL. Keeping a single "Go to Today" on the 404 (no
+  "Try again") was accepted.
+- **Verification:** eslint / tsc clean, **vitest 138/138** (was 128, +10 for
+  `errors.test.ts`), `next build` 12 routes. Review-board harnesses on the local
+  stack: verify-detail-pass 15/15, verify-recipes-pass 22/22 (live `save_recipe`
+  round-trip), verify-import-pass 26/26 — proving the sweep and recipe-detail
+  changes behavior-neutral. Custom probes: boundary smoke (error panel renders +
+  recovers; temp `boom=1` throw reverted + grep-proven), not-found (unmatched
+  route + bad recipe id), auth mapping (wrong password → "Wrong email or
+  password."). Grep proof: no `setError(x.message)` sites remain. PR #33 CI green
+  (app-checks 56s, db-tests 1m5s), `main` post-merge CI green (1m19s), prod
+  liveness `/` 200 and `/nonexistent` → 404 with `error-boundary-panel` in the
+  served HTML. DB layer untouched (pgTAP 108).
+- **Gotcha logged:** `next build` while the local dev server runs poisons the
+  shared `.next` with `.env.local`'s prod URLs (broke the EB1 capture until
+  `rm -rf .next` + dev restart) — the review-board README warns about this.
+- **Remaining (owner's call, not blocking):** M10-M15 specced but unapproved;
+  M8 real-device import tails still open.
+
+## 2026-07-05 - Scoping session: milestones 9-15 specced (docs-only, no code)
 
 With milestone 8 done and nothing queued, the owner asked to scope **all** the
 improvement candidates in one pass, with the explicit constraint that the

@@ -312,34 +312,47 @@ Acceptance:
 - The existing editor's behavior is byte-identical after the
   `saveRecipeForm` extraction (existing verify script re-run green).
 
-## Scoped Milestones (2026-07-05 scoping session — specced, not started)
+## Scoped Milestones (2026-07-05 scoping session)
 
 All seven were interviewed and specced in one session (owner verdicts recorded
 in each spec's §1 table); each has a builder-ready spec in `docs/plans/`
-written for a lower-capability executor. **None is approved to build yet** —
-the owner picks the order and gives the go-ahead per milestone. Recommended
-order below (dependencies noted); board pins for M9/M10/M11/M13/M15 can bundle
-into one review round; M14 needs its own round.
+written for a lower-capability executor. **M9 shipped 2026-07-05 (PR #33,
+deployed); M10 PR 1 shipped 2026-07-05 (PR #34, deployed) — M10 PR 2 and
+M11-M15 remain to build** — the owner picks the order and gives the go-ahead per
+milestone. Recommended order below
+(dependencies noted); board pins for M10/M11/M13/M15 can bundle into one review
+round; M14 needs its own round.
 
-### 9. Resilience (error/loading boundaries + raw-error sweep)
+### 9. Resilience (error/loading boundaries + raw-error sweep) — DONE
 
-Spec: [plans/error-boundaries.md](plans/error-boundaries.md) · Branch `codex/error-boundaries`
+**Done 2026-07-05: PR #33 (`codex/error-boundaries` → `main` `8f1cd46`),
+deployed.** Root `error.tsx`/`global-error.tsx`/`not-found.tsx`/`loading.tsx`
+boundaries, a recipe-detail 404 (`PGRST116` → render-time `notFound()`), the
+`toAuthErrorMessage` mapper, and the sweep of 17 `setError(x.message)` sites
+through `toErrorMessage`/`toAuthErrorMessage`. Board pin EB1 signed off; senior
+review clean; vitest 138/138; harnesses 15/22/26. Zero schema, zero deps. Its
+error plumbing is now available to M10 and M11.
 
-Root `error.tsx`/`global-error.tsx`/`not-found.tsx`/`loading.tsx`, a
-recipe-detail 404, a friendly auth-error mapper, and the sweep of ~18
-`setError(x.message)` sites through `toErrorMessage`. Zero schema, zero deps.
-**Build first — M10 and M11 assume its error plumbing.**
+Spec: [plans/error-boundaries.md](plans/error-boundaries.md) · Branch `codex/error-boundaries` (merged + deleted)
 
 ### 10. Responsiveness (Shop stale banner + optimistic writes)
 
 Spec: [plans/responsiveness.md](plans/responsiveness.md) · Branches
-`codex/shop-stale-banner`, then `codex/optimistic-writes`
+`codex/shop-stale-banner` (PR 1, merged + deleted), then `codex/optimistic-writes` (PR 2)
 
-PR 1 replaces the Shop page's silent regenerate-on-load with an amber
-banner + explicit button (closes the "prompting before regeneration" half of
-the old over-triggered-regeneration flag). PR 2 makes item-level mutations
-optimistic (apply-then-rollback) per the binding treatment table, with a
-latency-probe harness. Zero schema, zero deps. After M9.
+**PR 1 done 2026-07-05: PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`),
+deployed.** An amber staleness banner + explicit Generate/Update button replaces
+the Shop page's silent regenerate-on-load (closes the "prompting before
+regeneration" half of the old over-triggered-regeneration flag; the
+version-scoping half was closed by M3). Board pin SB1: A (amber); senior review
+applied one fix (banner in-flight flicker on plan switch); `verify-shop-pass`
+22/22; zero schema, zero deps.
+
+**PR 2 (optimistic writes) — not started, next action.** Make item-level
+mutations optimistic (apply-then-rollback) per the binding treatment table
+(§4b), drop the blocking refetches from form saves, add a latency-probe harness.
+No visual surface, no board pin. Build on `codex/optimistic-writes` off the
+current `main`.
 
 ### 11. Password reset
 
