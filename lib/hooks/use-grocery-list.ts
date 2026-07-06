@@ -35,6 +35,7 @@ export function useGroceryList() {
   const [items, setItems] = useState<GroceryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
+  const [stale, setStale] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -106,6 +107,10 @@ export function useGroceryList() {
 
   async function loadGroceryItems(planId: string, options?: { skipStaleCheck?: boolean }) {
     setError(null);
+    // Clear staleness while the new plan's items are in flight so a plan switch
+    // (or a load error) never flashes the previous plan's banner; it is
+    // recomputed from the freshly-loaded plan below.
+    setStale(false);
     const { data, error: groceryError } = await supabase
       .from("grocery_list_items")
       .select("id, ingredient_name, amount, unit_code, is_pantry_staple, is_on_hand, is_checked, source_key")
@@ -123,19 +128,15 @@ export function useGroceryList() {
     const plan = plans.find((value) => value.id === planId);
     if (!plan) return;
 
-    // Stale when the list was generated from a different plan version (or
-    // never generated). Milestone 3's triggers bump the version only on
-    // grocery-relevant changes, and regeneration preserves user state, so an
-    // automatic regenerate here is safe.
-    if (plan.groceries_version !== plan.version) {
-      await regenerate(plan, true);
-    }
+    // Milestone 10: staleness is surfaced as a banner, never auto-regenerated.
+    // The list stays usable while stale; the user resolves it explicitly.
+    setStale(plan.groceries_version !== plan.version);
   }
 
-  async function regenerate(plan: GroceryPlan, silent = false) {
+  async function regenerate(plan: GroceryPlan) {
     setRegenerating(true);
     setError(null);
-    if (!silent) setMessage(null);
+    setMessage(null);
 
     try {
       // Transactional, state-preserving regeneration in the database
@@ -152,8 +153,9 @@ export function useGroceryList() {
       setPlans((current) =>
         current.map((value) => (value.id === plan.id ? { ...value, groceries_version: value.version } : value)),
       );
+      setStale(false);
       await loadGroceryItems(plan.id, { skipStaleCheck: true });
-      if (!silent) setMessage("Grocery list regenerated from current meal plan.");
+      setMessage("Grocery list regenerated from current meal plan.");
     } catch (caughtError) {
       setError(toErrorMessage(caughtError, "Failed to regenerate grocery list."));
     } finally {
@@ -222,6 +224,7 @@ export function useGroceryList() {
     onHandItems,
     loading,
     regenerating,
+    stale,
     error,
     message,
     regenerate,

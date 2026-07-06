@@ -24,11 +24,13 @@ function ShopScreen() {
     selectedPlanId,
     selectPlan,
     selectedPlan,
+    items,
     mainItems,
     pantryItems,
     onHandItems,
     loading,
     regenerating,
+    stale,
     error,
     message,
     regenerate,
@@ -40,6 +42,7 @@ function ShopScreen() {
   const [showOnHand, setShowOnHand] = useState(false);
 
   const today = toYmd(new Date());
+  const hasList = items.length > 0;
   const uncheckedCount = useMemo(
     () => [...mainItems, ...pantryItems].filter((item) => !item.is_checked).length,
     [mainItems, pantryItems],
@@ -130,6 +133,23 @@ function ShopScreen() {
         ) : null}
 
         <StatusMessage error={error} message={message} />
+        {stale && selectedPlan && !loading ? (
+          <div className="shop-stale-banner" role="status">
+            <p>
+              {hasList
+                ? "Your meal plan changed since this list was made."
+                : "This plan doesn't have a grocery list yet."}
+            </p>
+            <button
+              className="shop-stale-btn"
+              disabled={regenerating}
+              onClick={() => regenerate(selectedPlan)}
+              type="button"
+            >
+              {regenerating ? "Updating..." : hasList ? "Update list" : "Generate list"}
+            </button>
+          </div>
+        ) : null}
         {loading ? <p className="muted">Loading...</p> : null}
         {!loading && plans.length === 0 ? (
           <p className="muted">No current meal plan — plan the week first, then shop from it.</p>

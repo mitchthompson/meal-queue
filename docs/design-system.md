@@ -292,6 +292,12 @@ direction, over the unchanged `use-grocery-list` data layer. Column capped by
   `1.02rem` name (checked = muted + strikethrough), `tabular-nums` amount,
   small muted per-row move actions (have this / move to groceries / move
   back).
+- `.shop-stale-banner` / `.shop-stale-btn` (milestone 10): amber staleness
+  callout shown when the plan changed since the list was generated. The
+  banner uses the accent-soft fill / accent-deep text / accent border of the
+  import callout; the button is a solid `--color-accent-deep` 44px action
+  ("Update list" / "Generate list"). The list stays usable while stale — the
+  banner is the only path that regenerates; nothing regenerates on load.
 
 ### Settings components
 
