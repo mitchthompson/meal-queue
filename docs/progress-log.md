@@ -44,6 +44,74 @@ Three issues the owner hit in real use, built on `codex/ux-feedback-fixes` (off
   running app (artifact, favicon 🛠️); owner signed off the pins. **Owner tail:**
   a real-iPhone pass on the takeover (WebKit ≠ Playwright).
 
+## 2026-07-06 - Milestone 11 (password reset) built on branch, AR1 signed off — NOT committed/merged
+
+Owner approved starting M11. Built the whole milestone from the locked spec
+([plans/password-reset.md](plans/password-reset.md)) on `codex/password-reset`
+(off `main` `cc1e6ec`). **Everything below is uncommitted working-tree work** —
+AR2 sign-off + owner gates + merge word still pending. Session also **pushed the
+stranded M10-PR2 docs wrap** (`cc1e6ec`, was local-only) to `origin/main` at the
+start; `origin/main` and local `main` back in sync.
+
+- **What was built (spec §3–§4):**
+  - `components/auth-gate.tsx` — a `message` state, a `requestPasswordReset`
+    handler (`supabase.auth.resetPasswordForEmail(email, { redirectTo:
+    ${origin}/reset-password })`), and a "Forgot password?" `.text-btn` shown
+    only in sign-in mode. Reuses M9's `toAuthErrorMessage`. Sign-in/sign-up/
+    session-cache/`ensureUserSettings` untouched.
+  - `app/reset-password/page.tsx` (new client component) — resolves the recovery
+    session via `getSession()` + `onAuthStateChange` (same as auth-gate); three
+    states (loading / "Reset link expired" / the new-password form). Submit does a
+    client-side match check then `supabase.auth.updateUser({ password })`.
+  - `app/reset-password/layout.tsx` (new) — metadata title "Reset Password".
+  - Zero schema, zero deps, no `supabase/**` touched (config.toml redirect
+    allowlist is on the spec do-not-touch list).
+- **Senior `/code-review` (high): no correctness bugs.** Refuted the
+  expired-link-flash worry (supabase-js `getSession()` awaits its init promise,
+  which processes the URL recovery token and persists the session *before*
+  resolving — the real recovery redirect renders the form directly). 3
+  low-severity notes surfaced and, **owner-approved, applied:** (1) `disabled={busy}`
+  on the Forgot-password button (no double-send); (2) clear the status line on the
+  sign-in↔sign-up toggle (no stale success bleeding onto the other form) — new
+  harness assertion; (3) title case "Reset Password".
+- **Board round AR (deployed in place to the 🍳 artifact URL) — AR1 caught a real
+  bug.** As first built, the sign-in screen mashed the two `.text-btn` links
+  ("Need an account? Create one" + "Forgot password?") onto one line. Mocked A
+  (stacked) vs B (spaced row); **owner picked AR1: A.** Implemented as a new
+  `.auth-links` wrapper (column, `align-items:flex-start`, `gap:0.6rem`,
+  `margin-top:0.5rem`) in `app/globals.css`, documented in
+  [design-system.md](design-system.md). **AR2 (the reset page — form + expired
+  state) still awaits sign-off** (`AR2: ok` or a tweak).
+- **Verification (all green):** typecheck / lint clean, **vitest 138/138**
+  (unchanged — UI/hook behavior, no lib units), `next build` **13 routes**
+  (`/reset-password` ~1.7 kB). New **`scripts/review-board/verify-reset-pass.mjs`
+  25/25, 0 console errors** on the local stack + a `:3123` dev server: empty-email
+  guard fires no `/recover`; reset-request success + **a real recovery email
+  lands in Mailpit**; expired-link state; the form/mismatch-guard/`updateUser`
+  change; **old password rejected + new accepted**; toggle-clear; sign-up-toggle
+  hides the link. Re-run green after the note edits and again after AR1: A.
+- **Hard-won env facts (this session):**
+  - Local reset testing **needs the mail catcher** — `resetPasswordForEmail`
+    *errors* (can't send) when inbucket/mailpit is excluded. Restarted the stack
+    per spec §6: `supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,supavisor`
+    (mailpit **not** excluded; data persists across stop/start). Stack left up
+    this way; `:3123` dev server stopped.
+  - **Can't follow the email link on `:3123`** — the recovery redirect target
+    isn't in the local `additional_redirect_urls`, and `supabase/config.toml` is
+    do-not-touch. So the harness proves the recovery UI states via a normal
+    signed-in session (`/reset-password` keys off session presence, not
+    specifically a recovery event) + the Mailpit API to confirm the email lands.
+    The true email→Safari→recovery-session round-trip is the Needs-Mitchell prod
+    item.
+  - The harness is **destructive-but-safe**: it changes then restores the reviewer
+    password (`review-pass-1234`) in a `finally`, and self-heals a prior aborted
+    run. RTK mangles a direct backgrounded `next dev` into a build — start it via
+    `rtk proxy bash -c '… exec npx next dev -p 3123'`.
+- **Remaining (all owner-side) before merge:** AR2 sign-off · add the two
+  `/reset-password` **redirect URLs in the Supabase dashboard** (prod +
+  `localhost:3000`) · one **prod real-device reset** on iPhone Safari after
+  deploy · then commit / PR / merge on the owner's word.
+
 ## 2026-07-05 - Milestone 10 PR 2 shipped: optimistic item mutations
 
 Built and shipped M10 PR 2 from the locked spec

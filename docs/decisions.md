@@ -416,7 +416,16 @@ all locked in the specs' §1 tables:
   auto-regeneration and over a blocking dialog. The list never writes on load.
 - **Auth (M11): password reset only.** Sign-up confirmation messaging stays
   deferred — single household, accounts already provisioned. Friendlier auth
-  errors land earlier via M9's `toAuthErrorMessage`.
+  errors land earlier via M9's `toAuthErrorMessage`. **Build decisions
+  (2026-07-06, on `codex/password-reset`, not yet merged):** board pin **AR1: A**
+  — the sign-in mode-toggle and "Forgot password?" links **stack** in a new
+  `.auth-links` column (the as-first-built inline layout collided them). Three
+  senior-review notes applied over the spec's verbatim code: `disabled={busy}` on
+  the forgot button (no double-send), the status line clears on the sign-in↔sign-up
+  toggle, and the tab title is title-cased "Reset Password". `/reset-password`
+  gates on **session presence** (not specifically a recovery event) — an
+  authenticated user can change their password there too; not a security issue
+  (`updateUser` needs a valid session). **AR2 (reset page) sign-off still pending.**
 - **Optimistic UI (M10 PR 2): "everything client-writable"**, interpreted as
   a binding per-mutation table: item-level mutations get true
   apply-then-rollback optimism; `createPlan`/`savePlanMeta`/
@@ -432,10 +441,12 @@ all locked in the specs' §1 tables:
   the fifth migration (full DB ritual). Conversion factors live in a new
   `units.base_factor` column (data-driven, not hardcoded in the function);
   old-key rows normalize state-intact with `bool_and` merge semantics.
-- **Execution rails:** per-milestone go-ahead required. **M9 shipped
-  2026-07-05 (PR #33); M10–M15 remain unapproved.** Recommended order
-  10 → 11 → 12 → 13 → 14 → 15 (dependencies in [roadmap.md](roadmap.md));
-  board pins for M10/M11/M13/M15 may bundle into one round, M14 gets its own.
+- **Execution rails:** per-milestone go-ahead required. **M9 + M10 shipped
+  (2026-07-05); M11 approved and in progress (2026-07-06, built on branch,
+  awaiting AR2 sign-off + owner gates + merge); M12–M15 remain unapproved.**
+  Recommended order 12 → 13 → 14 → 15 (dependencies in
+  [roadmap.md](roadmap.md)); board pins for M13/M15 may bundle into one round,
+  M14 gets its own.
 
 ### Milestone 9 build decisions (2026-07-05)
 
