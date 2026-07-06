@@ -256,11 +256,25 @@ export function useRecipes(userId: string, editRecipeId: string | null) {
       // stale. Extracted to saveRecipeForm (C1) and shared with import.
       const recipeId = await saveRecipeForm(form);
 
-      await loadData();
+      // Milestone 10 PR 2: reduced-latency confirm — the atomic save_recipe RPC
+      // await above stays (validation is the point), but the former full
+      // reload + re-select round trip is replaced by a local list patch. Tags
+      // created during this save won't appear in knownTags until the next full
+      // load — acceptable (owner-noted in the PR).
+      const name = form.name.trim();
+      const baseServings = Number(form.base_servings || 2);
+      setRecipes((current) => {
+        if (current.some((recipe) => recipe.id === recipeId)) {
+          return current.map((recipe) =>
+            recipe.id === recipeId
+              ? { ...recipe, name, base_servings: baseServings, instructions_raw: form.instructions_raw }
+              : recipe,
+          );
+        }
+        return [{ id: recipeId, name, base_servings: baseServings, instructions_raw: form.instructions_raw }, ...current];
+      });
+      setForm((current) => ({ ...current, id: recipeId }));
       setShowEditor(true);
-      await selectRecipe(recipeId);
-      // After selectRecipe, which resets the status line — otherwise the
-      // confirmation is wiped before it ever paints.
       setMessage("Recipe saved.");
     } catch (caughtError) {
       setError(toErrorMessage(caughtError, "Failed to save recipe."));
@@ -273,6 +287,7 @@ export function useRecipes(userId: string, editRecipeId: string | null) {
     if (!form.id) return;
     if (!window.confirm("Delete this recipe?")) return;
 
+    const deletedId = form.id;
     const { error: deleteError } = await supabase.from("recipes").delete().eq("id", form.id);
     if (deleteError) {
       setError(toErrorMessage(deleteError, "Failed to delete recipe."));
@@ -282,7 +297,8 @@ export function useRecipes(userId: string, editRecipeId: string | null) {
     setForm(blankForm());
     setShowEditor(false);
     setMessage("Recipe deleted.");
-    loadData();
+    // Milestone 10 PR 2: drop the fire-and-forget reload for a local filter.
+    setRecipes((current) => current.filter((recipe) => recipe.id !== deletedId));
   }
 
   return {

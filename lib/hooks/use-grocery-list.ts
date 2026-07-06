@@ -163,54 +163,66 @@ export function useGroceryList() {
     }
   }
 
+  // Milestone 10 PR 2: item-level writes are optimistic — patch local state
+  // before the round trip and, on failure, roll back only the touched item(s)
+  // functionally so a concurrent optimistic patch on another item is never
+  // clobbered. Single household, last-write-wins (locked decision), no queue.
   async function toggleChecked(item: GroceryItem) {
+    setError(null);
+    setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_checked: !value.is_checked } : value)));
     const { error: toggleError } = await supabase
       .from("grocery_list_items")
       .update({ is_checked: !item.is_checked })
       .eq("id", item.id);
     if (toggleError) {
+      setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_checked: item.is_checked } : value)));
       setError(toErrorMessage(toggleError, "Failed to update the item."));
-      return;
     }
-    setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_checked: !value.is_checked } : value)));
   }
 
   async function setCheckedForBucket(bucketItems: GroceryItem[], isChecked: boolean) {
     if (bucketItems.length === 0) return;
+    setError(null);
     const ids = bucketItems.map((item) => item.id);
     const idSet = new Set(ids);
-    const { error: updateError } = await supabase.from("grocery_list_items").update({ is_checked: isChecked }).in("id", ids);
-    if (updateError) {
-      setError(toErrorMessage(updateError, "Failed to update the items."));
-      return;
-    }
+    // Prior state per id, so a rollback restores each item's own value.
+    const priorChecked = new Map(bucketItems.map((item) => [item.id, item.is_checked]));
     setItems((current) =>
       current.map((value) => (idSet.has(value.id) ? { ...value, is_checked: isChecked } : value)),
     );
+    const { error: updateError } = await supabase.from("grocery_list_items").update({ is_checked: isChecked }).in("id", ids);
+    if (updateError) {
+      setItems((current) =>
+        current.map((value) => (priorChecked.has(value.id) ? { ...value, is_checked: priorChecked.get(value.id)! } : value)),
+      );
+      setError(toErrorMessage(updateError, "Failed to update the items."));
+    }
   }
 
   async function movePantryToMain(item: GroceryItem) {
+    setError(null);
+    setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_pantry_staple: false } : value)));
     const { error: moveError } = await supabase
       .from("grocery_list_items")
       .update({ is_pantry_staple: false })
       .eq("id", item.id);
     if (moveError) {
+      setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_pantry_staple: item.is_pantry_staple } : value)));
       setError(toErrorMessage(moveError, "Failed to move the item."));
-      return;
     }
-    setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_pantry_staple: false } : value)));
   }
 
   async function setOnHand(item: GroceryItem, isOnHand: boolean) {
+    setError(null);
+    setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_on_hand: isOnHand } : value)));
     const { error: updateError } = await supabase
       .from("grocery_list_items")
       .update({ is_on_hand: isOnHand })
       .eq("id", item.id);
     if (updateError) {
+      setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_on_hand: item.is_on_hand } : value)));
       setError(toErrorMessage(updateError, "Failed to update the item."));
-      return;
     }
-    setItems((current) => current.map((value) => (value.id === item.id ? { ...value, is_on_hand: isOnHand } : value)));
   }
 
   return {

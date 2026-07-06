@@ -362,6 +362,12 @@ export function usePlan(userId: string) {
     setError(null);
     setMessage(null);
 
+    // Milestone 10 PR 2: append the new meal locally (temp id) before the
+    // insert, then swap in the real id on success. tempId is declared out here
+    // so the catch can remove exactly this row on failure — and only if the
+    // insert never succeeded, since a successful insert swaps the id away
+    // (making the filter a no-op, so a later refresh throw keeps the saved row).
+    let tempId: string | null = null;
     try {
       // The grid renders from the (possibly unsaved) date form; the database
       // validates against the SAVED range. Catch the mismatch with a clear
@@ -376,22 +382,55 @@ export function usePlan(userId: string) {
       const leftoverFromItemId = options.leftoverFromItemId ?? null;
       const note = options.note?.trim() ? options.note.trim() : null;
 
-      const { error: insertError } = await supabase.from("meal_plan_items").insert({
-        meal_plan_id: selectedPlan.id,
+      // Recipe object for the optimistic row: cook slots resolve from the
+      // hook's recipe list, leftovers from the source item they copy, eat-out
+      // has none. Real call paths always resolve (cook ids come from the recipe
+      // list, leftover sources carry a recipe); null is only a defensive fallback.
+      const optimisticRecipe: RecipeOption | null =
+        slotType === "cook" && recipeId
+          ? recipes.find((recipe) => recipe.id === recipeId) ?? null
+          : slotType === "leftover" && leftoverFromItemId
+            ? items.find((value) => value.id === leftoverFromItemId)?.recipe ?? null
+            : null;
+
+      // Random suffix (not just Date.now()) so two adds in the same millisecond
+      // cannot share a temp id and get collapsed onto one real id by the swap.
+      const newId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      tempId = newId;
+      const optimisticItem: MealPlanItem = {
+        id: newId,
         plan_date: day,
-        // Vestigial since the flat-day rework (owner decision 2026-07-02):
-        // the NOT NULL column stays in the schema, every new row writes
-        // 'dinner', and nothing reads it.
-        meal_type: "dinner",
         slot_type: slotType,
-        recipe_id: recipeId,
         leftover_from_item_id: leftoverFromItemId,
         note,
         serving_multiplier: servingMultiplier,
-      });
+        created_at: new Date().toISOString(),
+        recipe: optimisticRecipe,
+      };
+      setItems((current) => [...current, optimisticItem]);
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("meal_plan_items")
+        .insert({
+          meal_plan_id: selectedPlan.id,
+          plan_date: day,
+          // Vestigial since the flat-day rework (owner decision 2026-07-02):
+          // the NOT NULL column stays in the schema, every new row writes
+          // 'dinner', and nothing reads it.
+          meal_type: "dinner",
+          slot_type: slotType,
+          recipe_id: recipeId,
+          leftover_from_item_id: leftoverFromItemId,
+          note,
+          serving_multiplier: servingMultiplier,
+        })
+        .select("id")
+        .single();
       if (insertError) throw insertError;
 
-      await loadPlanItems(selectedPlan.id);
+      // Swap the temp id for the real one in place; keep the plan-version
+      // refresh, drop the full item refetch (the local row is already truth).
+      setItems((current) => current.map((value) => (value.id === newId ? { ...value, id: inserted.id } : value)));
       await refreshPlansAndKeepSelection(selectedPlan.id);
       if (slotType === "leftover") {
         setMessage("Leftover added to plan.");
@@ -412,6 +451,9 @@ export function usePlan(userId: string) {
         setActiveDay(null);
       }
     } catch (caughtError) {
+      // Remove only this optimistic row; a no-op once the id was swapped (so a
+      // successful insert whose later refresh throws keeps the saved row).
+      if (tempId) setItems((current) => current.filter((value) => value.id !== tempId));
       setError(toErrorMessage(caughtError, "Failed adding meal."));
     } finally {
       setSaving(false);
@@ -423,14 +465,30 @@ export function usePlan(userId: string) {
     setSaving(true);
     setError(null);
     setMessage(null);
+    // Milestone 10 PR 2: drop the item locally before the delete round trip;
+    // keep the plan-version refresh, drop the item refetch. Capture the removed
+    // row (and its position) so a WRITE failure re-inserts just that row; a
+    // successful delete whose later refresh throws must NOT bring it back.
+    const removedIndex = items.findIndex((value) => value.id === itemId);
+    const removed = removedIndex >= 0 ? items[removedIndex] : null;
+    let deleted = false;
+    setItems((current) => current.filter((value) => value.id !== itemId));
     try {
       const { error: deleteError } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
       if (deleteError) throw deleteError;
+      deleted = true;
 
-      await loadPlanItems(selectedPlan.id);
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Meal removed.");
     } catch (caughtError) {
+      if (!deleted && removed) {
+        setItems((current) => {
+          if (current.some((value) => value.id === itemId)) return current;
+          const next = [...current];
+          next.splice(Math.min(removedIndex, next.length), 0, removed);
+          return next;
+        });
+      }
       setError(toErrorMessage(caughtError, "Failed removing meal."));
     } finally {
       setSaving(false);
@@ -468,17 +526,31 @@ export function usePlan(userId: string) {
     setSaving(true);
     setError(null);
     setMessage(null);
+    // Milestone 10 PR 2: patch the serving locally before the write; the local
+    // patch is the truth on success, so we keep the plan-version refresh but
+    // drop the full item refetch. Roll back only this item's value, and only if
+    // the WRITE failed (a successful write whose later refresh throws stays put).
+    const priorValue = item.serving_multiplier;
+    let written = false;
+    setItems((current) =>
+      current.map((value) => (value.id === item.id ? { ...value, serving_multiplier: nextValue } : value)),
+    );
     try {
       const { error: updateError } = await supabase
         .from("meal_plan_items")
         .update({ serving_multiplier: nextValue })
         .eq("id", item.id);
       if (updateError) throw updateError;
+      written = true;
 
-      await loadPlanItems(selectedPlan.id);
       await refreshPlansAndKeepSelection(selectedPlan.id);
       setMessage("Serving updated.");
     } catch (caughtError) {
+      if (!written) {
+        setItems((current) =>
+          current.map((value) => (value.id === item.id ? { ...value, serving_multiplier: priorValue } : value)),
+        );
+      }
       setError(toErrorMessage(caughtError, "Failed updating serving."));
     } finally {
       setSaving(false);
