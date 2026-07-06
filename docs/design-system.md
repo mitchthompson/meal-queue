@@ -393,6 +393,11 @@ auth-panel language.
 
 - `.error-text` → `var(--color-danger)`; `.success-text` → `var(--color-success)`.
 - `.muted` utility → `var(--muted)`, `0.85rem`.
+- `.auth-links`: column-stacked wrapper for the secondary text links under the
+  auth form (the mode toggle + the "Forgot password?" link, milestone 11) —
+  `flex-direction: column`, `align-items: flex-start`, `gap: 0.6rem`,
+  `margin-top: 0.5rem`. Keeps the two `.text-btn` links from colliding on one
+  line (board pin AR1: A).
 - `details`/`summary` power collapsibles (recipe danger menu, recipe details,
   home next-week) with `list-style: none` and a hidden webkit marker.
 - **Navigation** is centralized in [`components/app-shell.tsx`](../components/app-shell.tsx):
