@@ -492,6 +492,36 @@ decision above.
   banner/copy on every plan switch. Resetting `setStale(false)` before the fetch
   keeps `stale`/`items` a coherent snapshot.
 
+### Milestone 10 PR 2 — optimistic writes (2026-07-05)
+
+M10 PR 2 built and shipped from the locked spec
+([plans/responsiveness.md](plans/responsiveness.md) §4); PR #35 (`main`
+`1d16ef8`), deployed. Completes milestone 10.
+
+- **Item-level mutations are optimistic; form saves shed their refetches.**
+  Grocery toggle/bucket/pantry/on-hand and plan adjustServing/removeItem/addMeal
+  patch local state before the write; recipe save/delete patch the list locally
+  instead of a full reload. The atomic `save_recipe` RPC await is kept (validation
+  is the point), and `saveRecipeForm` (the C1 seam) was not touched. Plan
+  mutations keep `refreshPlansAndKeepSelection` (version freshness) but drop the
+  `loadPlanItems` item refetch.
+- **Rollback is targeted and functional, not a whole-list snapshot** (senior
+  `/code-review` decision — owner chose to harden over the spec's literal §4a
+  snapshot pattern). On failure each function restores only the touched item's
+  field (or re-inserts only the removed row at its index); a concurrent optimistic
+  patch on another item is therefore never clobbered. This realizes the spec's
+  locked "use functional setState everywhere; last-write-wins accepted (single
+  household), no mutation queues" directive.
+- **A committed write is never rolled back by a later refresh failure.** The DB
+  write and the follow-up `refreshPlansAndKeepSelection` are separated by a
+  `written`/`deleted` flag (or, for `addMeal`, a tempId filter that no-ops once the
+  id is swapped), so only a genuine write failure reverts the UI. This fixed a
+  regression the first optimistic draft introduced.
+- **`addMeal` temp ids carry a random suffix** (`optimistic-${Date.now()}-${rand}`)
+  so a same-millisecond double-add cannot collapse two rows onto one real id.
+- No visual surface, so no board pin. Proven by `verify-optimistic-pass.mjs`
+  (16/16 latency + rollback probe) plus the re-run regression harnesses.
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)

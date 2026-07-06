@@ -3,7 +3,80 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-05 (latest) - Milestone 10 PR 1 shipped: Shop staleness banner replaces silent regenerate-on-load
+## 2026-07-05 (latest) - Milestone 10 PR 2 shipped: optimistic item mutations
+
+Built and shipped M10 PR 2 from the locked spec
+([plans/responsiveness.md](plans/responsiveness.md) §4), owner-approved.
+**PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`) merged and deployed to
+Vercel prod.** Milestone 10 (and the "no optimistic UI" flag) is now complete.
+
+- **What shipped:** item-level mutations apply to local React state *before* the
+  network round trip and roll back on failure, and the plan/recipe form saves
+  drop their blocking refetches, per the binding §4b treatment table:
+  - `lib/hooks/use-grocery-list.ts` — `toggleChecked`, `setCheckedForBucket`,
+    `movePantryToMain`, `setOnHand` patch optimistically.
+  - `lib/hooks/use-plan.ts` — `adjustServing`, `removeItem`, `addMeal` patch
+    optimistically; keep `refreshPlansAndKeepSelection` (plan-version freshness),
+    drop the `loadPlanItems` refetch. `addMeal` appends a temp-id row and swaps
+    the real id in on insert.
+  - `lib/hooks/use-recipes.ts` — `saveRecipe`/`deleteRecipe` patch the `recipes`
+    list locally instead of `loadData()`+`selectRecipe()`; the atomic
+    `save_recipe` RPC await stays. Known tradeoff (owner-noted in the PR): tags
+    created during a save don't reach `knownTags` until the next full load.
+  - `saveRecipeForm` (the C1 seam), `supabase/**`, `app/api/**` untouched, per
+    the spec do-not-touch list.
+- **Senior `/code-review` (high) — 3 findings, all fixed before merge.** Two
+  independent finder passes (line-by-line, removed-behavior, cross-file, reuse,
+  altitude, conventions), cross-verified; a 4th candidate (optimistic-recipe
+  null) was refuted as unreachable (cook ids always come from `quickMatches ⊆
+  recipes`, leftover sources always carry a recipe).
+  1. **[High] Refresh-after-write rollback regression.** The DB write and the
+     throwing `refreshPlansAndKeepSelection` shared one `try`; on the rare path
+     where the write committed but the refresh threw, the catch's
+     `setItems(snapshot)` rolled back a *persisted* change and showed a false
+     "Failed…" error — and since the refresh keeps the same `selectedPlanId`, the
+     `[selectedPlanId]` effect never refetched, so a ghost row persisted until a
+     manual reselect. The old code never touched `items` in catch. **Fixed:**
+     `written`/`deleted` guards (adjustServing/removeItem) so only a WRITE failure
+     rolls back; `addMeal` uses a tempId filter that is a no-op once the id is
+     swapped (so a post-insert refresh throw keeps the saved row).
+  2. **[Low — owner chose to harden] Concurrent stale-snapshot clobber.**
+     `const snapshot = items` captured the whole list from the render closure;
+     two rapid taps on different items where the *later* one fails would roll back
+     to a snapshot missing the *earlier* successful optimistic patch, silently
+     reverting it. **Fixed:** switched all six functions to **targeted functional
+     rollback** — restore only the touched item's field (or re-insert only the
+     removed row at its index), never a whole-list snapshot. Resolves the tension
+     with the locked "functional setState everywhere" decision.
+  3. **[Low-Med] Temp-id collision.** `optimistic-${Date.now()}` could collide on
+     a same-millisecond double-add, and the swap then rewrote both rows to one
+     real id (duplicate React key, second row invisible until reload). **Fixed:**
+     random suffix (`optimistic-${Date.now()}-${rand}`).
+- **Verification:** typecheck / eslint clean, **vitest 138/138** (unchanged — the
+  change is hook/UI behavior, covered by Playwright harnesses not vitest units),
+  `next build` 12 routes. New **`verify-optimistic-pass.mjs` 16/16, 0 console
+  errors** (self-contained Playwright latency probe on the local stack, seeds +
+  tears down its own OPTVERIFY plan/recipes): a grocery check and a plan remove
+  each render **<200ms under a 1500ms-delayed network** (observed ~28-29ms), and
+  both **roll back + surface the red `.error-text` on `route.abort()`**.
+  Regression harnesses re-run green after the review fixes: **verify-shop 22/22**,
+  **verify-recipes 22/22**, **verify-import 26/26** (proving the reduced-latency
+  saves still round-trip and M4 preservation holds). Console-error capture in the
+  new harness filters the intentional `net::ERR_FAILED` from the abort probes.
+- **CI:** PR #35 green (app-checks + db-tests). **`main` post-merge CI green on
+  the first run** (no port-bind flake this time). Prod liveness `/`, `/grocery`,
+  `/plans`, `/recipes` all 200; `/nonexistent` 404 (M9 boundary intact).
+- **Scope:** zero schema, zero deps. New harness committed:
+  `scripts/review-board/verify-optimistic-pass.mjs` (generated `shots-optimistic/`
+  gitignored). PR 2 had no visual surface, so no board pin.
+- **Also reconciled:** last session's docs-wrap commit `7a0df26` (M10 PR 1) had
+  never reached `origin/main`; it rode along inside PR #35 rather than a separate
+  direct-to-main push, so `origin/main` and local `main` are now fully in sync.
+- **Remaining:** M11-M15, all unapproved — owner picks order. M11 (password
+  reset) reuses M9's `toAuthErrorMessage`; owner gate = Supabase-dashboard
+  redirect URLs. M12 is the one DB milestone (needs migration review + "apply").
+
+## 2026-07-05 - Milestone 10 PR 1 shipped: Shop staleness banner replaces silent regenerate-on-load
 
 Built and shipped M10 PR 1 from the locked spec
 ([plans/responsiveness.md](plans/responsiveness.md) §3), owner-approved.

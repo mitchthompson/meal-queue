@@ -317,8 +317,8 @@ Acceptance:
 All seven were interviewed and specced in one session (owner verdicts recorded
 in each spec's §1 table); each has a builder-ready spec in `docs/plans/`
 written for a lower-capability executor. **M9 shipped 2026-07-05 (PR #33,
-deployed); M10 PR 1 shipped 2026-07-05 (PR #34, deployed) — M10 PR 2 and
-M11-M15 remain to build** — the owner picks the order and gives the go-ahead per
+deployed); M10 complete 2026-07-05 (PR #34 + PR #35, deployed) — M11-M15 remain
+to build** — the owner picks the order and gives the go-ahead per
 milestone. Recommended order below
 (dependencies noted); board pins for M10/M11/M13/M15 can bundle into one review
 round; M14 needs its own round.
@@ -338,7 +338,8 @@ Spec: [plans/error-boundaries.md](plans/error-boundaries.md) · Branch `codex/er
 ### 10. Responsiveness (Shop stale banner + optimistic writes)
 
 Spec: [plans/responsiveness.md](plans/responsiveness.md) · Branches
-`codex/shop-stale-banner` (PR 1, merged + deleted), then `codex/optimistic-writes` (PR 2)
+`codex/shop-stale-banner` (PR 1) and `codex/optimistic-writes` (PR 2) — both
+merged + deleted. **Milestone 10 complete 2026-07-05.**
 
 **PR 1 done 2026-07-05: PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`),
 deployed.** An amber staleness banner + explicit Generate/Update button replaces
@@ -348,11 +349,16 @@ version-scoping half was closed by M3). Board pin SB1: A (amber); senior review
 applied one fix (banner in-flight flicker on plan switch); `verify-shop-pass`
 22/22; zero schema, zero deps.
 
-**PR 2 (optimistic writes) — not started, next action.** Make item-level
-mutations optimistic (apply-then-rollback) per the binding treatment table
-(§4b), drop the blocking refetches from form saves, add a latency-probe harness.
-No visual surface, no board pin. Build on `codex/optimistic-writes` off the
-current `main`.
+**PR 2 done 2026-07-05: PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`),
+deployed.** Item-level mutations (grocery toggle/bucket/pantry/on-hand, plan
+adjustServing/removeItem/addMeal) apply optimistically with targeted functional
+rollback; the plan/recipe form saves dropped their blocking refetches (the atomic
+`save_recipe` RPC await stays). Senior `/code-review` (high) found + fixed 3
+issues (refresh-after-write rollback regression, concurrent stale-snapshot
+clobber → hardened to per-item rollback, same-ms temp-id collision). Closes the
+"no optimistic UI" flag. `verify-optimistic-pass` 16/16 (render <200ms under a
+1500ms-delayed network, rollback + red error on abort); no visual surface, no
+board pin; zero schema, zero deps.
 
 ### 11. Password reset
 

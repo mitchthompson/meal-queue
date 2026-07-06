@@ -1,19 +1,27 @@
 # Current State
 
-Last reviewed: 2026-07-05 (**Milestone 10 PR 1 (Shop stale banner) shipped & deployed** — PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`) is live on Vercel prod: the Shop page's silent regenerate-on-load is replaced by an amber staleness banner + explicit Generate/Update button — it **never auto-regenerates** and the list stays usable while stale. Board pin **SB1: A (amber)** signed off; senior `/code-review` (high) applied one fix (the new banner briefly flashed the previous plan's state on a plan switch → reset `setStale(false)` at the top of `loadGroceryItems`); **vitest 138/138**, new `verify-shop-pass` harness **22/22** (proves no regen-on-load and that checked items survive a user-triggered update — the M4 guarantee, now user-initiated); post-merge `main` CI needed one rerun (the known transient `supabase start` `54322` port-bind flake, not a code issue); zero schema, zero deps. Prior 2026-07-05: **Milestone 9 (Resilience) shipped & deployed** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, a recipe-detail 404, a `toAuthErrorMessage` mapper, and the 17-site raw-`setError(x.message)` sweep; EB1 signed off, **vitest 138/138**, prod 404 panel live; zero schema, zero deps. Earlier the same day a planning session **scoped milestones 9-15** — seven builder-ready specs in `docs/plans/` (M9 now shipped; M10 responsiveness, M11 password reset, M12 grocery unit merge (DB), M13 plan copy, M14 dark mode, M15 empty states), recipe-import handoff format, owner forks locked. **M10 was then approved and PR 1 shipped (above); M11-M15 remain unapproved.** See Active Handoff. Prior session 2026-07-04: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
+Last reviewed: 2026-07-05 (**Milestone 10 complete — PR 2 (optimistic writes) shipped & deployed** — PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`) is live on Vercel prod: item-level mutations (grocery toggle/bucket/pantry/on-hand, plan adjustServing/removeItem/addMeal) now patch local React state before the write and roll back per-item on failure, and the plan/recipe form saves dropped their blocking refetches (the atomic `save_recipe` RPC await stays); senior `/code-review` (high) found + fixed 3 issues (a refresh-after-write rollback regression, a concurrent stale-snapshot clobber hardened to **targeted functional rollback**, and a same-millisecond temp-id collision); **vitest 138/138**, new `verify-optimistic-pass` **16/16** (a grocery check and a plan remove each render <200ms under a 1500ms-delayed network, and both roll back + show the red error on `route.abort`), regression harnesses re-run green (shop 22/22, recipes 22/22, import 26/26); PR #35 CI green + `main` post-merge CI green on the first run; the docs-wrap `7a0df26` from PR 1 rode along inside PR #35, so `origin/main` and local `main` are back in sync; zero schema, zero deps. This closes the "no optimistic UI" flag and completes milestone 10. Prior 2026-07-05: **Milestone 10 PR 1 (Shop stale banner) shipped & deployed** — PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`) is live on Vercel prod: the Shop page's silent regenerate-on-load is replaced by an amber staleness banner + explicit Generate/Update button — it **never auto-regenerates** and the list stays usable while stale. Board pin **SB1: A (amber)** signed off; senior `/code-review` (high) applied one fix (the new banner briefly flashed the previous plan's state on a plan switch → reset `setStale(false)` at the top of `loadGroceryItems`); **vitest 138/138**, new `verify-shop-pass` harness **22/22** (proves no regen-on-load and that checked items survive a user-triggered update — the M4 guarantee, now user-initiated); post-merge `main` CI needed one rerun (the known transient `supabase start` `54322` port-bind flake, not a code issue); zero schema, zero deps. Prior 2026-07-05: **Milestone 9 (Resilience) shipped & deployed** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, a recipe-detail 404, a `toAuthErrorMessage` mapper, and the 17-site raw-`setError(x.message)` sweep; EB1 signed off, **vitest 138/138**, prod 404 panel live; zero schema, zero deps. Earlier the same day a planning session **scoped milestones 9-15** — seven builder-ready specs in `docs/plans/` (M9 now shipped; M10 responsiveness, M11 password reset, M12 grocery unit merge (DB), M13 plan copy, M14 dark mode, M15 empty states), recipe-import handoff format, owner forks locked. **M10 was then approved and PR 1 shipped (above); M11-M15 remain unapproved.** See Active Handoff. Prior session 2026-07-04: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
 
 ## Current build phase
 
-**Milestone 10 PR 1 (Shop stale banner) is shipped and deployed** (2026-07-05,
-PR #34 `41fa28b`): the Shop page no longer silently regenerates the grocery list
-on load. When `groceries_version !== version` it now shows an amber banner
-(`.shop-stale-banner`) with an explicit Generate/Update button; the list stays
-usable while stale and nothing writes until the button is tapped. Board pin
-**SB1: A (amber)** signed off. **M10 PR 2 (optimistic writes) is next and not
-yet started.** **Milestone 9 (Resilience) shipped** (2026-07-05, PR #33
+**Milestone 10 is complete** (2026-07-05). **PR 2 (optimistic writes) is shipped
+and deployed** (PR #35 `1d16ef8`): item-level mutations in
+`lib/hooks/use-grocery-list.ts` (`toggleChecked`, `setCheckedForBucket`,
+`movePantryToMain`, `setOnHand`) and `lib/hooks/use-plan.ts` (`adjustServing`,
+`removeItem`, `addMeal`) patch local state before the network write and roll back
+only the touched item on failure; `lib/hooks/use-recipes.ts` (`saveRecipe`,
+`deleteRecipe`) patch the list locally instead of a full reload. The plan
+mutations keep `refreshPlansAndKeepSelection` but drop the `loadPlanItems`
+refetch; `saveRecipeForm`, `supabase/**`, and `app/api/**` are untouched. Closes
+the "no optimistic UI" flag. **PR 1 (Shop stale banner) shipped earlier the same
+day** (PR #34 `41fa28b`): the Shop page no longer silently regenerates the
+grocery list on load. When `groceries_version !== version` it shows an amber
+banner (`.shop-stale-banner`) with an explicit Generate/Update button; the list
+stays usable while stale and nothing writes until the button is tapped. Board pin
+**SB1: A (amber)** signed off. **Milestone 9 (Resilience) shipped** (2026-07-05, PR #33
 `8f1cd46`): route-level `error.tsx`/`global-error.tsx`/`not-found.tsx`/`loading.tsx`
 boundaries, a recipe-detail 404, a `toAuthErrorMessage` mapper, and a 17-site
 raw-error sweep through `toErrorMessage`. Milestones 0–8 are all done.
@@ -78,7 +86,7 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Stable Baseline
 
-- **`main`:** at `41fa28b` (**Milestone 10 PR 1 (Shop stale banner), PR #34** — merge of `codex/shop-stale-banner`: replaced the silent regenerate-on-load in `lib/hooks/use-grocery-list.ts` with a `stale` flag + amber `.shop-stale-banner`/`.shop-stale-btn` in `app/grocery/page.tsx` (token-only, SB1: A); added `scripts/review-board/verify-shop-pass.mjs` (22 assertions) + the SB1 board capture/gen tooling; deployed to Vercel prod, `/grocery` 200 live) atop `8f1cd46` (**Milestone 9 (Resilience), PR #33** — merge of `codex/error-boundaries`: root `error.tsx`/`global-error.tsx`/`not-found.tsx`/`loading.tsx` boundaries, a recipe-detail 404 via render-time `notFound()`, the `toAuthErrorMessage` mapper, and the 17-site raw-error sweep; deployed to Vercel prod, `/nonexistent` → 404 branded panel confirmed live) atop `3dcf791` (**docs wrap of the tags-cap hotfix, PR #32** — merge of `codex/docs-import-hotfix`, docs-only) atop `cbb1c57` (**import tags-cap hotfix, PR #31** — `codex/fix-import-tags-cap`: raised the request-schema `tags` cap 50→500 and added the `conflicting_source` error code so validation failures stop reading as "(not both)"; server-only, deployed) atop `88a6bc5` (**Recipe Import PR 2 / Phase C** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
+- **`main`:** at `1d16ef8` (**Milestone 10 PR 2 (optimistic writes), PR #35** — merge of `codex/optimistic-writes`: item-level mutations in `lib/hooks/use-grocery-list.ts`, `use-plan.ts`, and `use-recipes.ts` made optimistic with targeted per-item rollback, plan/recipe form saves dropped their blocking refetches, new `scripts/review-board/verify-optimistic-pass.mjs` latency probe; this merge also carried the docs-wrap `7a0df26` from PR 1; deployed to Vercel prod, `/grocery`+`/plans`+`/recipes` 200 live) atop `41fa28b` (**Milestone 10 PR 1 (Shop stale banner), PR #34** — merge of `codex/shop-stale-banner`: replaced the silent regenerate-on-load in `lib/hooks/use-grocery-list.ts` with a `stale` flag + amber `.shop-stale-banner`/`.shop-stale-btn` in `app/grocery/page.tsx` (token-only, SB1: A); added `scripts/review-board/verify-shop-pass.mjs` (22 assertions) + the SB1 board capture/gen tooling; deployed to Vercel prod, `/grocery` 200 live) atop `8f1cd46` (**Milestone 9 (Resilience), PR #33** — merge of `codex/error-boundaries`: root `error.tsx`/`global-error.tsx`/`not-found.tsx`/`loading.tsx` boundaries, a recipe-detail 404 via render-time `notFound()`, the `toAuthErrorMessage` mapper, and the 17-site raw-error sweep; deployed to Vercel prod, `/nonexistent` → 404 branded panel confirmed live) atop `3dcf791` (**docs wrap of the tags-cap hotfix, PR #32** — merge of `codex/docs-import-hotfix`, docs-only) atop `cbb1c57` (**import tags-cap hotfix, PR #31** — `codex/fix-import-tags-cap`: raised the request-schema `tags` cap 50→500 and added the `conflicting_source` error code so validation failures stop reading as "(not both)"; server-only, deployed) atop `88a6bc5` (**Recipe Import PR 2 / Phase C** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
   reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
@@ -114,7 +122,20 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   `actions/checkout` and `actions/setup-node` are now on `@v5` (2026-07-03,
   merge `2e8bc09`), clearing the Node-20 runtime deprecation;
   `supabase/setup-cli@v1` stays (no v5) and `node-version: 20` is unchanged.
-- **Latest verification:** 2026-07-05 (Milestone 10 PR 1, PR #34): eslint / tsc
+- **Latest verification:** 2026-07-05 (Milestone 10 PR 2, PR #35): eslint / tsc
+  clean, **vitest 138/138** (unchanged — the change is hook/UI behavior with
+  Playwright harnesses, not vitest units), `next build` 12 routes; new
+  **`verify-optimistic-pass.mjs` 16/16, 0 console errors** on the local stack
+  (self-contained OPTVERIFY seed/teardown): a grocery check and a plan remove
+  each render <200ms under a 1500ms-delayed network (observed ~28-29ms) and both
+  roll back + surface the red `.error-text` on `route.abort`. Regression
+  harnesses re-run green after the senior-review fixes: **verify-shop 22/22**,
+  **verify-recipes 22/22**, **verify-import 26/26** (the reduced-latency saves
+  still round-trip; M4 state preservation holds). PR #35 CI green (app-checks +
+  db-tests); **`main` post-merge CI green on the first run** (no port-bind flake).
+  Prod liveness `/`, `/grocery`, `/plans`, `/recipes` all 200; `/nonexistent` 404
+  (M9 boundary intact). DB layer untouched (pgTAP unchanged at 108). Prior —
+  2026-07-05 (Milestone 10 PR 1, PR #34): eslint / tsc
   clean, **vitest 138/138** (unchanged — the change is UI/hook behavior with a
   Playwright harness, not vitest units), `next build` 12 routes; new
   **`verify-shop-pass.mjs` 22/22, 0 console errors** on the local stack
@@ -201,7 +222,27 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Active Handoff
 
-- **Just done (2026-07-05):** **Milestone 10 PR 1 (Shop stale banner) shipped &
+- **Just done (2026-07-05):** **Milestone 10 PR 2 (optimistic writes) shipped &
+  deployed.** PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`, branch
+  deleted local+remote): item-level mutations patch local state before the
+  network write and roll back only the touched item on failure —
+  `use-grocery-list.ts` (`toggleChecked`/`setCheckedForBucket`/`movePantryToMain`/
+  `setOnHand`), `use-plan.ts` (`adjustServing`/`removeItem`/`addMeal`; keep
+  `refreshPlansAndKeepSelection`, drop `loadPlanItems`; `addMeal` appends a
+  temp-id row swapped for the real id on insert), `use-recipes.ts`
+  (`saveRecipe`/`deleteRecipe` local list patch, atomic RPC await kept).
+  Senior `/code-review` (high) found + fixed 3 issues: (1) a refresh-after-write
+  rollback regression — a committed write followed by a `refreshPlansAndKeepSelection`
+  throw rolled back the persisted change; fixed with `written`/`deleted` guards
+  (and the tempId filter for `addMeal`) so only a WRITE failure reverts; (2) a
+  concurrent stale-snapshot clobber — owner chose to **harden to targeted
+  functional rollback** (restore only the touched item, never a whole-list
+  snapshot); (3) a same-millisecond temp-id collision — fixed with a random
+  suffix. `verify-optimistic-pass.mjs` 16/16, all regression harnesses green,
+  gate green, deployed. Zero schema, zero deps, no board pin (no visual surface).
+  This merge also carried the docs-wrap `7a0df26` from PR 1 (last session's wrap
+  that had not reached `origin/main`), so tracking is back in sync.
+- **Prior (2026-07-05):** **Milestone 10 PR 1 (Shop stale banner) shipped &
   deployed.** PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`, branch
   deleted local+remote): replaced the silent regenerate-on-load in
   `lib/hooks/use-grocery-list.ts` (`loadGroceryItems`) with a `stale` flag; the
@@ -228,28 +269,23 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   centering, auth pass-through). vitest **138/138**, verify harnesses 15/22/26,
   prod 404 panel live. Zero schema, zero deps. (Earlier the same day, docs-only:
   milestones 9-15 scoped into builder-ready specs — see progress-log.)
-- **Next action:** **M10 PR 2 — optimistic writes** on a new branch
-  `codex/optimistic-writes` off `main` (`41fa28b`). Owner has approved M10; PR 1
-  is merged, so PR 2 is clear to start (the spec sequenced it after PR 1 so the
-  optimistic patches rebase over the banner, not the reverse). Read
-  [plans/responsiveness.md](plans/responsiveness.md) **§4** end to end, then
-  follow the **binding per-mutation treatment table (§4b)** literally: make
-  item-level mutations in `lib/hooks/use-grocery-list.ts` (`toggleChecked`,
-  `setCheckedForBucket`, `movePantryToMain`, `setOnHand`) and
-  `lib/hooks/use-plan.ts` (`adjustServing`, `removeItem`, `addMeal`) truly
-  optimistic (snapshot → patch before `await` → rollback on error via the
-  existing `toErrorMessage` fallbacks), and drop the blocking refetches from the
-  reduced-latency form saves (`use-recipes.ts` `saveRecipe`/`deleteRecipe`) per
-  the table. Use the single pattern in §4a everywhere; do NOT touch
-  `saveRecipeForm`, `supabase/**`, `app/api/**`, or the UNCHANGED rows in the
-  table. Verify per §4d: re-run `verify-recipes-pass` (22/22),
-  `verify-import-pass` (26/26), `verify-shop-pass` (22/22), then add a
-  Playwright route-delay latency probe (checkbox renders checked <200ms under a
-  1500ms-delayed network; rollback + red StatusMessage on `route.abort`). PR 2
-  has **no visual surface and needs no board pin**. Then M11 (password reset)
-  reuses M9's `toAuthErrorMessage`. Owner-side gates still pending for later
-  milestones: Supabase-dashboard redirect URLs before M11 live-testing;
-  migration review + "apply" for M12 (the one DB milestone).
+- **Next action:** **Milestones 11-15 are specced but unapproved — the owner
+  picks the next milestone and gives a per-milestone go-ahead.** No branch until
+  then. **Recommended next is M11 (password reset)** — spec
+  [plans/password-reset.md](plans/password-reset.md), branch `codex/password-reset`
+  off `main` (`1d16ef8`): "Forgot password?" → `resetPasswordForEmail` →
+  `/reset-password` route → `updateUser`. It reuses M9's `toAuthErrorMessage` and
+  is small. **Owner gate first:** configure the Supabase-dashboard redirect URLs
+  for the `/reset-password` route before any live testing (per the spec). Other
+  options, owner's call on order (see [roadmap.md](roadmap.md) Scoped Milestones):
+  M12 grocery unit-merge (the **one DB milestone** — fifth migration, full ritual:
+  migration review → "apply" → verify → merge), M13 plan copy (`codex/plan-copy`,
+  touches `createPlan`), M14 dark mode (its own board round for the dark token
+  VALUES — nothing ships unapproved), M15 empty states (last; benefits from M13/M14).
+  For whichever is chosen: `/onboard`, read its spec end to end, branch off `main`,
+  build with confirmed token/schema values only, verify (typecheck/lint/test/build
+  + the relevant `verify-*-pass` harness), senior `/code-review`, then
+  commit/PR/merge on the owner's word.
 - **Prior (2026-07-04):** **Recipe Import PR 2 / Phase C — merged & deployed.** PR #29
   (`codex/import-ui` → `main` `88a6bc5`, feature branch deleted) is live on Vercel
   prod: the in-app import UI — `components/recipe-import.tsx` (`ImportFlow`:
@@ -274,12 +310,15 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   WebKit ≠ real Safari; the NYT paste path is already owner-confirmed live).
 - **Blockers:** none.
 - **Environment notes:** `main` is the working branch (feature branch
-  `codex/shop-stale-banner` merged + deleted, local and remote). Many older
+  `codex/optimistic-writes` merged + deleted, local and remote; `origin/main` and
+  local `main` are in sync at `1d16ef8`). Many older
   merged `codex/*` feature branches remain locally (harmless refs — prune with
   `git branch --delete` if desired). `.env.local` includes
   `ANTHROPIC_API_KEY` (sk-ant-, present locally); **Vercel has `ANTHROPIC_API_KEY`
   set for Production + Preview** (owner-provisioned). The local-pointed dev server
-  (`:3123`) used for the M10 harness + SB1 board capture was stopped at this wrap.
+  (`:3123`) used for the M10 PR 2 latency-probe harness was stopped at this wrap;
+  the final `next build` poisoned `.next` with `.env.local`'s prod URLs (the
+  documented gotcha) — `rm -rf .next` before re-driving any local harness.
   **Pushing as the repo owner:** the active machine account is `2a-webteam`
   (gets a 403 on push to this repo); push/PR as `mitchthompson` — `gh` commands
   via `GH_TOKEN=$(gh auth token --user mitchthompson)`, and `git push` via a
@@ -298,9 +337,10 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   (`2a-webteam` active machine-wide, `mitchthompson` pinned per command via
   `GH_TOKEN=$(gh auth token --user mitchthompson)`); local Supabase stack runs
   on Colima (`supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,mailpit,supavisor`),
-  used 2026-07-05 for the M10 harness + SB1 capture and left up (verify with
+  used 2026-07-05 for the M10 PR 2 latency-probe harness and left up (verify with
   `supabase status` before relying on it; local DB already seeded with the
-  review-board reviewer + recipes).
+  review-board reviewer + recipes; the harnesses seed/tear down their own
+  isolated data).
 
 ## Page status
 
@@ -311,10 +351,10 @@ the other three are stubs the redesign brief supersedes).
 | Page | Route | Status |
 | --- | --- | --- |
 | Today | `/` (`app/page.tsx`) | Working — reflow home screen ("Tonight" hero shows up to two meals + "Also tonight", deadline strip, week peek without meal-type sublabels, nudge); data layer in `lib/hooks/use-today.ts` |
-| Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working — v2 pass shipped (PR #21): page title + card labels, teal links, 44px targets, full-width save, serves line + sample-data seeder removed; atomic `save_recipe` RPC live; mobile editor takeover (PR #17); **in-app import shipped (PR #29): Import button + `?import=1` → paste/URL → LLM parse → review screen → save via the shared `saveRecipeForm`** (`components/recipe-import.tsx`, `lib/hooks/use-import.ts`); data layer in `lib/hooks/use-recipes.ts` |
+| Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working — v2 pass shipped (PR #21): page title + card labels, teal links, 44px targets, full-width save, serves line + sample-data seeder removed; atomic `save_recipe` RPC live; mobile editor takeover (PR #17); **in-app import shipped (PR #29): Import button + `?import=1` → paste/URL → LLM parse → review screen → save via the shared `saveRecipeForm`** (`components/recipe-import.tsx`, `lib/hooks/use-import.ts`); save/delete patch the list locally instead of a full reload (M10 PR 2, PR #35); data layer in `lib/hooks/use-recipes.ts` |
 | Recipe detail | `/recipes/[id]` (`app/recipes/[id]/page.tsx`) | Working — v2 pass shipped (PR #22): flat hairline rows, full-width teal "Start cooking" (launches `components/cook-mode.tsx`), breadcrumb + one-row actions, pantry-badge quirk fixed; a bad id now renders the not-found boundary (M9, PR #33) |
-| Plan | `/plans` (`app/plans/page.tsx`) | Working — flat day lists (no lunch/dinner division, PR #18; `meal_type` vestigial), per-day quick-add (44px rows, recents first), sheets, generate exit; day items in `components/plan-day-items.tsx`; data layer in `lib/hooks/use-plan.ts` |
-| Shop | `/grocery` (`app/grocery/page.tsx`) | Working — reflow chunky direction (pinned order bar, 30px checks, sticky sections); transactional state-preserving regeneration underneath; **no longer regenerates on load — a stale plan shows an amber banner + explicit Generate/Update button (M10 PR 1, PR #34, SB1: A)**; data layer in `lib/hooks/use-grocery-list.ts` |
+| Plan | `/plans` (`app/plans/page.tsx`) | Working — flat day lists (no lunch/dinner division, PR #18; `meal_type` vestigial), per-day quick-add (44px rows, recents first), sheets, generate exit; day items in `components/plan-day-items.tsx`; item writes (serving/add/remove) are optimistic with per-item rollback (M10 PR 2, PR #35); data layer in `lib/hooks/use-plan.ts` |
+| Shop | `/grocery` (`app/grocery/page.tsx`) | Working — reflow chunky direction (pinned order bar, 30px checks, sticky sections); transactional state-preserving regeneration underneath; **no longer regenerates on load — a stale plan shows an amber banner + explicit Generate/Update button (M10 PR 1, PR #34, SB1: A)**; item writes (check/pantry/on-hand) are optimistic with per-item rollback (M10 PR 2, PR #35); data layer in `lib/hooks/use-grocery-list.ts` |
 | Settings | `/settings` (`app/settings/page.tsx`) | Working — v2 pass shipped (PR #20): iOS-style rows, page title + card labels, 44px targets, full-width teal save; `ensureUserSettings` runs once per sign-in; settings defaults now share one `DEFAULT_USER_SETTINGS` source of truth mirroring SQL (2026-07-03) |
 
 Authentication is email/password through Supabase. The app installs to the
@@ -341,7 +381,7 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | — | iPad coherence | **Done (2026-07-03)** — orientation-routed chrome (PR #26) + portrait content-width fill (PR #27); CSS-only, deployed & confirmed on iPad Pro ([plans/ipad-support.md](plans/ipad-support.md)) |
 | 8 | Recipe Import (in-app) | **Done (2026-07-04)** — PR 1 (server route, PR #28 `11834f9`) + **PR 2 / Phase C (import UI, PR #29 `codex/import-ui` → `main` `88a6bc5`)**: paste/URL → LLM parse → review → save via shared `saveRecipeForm`; vitest 125/125, verify-recipes-pass 22/22 (C1 neutral) + verify-import-pass 26/26, deployed to prod. Phases A/B/C/D all shipped; only the owner real-device pass remains. Spec: [plans/recipe-import.md](plans/recipe-import.md) |
 | 9 | Resilience (error/loading/not-found boundaries + raw-error sweep) | **Done (2026-07-05)** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, recipe-detail 404, `toAuthErrorMessage`, 17-site sweep; EB1 signed off, vitest 138/138, deployed. Spec: [plans/error-boundaries.md](plans/error-boundaries.md) |
-| 10 | Responsiveness (Shop stale banner + optimistic writes) | **PR 1 done (2026-07-05)** — PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`): amber staleness banner replaces silent regen-on-load, SB1: A, `verify-shop-pass` 22/22, deployed. **PR 2 (optimistic writes) not started** — next action. Spec: [plans/responsiveness.md](plans/responsiveness.md) |
+| 10 | Responsiveness (Shop stale banner + optimistic writes) | **Done (2026-07-05)** — PR #34 (`41fa28b`): amber staleness banner replaces silent regen-on-load, SB1: A, `verify-shop-pass` 22/22; **PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`): optimistic item mutations with targeted per-item rollback, form saves shed blocking refetches, senior review fixed 3 issues, `verify-optimistic-pass` 16/16**. Both deployed; closes the "no optimistic UI" flag. Spec: [plans/responsiveness.md](plans/responsiveness.md) |
 | 11-15 | Scoped batch (2026-07-05): password reset, unit merge (DB), plan copy, dark mode, empty states | **Specced, not started** — five builder-ready specs in `docs/plans/`; owner picks order and gives per-milestone go-aheads. [roadmap.md](roadmap.md) Scoped Milestones |
 
 ## Architecture snapshot
@@ -380,8 +420,11 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
   button; nothing regenerates on load. Closes the "silent regeneration" half of
   the over-triggered-regeneration flag (the version-scoping half was closed by
   milestone 3). See [design-flags.md](design-flags.md).
-- M10 PR 2 (optimistic writes) is the remaining half of the "no optimistic UI"
-  flag — not started; next action.
+- ~~M10 PR 2 (optimistic writes) is the remaining half of the "no optimistic UI"
+  flag — not started.~~ **Resolved 2026-07-05 (milestone 10 PR 2, PR #35
+  `1d16ef8`):** item-level mutations are optimistic with targeted per-item
+  rollback and the form saves shed their blocking refetches; the "no optimistic
+  UI" flag is now fully closed. See [design-flags.md](design-flags.md) (Resolved).
 - iPad: two optional tails (owner's call, not blocking) — a final real-device
   pass (portrait fill + landscape + iPadOS standalone), and centring the
   landscape 640px reading column (currently left-pinned, owner-accepted).

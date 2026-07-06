@@ -31,11 +31,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** These are skeletons; flesh out as each page is worked. Update (2026-07-02): [settings](pages/settings.md) was rewritten with the v2 Settings pass (PR #20), and [recipes](pages/recipes.md) was de-rotted with the v2 Recipes/detail passes (PRs #21–#22 — it had still described pre-M2 non-atomic saves, the removed sample-data seeder, and the pre-reflow "focus mode"). [today](pages/today.md), [plans](pages/plans.md), and [grocery](pages/grocery.md) remain stubs (the redesign brief supersedes them for future-state intent).
 - **Source:** Session decision (canonical context)
 
-### Five sequential round trips per plan mutation (no optimistic UI)
-- **Where it's used:** `app/plans/page.tsx` (plan mutation flow)
-- **What's needed:** Each plan mutation did insert, version read, version write, item reload, and plan reload sequentially, making planning sluggish on iPhone Safari (a primary target). Update (2026-07-02): milestone 3's trigger-based versioning removed the two version round trips (now insert + item reload + plan reload). Update (2026-07-05): optimistic UI is **specced as milestone 10 PR 2** with a binding per-mutation treatment table ([plans/responsiveness.md](plans/responsiveness.md) §4); closes when that PR ships.
-- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); also [roadmap](roadmap.md) Deferred Fixes ("No optimistic UI")
-
 ### Auth flow incomplete: no sign-up confirmation messaging, no password reset, unfriendly errors
 - **Where it's used:** Auth UI (`components/auth-gate.tsx` and sign-up/sign-in flow)
 - **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Update (2026-07-05): split by owner verdict — the **password-reset flow is specced as milestone 11** ([plans/password-reset.md](plans/password-reset.md)); **friendlier auth errors are DONE (milestone 9, PR #33, 2026-07-05)** — `toAuthErrorMessage` in `lib/errors.ts` maps the common Supabase auth errors and passes other readable ones through, wired into `components/auth-gate.tsx`; and **sign-up confirmation messaging stays deferred indefinitely** (single household, accounts already provisioned). With M9 shipped, only **password reset (M11)** and the deferred sign-up-confirmation third remain open. Known constraint recorded in the M11 spec: the reset email opens in the default browser, not the installed standalone app (per-context sessions; accepted).
@@ -57,6 +52,22 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
 
 ## Resolved
+
+### Five sequential round trips per plan mutation (no optimistic UI)
+- **Resolution (2026-07-05, milestone 10 PR 2, PR #35 `1d16ef8`, deployed):**
+  item-level mutations are now optimistic — local React state is patched before
+  the network round trip and rolls back (targeted, per-item) on failure — and the
+  plan/recipe form saves dropped their blocking refetches. Milestone 3 had already
+  removed the two version round trips (2026-07-02); this closed the remaining
+  latency by moving the UI ahead of the write. Affected `use-grocery-list.ts`
+  (toggle/bucket/pantry/on-hand), `use-plan.ts` (adjustServing/removeItem/addMeal;
+  keep the plan-version refresh, drop `loadPlanItems`), and `use-recipes.ts`
+  (saveRecipe/deleteRecipe local list patch). Last-write-wins is accepted (single
+  household); rollback is functional and per-item so concurrent patches are never
+  clobbered. Proven by `verify-optimistic-pass.mjs` (16/16: <200ms render under a
+  1500ms-delayed network, rollback + red error on abort). Spec
+  [plans/responsiveness.md](plans/responsiveness.md) §4.
+- **Source:** [CODE_AUDIT_2026-06-11.md](CODE_AUDIT_2026-06-11.md) (New Findings, minor); [roadmap](roadmap.md) Deferred Fixes ("No optimistic UI")
 
 ### Plan version bumps fire for grocery-irrelevant changes (over-triggered regeneration)
 - **Resolution (both halves now closed):** the **scoping half** was closed by
