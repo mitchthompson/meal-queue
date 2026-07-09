@@ -100,7 +100,7 @@ function TodayScreen() {
             <article className="tonight-card tonight-card-empty">
               <span className="tonight-label">Tonight</span>
               <h2>Nothing planned tonight</h2>
-              <Link className="tonight-btn" href="/plans">
+              <Link className="tonight-btn" href={`/plans?plan=${currentPlan.id}`}>
                 Open the plan
               </Link>
             </article>
@@ -157,7 +157,7 @@ function TodayScreen() {
                   : "Nothing planned yet"}
               </div>
             </div>
-            <Link className="today-next-btn" href="/plans">
+            <Link className="today-next-btn" href={nextPlan ? `/plans?plan=${nextPlan.id}` : "/plans?new=1"}>
               {nextPlan ? "Open plan" : "Plan it"}
             </Link>
           </article>
@@ -172,7 +172,7 @@ function TodayScreen() {
             <span className="tonight-meta">
               Pick recipes for the week, then generate the grocery list from the plan.
             </span>
-            <Link className="tonight-btn" href="/plans">
+            <Link className="tonight-btn" href="/plans?new=1">
               Plan the week
             </Link>
           </article>

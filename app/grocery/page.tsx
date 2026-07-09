@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
@@ -19,6 +20,9 @@ export default function GroceryPage() {
 }
 
 function ShopScreen() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan");
   const {
     plans,
     selectedPlanId,
@@ -38,8 +42,15 @@ function ShopScreen() {
     setCheckedForBucket,
     movePantryToMain,
     setOnHand,
-  } = useGroceryList();
+  } = useGroceryList(planParam);
   const [showOnHand, setShowOnHand] = useState(false);
+
+  // ?plan=<id> is consumed by useGroceryList at load; strip it once selection
+  // has settled so the URL stays clean (mirrors the plan screen's deep links).
+  useEffect(() => {
+    if (loading || !planParam) return;
+    router.replace("/grocery", { scroll: false });
+  }, [loading, planParam, router]);
 
   const today = toYmd(new Date());
   const hasList = items.length > 0;

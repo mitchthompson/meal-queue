@@ -29,7 +29,7 @@ export type GroceryItem = {
   source_key: string;
 };
 
-export function useGroceryList() {
+export function useGroceryList(initialPlanId?: string | null) {
   const [plans, setPlans] = useState<GroceryPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [items, setItems] = useState<GroceryItem[]>([]);
@@ -65,6 +65,7 @@ export function useGroceryList() {
 
   useEffect(() => {
     loadPlans();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -99,6 +100,10 @@ export function useGroceryList() {
 
     setPlans(ordered);
     setSelectedPlanId((current) => {
+      // Deep link: /grocery?plan=<id> (from the plan screen's "Shop this plan")
+      // wins on first load when the plan is in range. Past plans fall outside
+      // the current+future window loaded here and aren't shoppable (accepted).
+      if (initialPlanId && ordered.some((plan) => plan.id === initialPlanId)) return initialPlanId;
       if (current && ordered.some((plan) => plan.id === current)) return current;
       return ordered[0]?.id ?? null;
     });
