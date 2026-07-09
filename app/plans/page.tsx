@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { PlanDayItems } from "@/components/plan-day-items";
+import { PlanAddMeal } from "@/components/plan-add-meal";
 import { createDefaultsFromStart, dateRange, formatDayAbbrev, formatDisplayDate, toYmd } from "@/lib/date-utils";
 import { StatusMessage } from "@/components/status-message";
 import { usePlan } from "@/lib/hooks/use-plan";
@@ -27,6 +29,10 @@ export default function PlansPage() {
 }
 
 function PlanScreen({ userId }: { userId: string }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan");
+  const newParam = searchParams.get("new");
   const {
     visiblePlans,
     selectedPlan,
@@ -42,6 +48,7 @@ function PlanScreen({ userId }: { userId: string }) {
     planFilter,
     setPlanFilter,
     activeDay,
+    setActiveDay,
     quickQuery,
     setQuickQuery,
     quickMode,
@@ -65,9 +72,10 @@ function PlanScreen({ userId }: { userId: string }) {
     adjustServing,
     openQuickAdd,
     handleQuickAddKeyDown,
-  } = usePlan(userId);
+  } = usePlan(userId, planParam);
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [deepLinkHandled, setDeepLinkHandled] = useState(false);
 
   const today = toYmd(new Date());
 
@@ -78,10 +86,32 @@ function PlanScreen({ userId }: { userId: string }) {
     setShowEdit(false);
   }, [selectedPlanId]);
 
+  // Deep links (from the Today CTAs): ?plan=<id> is consumed by usePlan at load
+  // (it selects the plan + widens the filter); ?new=1 opens the create sheet.
+  // Run once loading is done — so it wins over the load-time selectedPlanId
+  // change that would otherwise close the sheet — then strip the params.
+  useEffect(() => {
+    if (loading || deepLinkHandled) return;
+    if (!planParam && newParam !== "1") return;
+    if (newParam === "1") {
+      setShowEdit(false);
+      setShowCreate(true);
+    }
+    setDeepLinkHandled(true);
+    router.replace("/plans", { scroll: false });
+  }, [loading, deepLinkHandled, planParam, newParam, router]);
+
   const dayItemsShared = {
     items,
     itemById,
+    removeItem,
+    adjustServing,
+    openQuickAdd,
+  };
+
+  const addMealShared = {
     activeDay,
+    setActiveDay,
     quickMode,
     setQuickMode,
     quickQuery,
@@ -95,9 +125,6 @@ function PlanScreen({ userId }: { userId: string }) {
     quickLeftoverOptions,
     handleQuickAddKeyDown,
     addMeal,
-    removeItem,
-    adjustServing,
-    openQuickAdd,
   };
 
   return (
@@ -285,12 +312,13 @@ function PlanScreen({ userId }: { userId: string }) {
             })
           : null}
 
-        {selectedPlan ? (
-          <Link className="plan-generate" href="/grocery">
-            Generate grocery list
+        {selectedPlan && selectedPlan.end_date >= today ? (
+          <Link className="plan-generate" href={`/grocery?plan=${selectedPlan.id}`}>
+            Shop this plan
           </Link>
         ) : null}
       </div>
+      <PlanAddMeal {...addMealShared} />
     </AppShell>
   );
 }

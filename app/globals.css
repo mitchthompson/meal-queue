@@ -742,10 +742,57 @@ textarea {
   color: var(--muted);
 }
 
-.plan-quick-wrap {
-  border-top: 1px solid var(--line);
-  padding: 0.6rem 0.9rem 0.75rem;
+/* Full-screen add-meal takeover (components/plan-add-meal.tsx). Replaces the
+   former inline quick-add card so the iOS keyboard can't reflow the day list
+   (owner feedback 2026-07-07). Same fixed-overlay recipe as .cook-mode, but
+   light-themed like the rest of the app. */
+.plan-add-meal {
+  position: fixed;
+  inset: 0;
+  /* Above the fixed .mobile-tabbar (z-index: 20). */
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
   background: var(--bg);
+  color: var(--ink);
+}
+
+.plan-add-head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  padding: calc(1rem + env(safe-area-inset-top)) 1.1rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.plan-add-close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.4rem 0;
+}
+
+.plan-add-day {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.plan-add-body {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1.1rem calc(1.5rem + env(safe-area-inset-bottom));
 }
 
 .plan-generate {

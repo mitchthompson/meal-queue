@@ -67,7 +67,7 @@ export type LeftoverOption = {
   recipe_name: string;
 };
 
-export function usePlan(userId: string) {
+export function usePlan(userId: string, initialPlanId?: string | null) {
   const [plans, setPlans] = useState<MealPlan[]>([]);
   const [recipes, setRecipes] = useState<RecipeOption[]>([]);
   const [items, setItems] = useState<MealPlanItem[]>([]);
@@ -98,6 +98,10 @@ export function usePlan(userId: string) {
   const [message, setMessage] = useState<string | null>(null);
   const quickInputRef = useRef<HTMLInputElement | null>(null);
   const previousPlanFilterRef = useRef<PlanListFilter>(planFilter);
+  // The control that opened the add-meal takeover, so focus can return to it on
+  // close (keyboard/screen-reader users don't lose their place in the day list).
+  const quickAddTriggerRef = useRef<HTMLElement | null>(null);
+  const previousActiveDayRef = useRef<string | null>(null);
 
   const selectedPlan = useMemo(() => plans.find((plan) => plan.id === selectedPlanId) ?? null, [plans, selectedPlanId]);
   const todayYmd = useMemo(() => toYmd(new Date()), []);
@@ -178,6 +182,16 @@ export function usePlan(userId: string) {
     if (activeDay) quickInputRef.current?.focus();
   }, [activeDay]);
 
+  // When the takeover closes (activeDay set → null), return focus to whatever
+  // opened it. Only fires on the close transition, so an A→B day jump (both
+  // truthy) leaves the in-dialog focus alone.
+  useEffect(() => {
+    if (previousActiveDayRef.current && !activeDay) {
+      quickAddTriggerRef.current?.focus?.();
+    }
+    previousActiveDayRef.current = activeDay;
+  }, [activeDay]);
+
   useEffect(() => {
     if (quickMode !== "leftover") return;
     if (!quickLeftoverId && quickLeftoverOptions.length > 0) {
@@ -216,7 +230,27 @@ export function usePlan(userId: string) {
 
     const loadedPlans = (plansRes.data ?? []) as MealPlan[];
     setPlans(loadedPlans);
-    if (loadedPlans.length > 0) setSelectedPlanId(loadedPlans[0].id);
+    // Deep link: /plans?plan=<id> selects that exact plan and widens the filter
+    // to "all" so a filtered view can't hide it. Prime the filter ref to "all"
+    // so the widening doesn't read as a user filter change and bounce the
+    // selection to visiblePlans[0] (the reset effect below).
+    const deepLinked =
+      initialPlanId && loadedPlans.some((plan) => plan.id === initialPlanId) ? initialPlanId : null;
+    if (deepLinked) {
+      previousPlanFilterRef.current = "all";
+      setPlanFilter("all");
+      setSelectedPlanId(deepLinked);
+    } else if (loadedPlans.length > 0) {
+      // Select what the default "current" filter settles on, so the
+      // selection-reset effect below doesn't bounce the choice on load. That
+      // bounce (loadedPlans[0] → the current-filter plan) re-fires the plan
+      // page's sheet-closing effect and would clobber a ?new=1 create sheet.
+      // Falls back to the newest plan when none cover today.
+      const currentPlan = loadedPlans
+        .filter((plan) => plan.start_date <= todayYmd && plan.end_date >= todayYmd)
+        .sort((a, b) => a.start_date.localeCompare(b.start_date))[0];
+      setSelectedPlanId((currentPlan ?? loadedPlans[0]).id);
+    }
 
     const settings = settingsRes.data ?? DEFAULT_USER_SETTINGS;
     setSettingsDefaults(settings);
@@ -558,6 +592,11 @@ export function usePlan(userId: string) {
   }
 
   function openQuickAdd(day: string) {
+    // Remember the trigger (the "+" / "add another meal" button) so focus can
+    // return to it when the takeover closes.
+    if (typeof document !== "undefined") {
+      quickAddTriggerRef.current = document.activeElement as HTMLElement | null;
+    }
     setActiveDay(day);
     setQuickMode("cook");
     setQuickLeftoverId("");
@@ -614,6 +653,7 @@ export function usePlan(userId: string) {
     planFilter,
     setPlanFilter,
     activeDay,
+    setActiveDay,
     quickQuery,
     setQuickQuery,
     quickMode,
