@@ -3,7 +3,48 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-05 (latest) - Milestone 10 PR 2 shipped: optimistic item mutations
+## 2026-07-08 (latest) - Post-use UX fixes: Today deep links, add-meal takeover, Shop this plan
+
+Three issues the owner hit in real use, built on `codex/ux-feedback-fixes` (off
+`main` `cc1e6ec`) and shipped after a review-board sign-off. Spec:
+[plans/ux-feedback-fixes.md](plans/ux-feedback-fixes.md). Zero schema, zero deps.
+
+- **#1 Today CTAs went to the wrong place.** Every Today button was a bare
+  `<Link href="/plans">`, and `/plans` always forces filter "current" + the
+  current plan — so "Open plan" under *Next week* opened *this* week, and the
+  "Plan" CTAs dropped you on an existing plan, not a create flow. **Fix:**
+  `/plans` reads `?plan=<id>` (select + widen filter to "all" so it can't be
+  hidden) and `?new=1` (open the create sheet); Today's CTAs repointed
+  accordingly. Mirrors the recipes page's `?edit`/`?import` deep-link convention.
+- **#2 Inline add-meal fought the iOS keyboard.** The quick-add card rendered
+  inline in the day row and autofocused, so the keyboard shifted the viewport and
+  the long day list reflowed/jumped. **Owner picked a full-screen takeover.**
+  New `components/plan-add-meal.tsx` — a fixed overlay above the tabbar with the
+  page scroll locked (the Cook-mode recipe, light-themed). It reuses the *same*
+  quick-add state machine from `usePlan` (no logic rewrite): recents-first,
+  Enter/Shift+Enter, all three modes. The inline block left `plan-day-items.tsx`.
+- **#3 "Generate grocery list" generated nothing.** It was a plain link to
+  `/grocery` (no plan, no generation). **Fix:** renamed **"Shop this plan"**,
+  deep-links to `/grocery?plan=<id>`; generation stays on the Shop page's amber
+  banner (the M10-intended place).
+
+- **Adversarial review (5 lenses, refute-verified) found + fixed 4 issues:**
+  (1) a `?new=1` create-sheet flicker when a current+future plan coexist — fixed
+  by selecting the current-filter plan at load (removes the selection bounce);
+  (2) "Shop this plan" from a *past* plan misfiring — button now gated on
+  `end_date >= today`; (3) the takeover wasn't a focus trap — now traps Tab;
+  (4) focus wasn't restored to the trigger on close — now captured in
+  `openQuickAdd` and restored on the set→null transition.
+- **Verification:** typecheck clean, **vitest 138/138**, `eslint
+  --max-warnings=0` clean, `next build` 12 routes. Real-app pass on the local
+  stack (iPhone viewport): 12 screenshots, **0 console errors** — deep-links land
+  on the right plan, the takeover opens + switches all three modes, "Shop this
+  plan" scopes correctly, and `/plans?new=1` opens the create sheet and it stays
+  open under the exact flicker precondition. Review board captured from the
+  running app (artifact, favicon 🛠️); owner signed off the pins. **Owner tail:**
+  a real-iPhone pass on the takeover (WebKit ≠ Playwright).
+
+## 2026-07-05 - Milestone 10 PR 2 shipped: optimistic item mutations
 
 Built and shipped M10 PR 2 from the locked spec
 ([plans/responsiveness.md](plans/responsiveness.md) §4), owner-approved.
