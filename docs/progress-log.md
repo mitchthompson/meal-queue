@@ -3,7 +3,54 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-11 (latest) - Milestone 11 (password reset) shipped: AR2 A, PR #37 merged + deployed, owner prod pass done
+## 2026-07-11 (latest, evening) - Cook-feedback fixes shipped (PR #38): "to taste" amounts + step-boundary prompt rule; M16 scoped
+
+Real-use session: the owner hit three issues mid-cook (One-Pot Chicken and
+Rice, an NYT import). Two fixed and deployed same-session; the third scoped as
+candidate milestone 16. Zero schema, zero deps.
+
+- **"0 tsp salt" diagnosed and fixed.** The import prompt deliberately stores
+  "to taste"/"pinch"/"as needed" as `amount: 0` (`lib/import/prompt.ts`), but no
+  display site knew the convention — confirmed against prod (salt, black
+  pepper, crushed red pepper all `0.000 tsp` on that recipe). New
+  `formatIngredientAmount` in `lib/grocery.ts` renders a zero amount as
+  **"to taste"**; used by the recipe-detail list, the cook-mode chips, and the
+  Shop list. The editor keeps showing the raw stored `0` (it edits the value).
+  +2 vitest.
+- **Step over-splitting fixed at the prompt.** The parser had turned ~5 source
+  steps into 16 one-sentence steps ("Remove from the pot and set aside." twice,
+  as its own step). The STEPS rule now says: keep the source's own step
+  boundaries, never split a source step. Future imports only — existing recipes
+  keep their stored steps until re-imported. +1 vitest.
+- **Mismatched cook-mode chips → candidate M16.** Root cause is the known
+  name-match heuristic (`matchesStep`): "**medium** shallot" chips onto
+  "medium heat". Scoped the accurate fix —
+  [plans/step-ingredients.md](plans/step-ingredients.md): the import LLM emits
+  per-step `ingredient_indexes`, `save_recipe` resolves them into a nullable
+  `recipe_steps.ingredient_ids uuid[]` (accepting BOTH `p_steps` shapes so
+  every legacy caller keeps working — key because `save_recipe`
+  delete-and-reinserts children with fresh UUIDs on every save), cook mode
+  trusts the mapping, heuristic becomes fallback-only. **Four owner forks not
+  yet locked** (§2: persistence shape, editor carry, backfill, chip UI) — needs
+  an owner interview before build. Also noted while scoping: the detail page
+  reads ingredients with no `.order()`.
+- **Docs true-up:** the unit-merge (M12) spec's claim that only `formatAmount`
+  is imported from `lib/grocery.ts` was made stale by this change — updated.
+  Design-flags chips entry updated with the real-use verdict + M16 pointer;
+  roadmap gained the M16 candidate section.
+- **Release:** branch `codex/cook-display-fixes`, three commits (`f13c9fb`
+  fix display, `a486af9` fix prompt, `674c1d3` docs). **PR #38** CI green
+  first try (app-checks 56s, db-tests 1m3s), merged → `main` **`be3fa74`**
+  (owner's word given), branch deleted local+remote; `main` post-merge CI green
+  first run; prod probes `/`, `/grocery`, `/recipes` all 200. Gate: eslint
+  clean, tsc clean, **vitest 141/141** (138 + 3), `next build` 13 routes.
+- **Owner follow-ups:** (1) re-import One-Pot Chicken to collapse the 16 steps
+  (recipe delete CASCADES to `meal_plan_items` — do it after tonight's cook, or
+  hand-edit the steps in the editor to keep plan history); (2) M16 fork
+  interview when ready. The local `.next` was poisoned by this session's
+  `next build` (documented gotcha) — `rm -rf .next` before any local harness.
+
+## 2026-07-11 - Milestone 11 (password reset) shipped: AR2 A, PR #37 merged + deployed, owner prod pass done
 
 M11 went from "built on branch, gate-blocked" to fully closed in one session.
 Zero schema, zero deps; no application code changed this session — the ship was

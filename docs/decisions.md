@@ -535,6 +535,36 @@ M10 PR 2 built and shipped from the locked spec
 - No visual surface, so no board pin. Proven by `verify-optimistic-pass.mjs`
   (16/16 latency + rollback probe) plus the re-run regression harnesses.
 
+### Cook-feedback fixes — zero-amount display convention + step boundaries (2026-07-11)
+
+Shipped same-session from the owner's mid-cook report (PR #38, `main`
+`be3fa74`).
+
+- **`amount = 0` means "unquantified", and the display layer owns the
+  translation.** The importer's convention (`"to taste"/"pinch"/"as needed" →
+  amount: 0`, `lib/import/prompt.ts`) is kept as-is in the data — no sentinel
+  values, no schema change. Every ingredient-amount display site renders a zero
+  as **"to taste"** through the single helper `formatIngredientAmount`
+  (`lib/grocery.ts`); new display surfaces must use it rather than
+  `formatAmount` + unit. The editor deliberately still shows the raw `0` — it
+  edits the stored value.
+- **Imported steps keep the source's own boundaries.** The parser was
+  atomizing steps (an NYT recipe's ~5 became 16 one-sentence steps); the STEPS
+  prompt rule now forbids splitting a source step. Prompt-only, future imports
+  only — already-imported recipes keep their stored steps until re-imported or
+  hand-edited.
+- **The accurate chips fix is deferred to candidate M16, not patched into the
+  heuristic.** Real use confirmed the long-flagged `matchesStep` failure mode
+  ("**medium** shallot" chips onto "medium heat"). Rather than tune word
+  filtering, the fix is scoped as a step↔ingredient link captured at import
+  ([plans/step-ingredients.md](plans/step-ingredients.md)) — owner forks not
+  yet locked; the heuristic stays untouched as the eventual fallback.
+- **Recipe deletes cascade to plan items** (`meal_plan_items.recipe_id` is
+  `on delete cascade`) — recorded here because it shapes the re-import advice:
+  deleting an old imported recipe removes it from current AND past plans, so
+  the owner re-imports after the cooking day, or hand-edits steps to keep the
+  recipe id.
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)
