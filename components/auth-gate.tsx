@@ -27,6 +27,7 @@ export function AuthGate({ children }: AuthGateProps) {
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [initializedUserId, setInitializedUserId] = useState<string | null>(null);
 
@@ -71,6 +72,7 @@ export function AuthGate({ children }: AuthGateProps) {
     event.preventDefault();
     setBusy(true);
     setError(null);
+    setMessage(null);
 
     const authCall = isSignUp
       ? supabase.auth.signUp({ email, password })
@@ -83,6 +85,26 @@ export function AuthGate({ children }: AuthGateProps) {
     // ensureUserSettings runs once per sign-in via the session effect below
     // (guarded by initializedUserId) — the duplicate call here is gone.
     setBusy(false);
+  }
+
+  async function requestPasswordReset() {
+    setError(null);
+    setMessage(null);
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setError("Enter your email above first, then tap Forgot password.");
+      return;
+    }
+    setBusy(true);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (resetError) {
+      setError(toAuthErrorMessage(resetError));
+      return;
+    }
+    setMessage("Password reset email sent. Check your inbox.");
   }
 
   useEffect(() => {
@@ -139,11 +161,26 @@ export function AuthGate({ children }: AuthGateProps) {
             </button>
           </form>
 
-          <StatusMessage error={error} />
+          <StatusMessage error={error} message={message} />
 
-          <button className="text-btn" onClick={() => setIsSignUp((current) => !current)} type="button">
-            {isSignUp ? "Already have an account? Sign in" : "Need an account? Create one"}
-          </button>
+          <div className="auth-links">
+            <button
+              className="text-btn"
+              onClick={() => {
+                setError(null);
+                setMessage(null);
+                setIsSignUp((current) => !current);
+              }}
+              type="button"
+            >
+              {isSignUp ? "Already have an account? Sign in" : "Need an account? Create one"}
+            </button>
+            {!isSignUp && (
+              <button className="text-btn" onClick={requestPasswordReset} type="button" disabled={busy}>
+                Forgot password?
+              </button>
+            )}
+          </div>
         </section>
       </main>
     );

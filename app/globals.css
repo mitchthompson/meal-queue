@@ -261,6 +261,17 @@ textarea:focus-visible {
   margin: 0 auto;
 }
 
+/* Stacked secondary links under the auth form (mode toggle + "Forgot
+   password?"). Column-stacked so the two text links don't collide on one
+   line (AR1: A, milestone 11 board). */
+.auth-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
 /* Error boundary panel (milestone 9): the standalone panel rendered by
    app/error.tsx and app/not-found.tsx (outside AppShell). Tokens/existing
    button classes only. */

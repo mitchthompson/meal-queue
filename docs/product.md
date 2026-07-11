@@ -12,7 +12,8 @@ public-product features.
 
 1. Save and organize recipes.
 2. Create a custom-date meal plan.
-3. Add cooked meals, leftovers, or eating-out entries to lunch and dinner.
+3. Add cooked meals, leftovers, or eating-out entries to plan days (each day
+   is one flat meal list — the lunch/dinner division was dropped 2026-07-02).
 4. Adjust recipe serving multipliers when needed.
 5. Generate a grocery list from cooked meals.
 6. Mark pantry or on-hand items and check off purchased items.
@@ -31,7 +32,7 @@ public-product features.
 
 See [routes.md](routes.md) for the full route map and per-page intent docs.
 
-- `/`: Dashboard and current-plan overview.
+- `/`: Today (reflow home) — tonight's meals, grocery deadline, week peek.
 - `/recipes`: Recipe library and editor.
 - `/recipes/[id]`: Recipe cooking and serving view.
 - `/plans`: Plan creation, history, and meal scheduling.

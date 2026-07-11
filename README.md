@@ -5,7 +5,7 @@ Meal Queue is a meal planner + recipe keeper + grocery list generator built with
 ## Current Features
 
 - Recipe CRUD with ingredients, structured steps, serving scaling, and tags
-- Custom date-range meal plans with lunch, dinner, leftovers, and eating-out slots
+- Custom date-range meal plans with flat per-day meal lists (cooked meals, leftovers, and eating-out entries)
 - Persisted grocery lists with pantry, on-hand, and checked states
 - User settings for plan length, week start, ordering, and pickup
 - Supabase email/password authentication and row-level security

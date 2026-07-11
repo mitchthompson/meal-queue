@@ -266,14 +266,24 @@ meal list — no L/D sub-slots; `.plan-slot` now styles a meal row and
   provenance, compact `−/×N/+` serving controls, small `remove`; days with
   meals end in a `.plan-slot-more` "+ add another meal" line.
 - Empty days: "Nothing planned" + the 30px `.plan-slot-add` (+) button —
-  quick-add (mode pills: Cook / Leftovers / Eating out) opens inline in a
-  `.plan-quick-wrap` band under the day; recipe results are
-  `.quick-add-row` buttons (≥44px, name + serves count, recently-planned
-  first) and the keyboard hint hides on touch (`.quick-add-hint`).
+  quick-add (mode pills: Cook / Leftovers / Eating out) opens the full-screen
+  add-meal takeover (below; 2026-07-08 — the former inline `.plan-quick-wrap`
+  band was retired so the iOS keyboard can't reflow the day list). Recipe
+  results are `.quick-add-row` buttons (≥44px, name + serves count,
+  recently-planned first) and the keyboard hint hides on touch
+  (`.quick-add-hint`).
+- `.plan-add-meal` (with `.plan-add-head` / `.plan-add-close` / `.plan-add-day`
+  / `.plan-add-body`): the full-screen add-meal takeover
+  (`components/plan-add-meal.tsx`) — a fixed light-themed overlay
+  (`inset: 0`, z-index 30, above the tabbar) with a sticky safe-area header
+  (day label + Close) and a 640px-capped body hosting the same quick-add mode
+  pills and `.quick-add-row` results. Same fixed-overlay recipe as
+  `.cook-mode`, but on the app's light theme.
 - `.plan-sheet`: the New-plan / Edit-plan panels (2-col date grid), toggled
   from the header; sheets auto-close when the working plan changes.
-- `.plan-generate`: the flow's exit — full-width teal link to `/grocery`
-  (Shop regenerates from staleness on load).
+- `.plan-generate`: the flow's exit — full-width teal "Shop this plan" link to
+  `/grocery?plan=<id>`, shown for current/upcoming plans (generation happens on
+  Shop via the staleness banner; nothing regenerates on load).
 
 ### Shop components
 
@@ -393,6 +403,11 @@ auth-panel language.
 
 - `.error-text` → `var(--color-danger)`; `.success-text` → `var(--color-success)`.
 - `.muted` utility → `var(--muted)`, `0.85rem`.
+- `.auth-links`: column-stacked wrapper for the secondary text links under the
+  auth form (the mode toggle + the "Forgot password?" link, milestone 11) —
+  `flex-direction: column`, `align-items: flex-start`, `gap: 0.6rem`,
+  `margin-top: 0.5rem`. Keeps the two `.text-btn` links from colliding on one
+  line (board pin AR1: A).
 - `details`/`summary` power collapsibles (recipe danger menu, recipe details,
   home next-week) with `list-style: none` and a hidden webkit marker.
 - **Navigation** is centralized in [`components/app-shell.tsx`](../components/app-shell.tsx):
