@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildGroceryRows, formatAmount, scaleIngredientAmount } from "./grocery";
+import { buildGroceryRows, formatAmount, formatIngredientAmount, scaleIngredientAmount } from "./grocery";
 
 describe("grocery generation", () => {
   it("scales and combines matching ingredients across repeated recipes", () => {
@@ -117,5 +117,17 @@ describe("ingredient amounts", () => {
   it("formats amounts with at most three decimal places", () => {
     expect(formatAmount(2)).toBe("2");
     expect(formatAmount(1.23456)).toBe("1.235");
+  });
+
+  it("renders a zero amount as to taste instead of a number and unit", () => {
+    expect(formatIngredientAmount(0, "tsp")).toBe("to taste");
+    expect(formatIngredientAmount(0 * 1.5, "tsp")).toBe("to taste");
+    expect(formatIngredientAmount(0.0004, "tsp")).toBe("to taste");
+  });
+
+  it("renders nonzero amounts with their unit label", () => {
+    expect(formatIngredientAmount(2, "tsp")).toBe("2 tsp");
+    expect(formatIngredientAmount(0.5, "cup")).toBe("0.5 cup");
+    expect(formatIngredientAmount(1.23456, "tbsp")).toBe("1.235 tbsp");
   });
 });

@@ -7,7 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { StatusMessage } from "@/components/status-message";
 import { formatDisplayDate, formatRelativeDay, toYmd } from "@/lib/date-utils";
-import { formatAmount } from "@/lib/grocery";
+import { formatIngredientAmount } from "@/lib/grocery";
 import { useGroceryList } from "@/lib/hooks/use-grocery-list";
 import type { GroceryItem } from "@/lib/hooks/use-grocery-list";
 
@@ -82,7 +82,7 @@ function ShopScreen() {
           </div>
         </div>
         <span className="shop-amt">
-          {formatAmount(item.amount)} {item.unit_code}
+          {formatIngredientAmount(item.amount, item.unit_code)}
         </span>
       </div>
     );
