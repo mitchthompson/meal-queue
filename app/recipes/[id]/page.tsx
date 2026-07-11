@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { CookMode } from "@/components/cook-mode";
-import { formatAmount } from "@/lib/grocery";
+import { formatIngredientAmount } from "@/lib/grocery";
 import { toErrorMessage } from "@/lib/errors";
 import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
@@ -253,8 +253,10 @@ function RecipeDetailScreen() {
                         {ingredient.is_pantry_staple ? <span className="pantry-badge">Pantry staple</span> : null}
                       </div>
                       <span className="recipe-amount">
-                        {formatAmount(Number(ingredient.amount) * scaleFactor)}{" "}
-                        {unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code}
+                        {formatIngredientAmount(
+                          Number(ingredient.amount) * scaleFactor,
+                          unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code,
+                        )}
                       </span>
                     </li>
                   ))}
@@ -295,9 +297,10 @@ function RecipeDetailScreen() {
           ingredients={ingredients.map((ingredient) => ({
             id: ingredient.id,
             name: ingredient.name,
-            amount: `${formatAmount(Number(ingredient.amount) * scaleFactor)} ${
-              unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code
-            }`,
+            amount: formatIngredientAmount(
+              Number(ingredient.amount) * scaleFactor,
+              unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code,
+            ),
           }))}
           onExit={() => setCooking(false)}
           recipeName={recipe.name}

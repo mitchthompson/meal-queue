@@ -25,7 +25,7 @@ export function buildSystemPrompt(existingTags: string[]): string {
     "",
     'BASE_SERVINGS. Use the stated yield. "serves 4-6" -> 4 (lower bound). If absent, use 4.',
     "",
-    "STEPS. One imperative string per step. No leading numbers. Stay close to the source wording.",
+    "STEPS. One imperative string per step. No leading numbers. Stay close to the source wording. Keep the source's own step boundaries: one output step per source step or paragraph. Never split a source step into several smaller steps.",
     "",
     'Ignore ads, comments, navigation, and story preamble. If there is no actual recipe in the content, return {"no_recipe": true}.',
   ].join("\n");

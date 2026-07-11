@@ -27,6 +27,11 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("2-3 tbsp");
   });
 
+  it("states the step-boundary rule", () => {
+    expect(prompt).toContain("step boundaries");
+    expect(prompt).toContain("Never split a source step");
+  });
+
   it("handles an empty tag list", () => {
     const empty = buildSystemPrompt([]);
     expect(empty).toContain("no tags");

@@ -30,6 +30,15 @@ export function formatAmount(value: number) {
   return roundAmount(value).toString();
 }
 
+// Imported recipes store "to taste" / "pinch" / "as needed" ingredients as
+// amount 0 (see lib/import/prompt.ts), so a zero amount means unquantified,
+// not "none".
+export function formatIngredientAmount(value: number, unitLabel: string) {
+  const rounded = roundAmount(Number(value));
+  if (rounded === 0) return "to taste";
+  return `${rounded} ${unitLabel}`;
+}
+
 export function scaleIngredientAmount(amount: number, multiplier: number) {
   return Number(amount) * Number(multiplier || 1);
 }
