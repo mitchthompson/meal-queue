@@ -425,6 +425,22 @@ the four weak page-level empties (Recipes ×2, Shop no-plan, Plan no-plans),
 copy locked in the spec pending board pins ES1–ES2. Zero schema, zero deps.
 Last; benefits from M13's sheet and M14's dark sweep.
 
+### 16. Step↔ingredient link (accurate cook-mode chips) — candidate, forks not locked
+
+Spec: [plans/step-ingredients.md](plans/step-ingredients.md) · Branch
+`codex/step-ingredients` (proposed)
+
+Scoped 2026-07-11 from real-use feedback (wrong chips while cooking One-Pot
+Chicken and Rice). **DB milestone** (takes the next migration slot after
+whichever of M12/this ships first): the import LLM emits per-step
+`ingredient_indexes`, `save_recipe` resolves them to a new nullable
+`recipe_steps.ingredient_ids uuid[]` (both-shape `p_steps` keeps every legacy
+caller working), and cook mode trusts the mapping — the name-match heuristic
+becomes fallback-only for unmapped recipes. Unlike M12–M15 the §2 owner forks
+are NOT yet locked — needs an owner interview before build. The cheap
+interim fixes (zero-amount "to taste" display + the keep-source-step-boundaries
+prompt rule) shipped 2026-07-11, independent of this milestone.
+
 ## Deferred Fixes (from the 2026-06-11 audit)
 
 Real issues confirmed in code but deliberately excluded from the current

@@ -6,7 +6,7 @@
 
 ## 1. Context (why)
 
-Grocery grouping identity is `lower(name)|unit_code|pantryflag`, so `1 cup chicken stock` and `240 ml chicken stock` are two list lines. The aggregation truth lives in the DB function `regenerate_grocery_list` (`supabase/schema.sql:621-694`) — the client-side `buildGroceryRows` in `lib/grocery.ts` is a vestige no app code calls (only `formatAmount` is imported; verified 2026-07-05).
+Grocery grouping identity is `lower(name)|unit_code|pantryflag`, so `1 cup chicken stock` and `240 ml chicken stock` are two list lines. The aggregation truth lives in the DB function `regenerate_grocery_list` (`supabase/schema.sql:621-694`) — the client-side `buildGroceryRows` in `lib/grocery.ts` is a vestige no app code calls (only the display formatters `formatAmount` and `formatIngredientAmount` are imported; verified 2026-07-05, updated 2026-07-11).
 
 **Owner decisions (locked, do not revisit):**
 | Decision | Choice |
