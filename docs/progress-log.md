@@ -3,7 +3,55 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-08 (latest) - Post-use UX fixes: Today deep links, add-meal takeover, Shop this plan
+## 2026-07-11 (latest) - Milestone 11 (password reset) shipped: AR2 A, PR #37 merged + deployed, owner prod pass done
+
+M11 went from "built on branch, gate-blocked" to fully closed in one session.
+Zero schema, zero deps; no application code changed this session — the ship was
+gates + release mechanics (the code commits were built 2026-07-06).
+
+- **Onboard caught two drift items** (fixed in chore `88a7a53` before
+  anything else): (1) `codex/password-reset` carried **five** commits, not the
+  documented three — the 2026-07-11 doc de-rot pair (`6482a5e`/`8abb9b3`) had
+  been committed onto it; (2) the tracked `.claude/skills/{onboard,wrap}`
+  SKILL.md files had been swapped, uncommitted, for symlinks into
+  `~/Dev/claude-skills/sites/meal-queue/` (owner centralized skills that
+  morning). **Decision:** commit the symlinks as-is — single-machine repo, so
+  absolute symlink targets are accepted; the skills still resolve (this
+  session's `/onboard` loaded through one).
+- **AR2 signed off: A, kept as built** (owner, from the existing 🍳 Milestone-11
+  board artifact — no fresh capture needed, the stack stayed down). All AR pins
+  resolved; recorded across decisions/current-state/roadmap/design-flags in
+  `7f95c39`.
+- **Owner configured the Supabase dashboard** (Authentication → URL
+  Configuration): Redirect URLs + `https://meal-queue.vercel.app/reset-password`
+  and `http://localhost:3000/reset-password`; Site URL confirmed. Without the
+  allowlist entry, `redirectTo` silently falls back to the Site URL and the
+  reset link lands on the home screen with no password form.
+- **Release:** pushed as `mitchthompson` (one-off token URL), opened **PR #37**,
+  CI green first try (app-checks **58s**, db-tests **1m10s**; pgTAP untouched at
+  108), merged (merge commit) → `main` **`7e66dd5`**, branch deleted
+  local+remote. `main` post-merge CI **green on the first run (1m7s)** — no
+  port-bind flake this time. Vercel deploy probed live: `/` 200,
+  `/reset-password` 200, `/nonexistent` 404 (M9 boundary intact).
+- **Owner prod real-device pass: done** — a live reset round-trip on iPhone
+  Safari against prod, confirmed working ("checked it out! looks good"). That
+  was the final M11 gate; the milestone is closed.
+- **Flag movement:** the auth-flow flag (UI audit finding 6) moved to Resolved —
+  password reset shipped (M11), friendlier errors shipped earlier (M9); only
+  sign-up confirmation messaging remains, deferred indefinitely by owner
+  decision (2026-07-05).
+- **Verification this session:** onboard baseline eslint clean / tsc clean /
+  **vitest 138/138**; wrap re-run tsc clean + vitest 138/138 (docs-only wrap; no
+  build re-run — the merge commit was built green in CI). `verify-reset-pass`
+  25/25 stands from 2026-07-06 (local stack down; the flow was proven live in
+  prod instead).
+- **Remaining work:** none for M11. Next: owner picks from M12–M15
+  (recommended 12 → 13 → 14 → 15); M12 unit-merge is the DB milestone (fifth
+  migration, full ritual). Housekeeping available anytime: prune the obsolete
+  `codex/password-reset-prerebase` backup ref and the older merged `codex/*`
+  refs.
+
+## 2026-07-08 - Post-use UX fixes: Today deep links, add-meal takeover, Shop this plan
 
 Three issues the owner hit in real use, built on `codex/ux-feedback-fixes` (off
 `main` `cc1e6ec`) and shipped after a review-board sign-off. Spec:

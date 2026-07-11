@@ -317,9 +317,9 @@ Acceptance:
 All seven were interviewed and specced in one session (owner verdicts recorded
 in each spec's §1 table); each has a builder-ready spec in `docs/plans/`
 written for a lower-capability executor. **M9 shipped 2026-07-05 (PR #33,
-deployed); M10 complete 2026-07-05 (PR #34 + PR #35, deployed); M11 in progress
-2026-07-06 (built on `codex/password-reset`; AR2 signed off + redirect URLs
-configured 2026-07-11, merge in motion) — M12-M15 remain to build** — the owner picks the order and gives the
+deployed); M10 complete 2026-07-05 (PR #34 + PR #35, deployed); M11 shipped
+2026-07-11 (PR #37, deployed, owner prod device pass done) — M12-M15 remain to
+build** — the owner picks the order and gives the
 go-ahead per milestone. Recommended order below
 (dependencies noted); board pins for M10/M11/M13/M15 can bundle into one review
 round; M14 needs its own round.
@@ -361,26 +361,29 @@ clobber → hardened to per-item rollback, same-ms temp-id collision). Closes th
 1500ms-delayed network, rollback + red error on abort); no visual surface, no
 board pin; zero schema, zero deps.
 
-### 11. Password reset — IN PROGRESS (built on branch, not merged)
+### 11. Password reset — DONE
 
-Spec: [plans/password-reset.md](plans/password-reset.md) · Branch `codex/password-reset`
+Spec: [plans/password-reset.md](plans/password-reset.md) · Branch
+`codex/password-reset` (merged + deleted)
 
 "Forgot password?" → `resetPasswordForEmail` → `/reset-password` route →
 `updateUser`. Sign-up confirmation messaging stays deferred (owner decision
 2026-07-05). Uses M9's `toAuthErrorMessage`.
 
-**Status (2026-07-06, git state updated 2026-07-11): built and verified on
-`codex/password-reset`; committed as `391ebe1` (feat) / `e2b7ea5` (test) /
-`b92db61` (docs wrap) and rebased onto `main` `6fb32b2` — unpushed, unmerged.** `auth-gate.tsx` forgot-password link + `requestPasswordReset`; new
+**Done 2026-07-11: PR #37 (`codex/password-reset` → `main` `7e66dd5`),
+deployed; the owner completed the prod real-device pass the same day (live
+iPhone Safari reset, confirmed working).** Built 2026-07-06:
+`auth-gate.tsx` forgot-password link + `requestPasswordReset`; new
 `app/reset-password/{page,layout}.tsx`. Senior `/code-review` (high) clean; 3
 low-severity notes applied (`disabled={busy}`, toggle-clears-status, title case).
 Board round **AR** caught a real sign-in link collision → **owner picked AR1: A**
 (stacked links, `.auth-links` in `app/globals.css`); **AR2 (reset page): signed
 off 2026-07-11, verdict A — kept as built.** `verify-reset-pass.mjs` 25/25 (real
-Mailpit round-trip), vitest 138/138, build 13 routes. Zero schema, zero deps.
-**Owner gates:** redirect URLs configured 2026-07-11 (`/reset-password`, prod +
-`localhost:3000`, Site URL confirmed) · push/PR/merge word given 2026-07-11 ·
-post-deploy prod real-device pass.
+Mailpit round-trip), vitest 138/138, build 13 routes; PR #37 CI green, `main`
+post-merge CI green first run. Zero schema, zero deps.
+**All owner gates cleared 2026-07-11:** redirect URLs configured
+(`/reset-password`, prod + `localhost:3000`, Site URL confirmed) · merge word
+given · prod real-device pass done.
 
 ### 12. Grocery unit merge (dimension-aware grouping)
 
@@ -459,7 +462,8 @@ Details in [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 
 - Auth flow completion: ~~password reset, friendlier auth errors~~ — promoted
   2026-07-05: password reset to milestone 11
-  ([plans/password-reset.md](plans/password-reset.md)), friendlier auth errors
+  ([plans/password-reset.md](plans/password-reset.md), **shipped 2026-07-11,
+  PR #37**), friendlier auth errors
   to milestone 9's `toAuthErrorMessage`. Sign-up confirmation messaging stays
   deferred (owner decision 2026-07-05: single household, accounts already
   provisioned).

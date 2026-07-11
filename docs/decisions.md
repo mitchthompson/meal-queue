@@ -417,7 +417,8 @@ all locked in the specs' §1 tables:
 - **Auth (M11): password reset only.** Sign-up confirmation messaging stays
   deferred — single household, accounts already provisioned. Friendlier auth
   errors land earlier via M9's `toAuthErrorMessage`. **Build decisions
-  (2026-07-06, on `codex/password-reset`, not yet merged):** board pin **AR1: A**
+  (2026-07-06; merged 2026-07-11 as PR #37, deployed, owner prod pass
+  done):** board pin **AR1: A**
   — the sign-in mode-toggle and "Forgot password?" links **stack** in a new
   `.auth-links` column (the as-first-built inline layout collided them). Three
   senior-review notes applied over the spec's verbatim code: `disabled={busy}` on
@@ -443,9 +444,8 @@ all locked in the specs' §1 tables:
   `units.base_factor` column (data-driven, not hardcoded in the function);
   old-key rows normalize state-intact with `bool_and` merge semantics.
 - **Execution rails:** per-milestone go-ahead required. **M9 + M10 shipped
-  (2026-07-05); M11 approved and in progress (2026-07-06, built on branch;
-  AR2 signed off + redirect URLs configured 2026-07-11, merge in motion; the
-  post-deploy prod pass remains); M12–M15 remain unapproved.**
+  (2026-07-05); M11 shipped (built 2026-07-06; merged + deployed + owner prod
+  pass 2026-07-11, PR #37); M12–M15 remain unapproved.**
   Recommended order 12 → 13 → 14 → 15 (dependencies in
   [roadmap.md](roadmap.md)); board pins for M13/M15 may bundle into one round,
   M14 gets its own.

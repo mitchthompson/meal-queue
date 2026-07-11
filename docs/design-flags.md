@@ -31,11 +31,6 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **What's needed:** These are skeletons; flesh out as each page is worked. Update (2026-07-02): [settings](pages/settings.md) was rewritten with the v2 Settings pass (PR #20), and [recipes](pages/recipes.md) was de-rotted with the v2 Recipes/detail passes (PRs #21–#22 — it had still described pre-M2 non-atomic saves, the removed sample-data seeder, and the pre-reflow "focus mode"). [today](pages/today.md), [plans](pages/plans.md), and [grocery](pages/grocery.md) remain stubs (the redesign brief supersedes them for future-state intent).
 - **Source:** Session decision (canonical context)
 
-### Auth flow incomplete: no sign-up confirmation messaging, no password reset, unfriendly errors
-- **Where it's used:** Auth UI (`components/auth-gate.tsx` and sign-up/sign-in flow)
-- **What's needed:** If Supabase email confirmation is enabled, sign-up shows no feedback at all (no session returned, nothing rendered). There is no password-reset path, and auth errors are not user-friendly. Update (2026-07-05): split by owner verdict — the **password-reset flow is specced as milestone 11** ([plans/password-reset.md](plans/password-reset.md)); **friendlier auth errors are DONE (milestone 9, PR #33, 2026-07-05)** — `toAuthErrorMessage` in `lib/errors.ts` maps the common Supabase auth errors and passes other readable ones through, wired into `components/auth-gate.tsx`; and **sign-up confirmation messaging stays deferred indefinitely** (single household, accounts already provisioned). With M9 shipped, only **password reset (M11)** and the deferred sign-up-confirmation third remain open. Known constraint recorded in the M11 spec: the reset email opens in the default browser, not the installed standalone app (per-context sessions; accepted). **Update (2026-07-06, git state 2026-07-11): password reset is BUILT and verified on `codex/password-reset` (committed as `391ebe1`/`e2b7ea5`/`b92db61`, rebased onto `main` `6fb32b2` — unpushed, unmerged)** — forgot-password link + `requestPasswordReset` in `auth-gate.tsx`, new `/reset-password` route, board **AR1: A** (stacked `.auth-links`) shipped in code, `verify-reset-pass` 25/25. **Still open until it merges (AR2 signed off, verdict A, and redirect URLs configured, both 2026-07-11 — all pre-merge gates clear):** push/PR/merge and a post-deploy prod real-device pass. Only the deferred sign-up-confirmation third stays open beyond that.
-- **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Auth flow gaps, finding 6); also [roadmap](roadmap.md) Deferred Fixes (UI audit)
-
 ### Thin empty states, no dark mode (wake-lock resolved)
 - **Where it's used:** New-user empty states across routes; global theming in [`app/globals.css`](../app/globals.css)
 - **What's needed:** Update (2026-07-02): the wake-lock half is done — Cook mode (`components/cook-mode.tsx`, reflow screen 1) holds a screen wake-lock while active, re-acquired on `visibilitychange`. Still open: richer empty states for new users, and dark-mode support beyond the Cook takeover. Update (2026-07-05): both halves specced — **dark mode as milestone 14** ([plans/dark-mode.md](plans/dark-mode.md); system-follow only, slate set as the base, values board-gated) and **empty states as milestone 15** ([plans/empty-states.md](plans/empty-states.md); shared `EmptyState` component, four weak states). Closes when both ship.
@@ -52,6 +47,22 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 - **Source:** [current-state](current-state.md) (Known Reliability Risks)
 
 ## Resolved
+
+### Auth flow incomplete: no sign-up confirmation messaging, no password reset, unfriendly errors
+- **Resolution (2026-07-11, milestone 11, PR #37 `7e66dd5`, deployed):** the
+  password reset shipped — "Forgot password?" + `requestPasswordReset` in
+  `components/auth-gate.tsx`, the `/reset-password` recovery-session route
+  (loading / expired-link / new-password states), board AR1: A + AR2: A,
+  `verify-reset-pass` 25/25. The owner configured the Supabase-dashboard
+  redirect URLs (`/reset-password`, prod + `localhost:3000`) and completed the
+  prod real-device pass the same day (live iPhone Safari reset, confirmed
+  working). Friendlier auth errors shipped earlier via milestone 9's
+  `toAuthErrorMessage` (PR #33). **Sign-up confirmation messaging stays
+  deferred indefinitely** (owner decision 2026-07-05: single household,
+  accounts already provisioned) — reopen only if account provisioning changes.
+  Accepted constraint: the reset email opens in the default browser, not the
+  installed standalone app (per-context sessions).
+- **Source:** [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md) (Auth flow gaps, finding 6); spec [plans/password-reset.md](plans/password-reset.md)
 
 ### Five sequential round trips per plan mutation (no optimistic UI)
 - **Resolution (2026-07-05, milestone 10 PR 2, PR #35 `1d16ef8`, deployed):**
