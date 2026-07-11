@@ -2,6 +2,8 @@
 
 > Status: confirmed against source. Design updated by the v2 sweep Settings pass
 > (2026-07-02, round-2 board verdicts ST1: B / ST2 / ST3); behavior unchanged.
+> Re-confirmed 2026-07-11 (`DEFAULT_USER_SETTINGS` source of truth, M9 error
+> mapping, `userEmail` cleanup reflected below).
 
 ## Purpose
 
@@ -22,7 +24,9 @@ in `<AuthGate>`, passing `session.user.id` and `session.user.email` down.
 ## Key components
 
 - `AuthGate` (`components/auth-gate.tsx`) — gates on the Supabase session.
-- `AppShell` (`components/app-shell.tsx`) — nav + content frame; receives `userEmail`.
+- `AppShell` (`components/app-shell.tsx`) — nav + content frame. It no longer
+  receives `userEmail` (2026-07-03 cleanup); this screen renders the signed-in
+  address itself.
 - `SettingsScreen` — inner client component holding all form state.
 - `WEEKDAYS` constant (`lib/constants.ts`) — option list for the three weekday `<select>`s.
 - `supabase.auth.signOut()` — wired to the "Sign out" button.
@@ -54,24 +58,25 @@ Field notes (confirmed against `supabase/schema.sql`):
 ## UI states
 
 - **Loading** — form panel shows `Loading settings...` while the initial read runs.
-- **Empty / no row** — when no `user_settings` row exists, the form falls back to the
-  in-component `initialForm` defaults (`default_plan_days: 7`, `week_starts_on: 5`,
-  `default_order_weekday: 3`, `default_pickup_weekday: 4`). See the flag below — these
-  client defaults disagree with the nullable SQL defaults for the order/pickup weekdays.
+- **Empty / no row** — when no `user_settings` row exists, the form falls back to
+  `DEFAULT_USER_SETTINGS` (`lib/constants.ts`, the single source of truth since
+  2026-07-03, mirroring the SQL defaults: `default_plan_days: 7`,
+  `week_starts_on: 5`, order/pickup weekdays `null` — users pick their own days).
 - **Saving** — submit button shows `Saving...` and is disabled.
-- **Error** — `<p className="error-text">` renders the raw Supabase error message
-  (`loadError.message` / `upsertError.message`).
+- **Error** — `<p className="error-text">` renders the mapped error message via
+  `toErrorMessage(loadError, "Failed to load settings.")` /
+  `toErrorMessage(upsertError, "Failed to save settings.")` (milestone 9 sweep,
+  2026-07-05).
 - **Success** — `<p className="success-text">` renders `Settings saved.` after upsert.
 
 ## Known flags
 
-See [design flags](../design-flags.md).
-
-- **`ensureUserSettings` runs twice per sign-in; default settings disagree across files** —
-  the client `initialForm` here uses `3`/`4` for order/pickup weekdays, but the SQL
-  defaults are `null`. This page is one of the files that duplicates default settings.
-- **Raw Supabase error strings render in the UI; no route-level error/loading boundaries** —
-  this page surfaces `error.message` directly and has no `error.tsx` / `loading.tsx`.
+See [design flags](../design-flags.md). The two flags formerly listed here are
+**resolved**: the `ensureUserSettings` duplicate call was fixed in mini-M5 and
+the defaults drift closed by the `DEFAULT_USER_SETTINGS` single source of truth
+(2026-07-03); raw error strings and missing boundaries closed with milestone 9
+(2026-07-05 — root `error.tsx`/`loading.tsx`/`not-found.tsx` boundaries plus
+the `toErrorMessage` sweep, which covers this page's load/save errors).
 
 ## Design notes
 

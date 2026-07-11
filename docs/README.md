@@ -37,6 +37,9 @@ At the start of a new session, read in this order:
 - [`progress-log.md`](progress-log.md) — append-only record of completed
   outcomes and important discoveries.
 - [`decisions.md`](decisions.md) — product and technical choices with rationale.
+- [`plans/`](plans/) — builder-ready milestone and fix specs written for
+  handoff. A spec's Status line asserts current state; the body is intent and
+  may predate reality by design.
 
 **Reference**
 
@@ -60,6 +63,9 @@ At the start of a new session, read in this order:
 - [`design-flags.md`](design-flags.md) — open design questions and unconfirmed
   values awaiting decision. A missing token or value is flagged here, never
   invented.
+- [`redesign-brief.md`](redesign-brief.md) — the reflow's owner-approved
+  direction and per-screen intent (2026-07-02). Mockup source lives in
+  [`mockups/`](mockups/), the app-icon source in [`assets/`](assets/).
 
 **Per-page intent** ([`pages/`](pages))
 

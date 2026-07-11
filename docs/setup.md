@@ -72,7 +72,7 @@ phone cannot reach the server.
 ```bash
 npm run lint
 npm run typecheck
-npm run test      # unit tests for lib/ domain logic (13 as of the last run)
+npm run test      # unit tests for lib/ domain logic (vitest)
 npm run build     # run when a change can affect the build
 ```
 
@@ -84,9 +84,10 @@ per-change-type acceptance checklists.
 - [`CLAUDE.md`](../CLAUDE.md) at the repo root auto-loads as project
   instructions. Every session starts by reading
   [`current-state.md`](current-state.md), then [`roadmap.md`](roadmap.md).
-- The **`.claude/` folder is gitignored** — Claude Code settings, any MCP
-  config, and git worktrees do **not** travel with the repo. Recreate
-  per-machine settings as needed.
+- The **`.claude/` folder is gitignored except `.claude/skills/`** — the
+  project's onboard/wrap skills travel with the repo, while Claude Code
+  settings, any MCP config, and git worktrees do **not**. Recreate per-machine
+  settings as needed.
 - Use the kickoff prompt below to start your first session.
 
 ## Optional — the recipe-import MCP server (`mcp/`)
@@ -114,11 +115,12 @@ Full rules are in [`CLAUDE.md`](../CLAUDE.md); the essentials:
 - Implementation work uses focused `codex/...` branches. Pull requests are
   required for DB migrations, broad refactors, and risky behavior changes;
   docs-only and low-risk work may go directly to `main` after review.
-- **Pushing to `main` deploys to Vercel** — treat a push as a release that
-  needs approval. (Confirm the exact deploy trigger — it is an open item in
-  [`design-flags.md`](design-flags.md).)
+- **Pushing to `main` deploys to Vercel** (confirmed 2026-07-01: merges and
+  pushes to `main` auto-deploy production; branch pushes create previews) —
+  treat a push as a release that needs approval.
 - Database migrations are applied **by hand through the Supabase SQL editor**
-  (no Supabase CLI installed); additive-only, against live data. See
+  (the Supabase CLI is for local/CI testing only); additive-only, against live
+  data. See
   [`qa.md`](qa.md) and [`architecture.md`](architecture.md).
 
 ## First Claude Code session — kickoff prompt

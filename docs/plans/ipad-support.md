@@ -1,6 +1,6 @@
 # Plan: iPad coherence
 
-Status: **shipped — chrome merged & deployed (PR #26, `e0a6a3c`); content-width follow-up on `codex/ipad-content-width` awaiting merge; real-device confirmation open** (2026-07-03) · Drafted 2026-07-03 · Scope chosen by owner: **"make it coherent"** — a CSS-tier fix, **no new layouts, no review-board round**.
+Status: **shipped — chrome (PR #26, `e0a6a3c`) and content-width (PR #27, `a40b90a`) both merged & deployed 2026-07-03, owner-confirmed on iPad Pro** (status updated 2026-07-11; only the optional real-device tails listed in current-state's Open issues remain) · Drafted 2026-07-03 · Scope chosen by owner: **"make it coherent"** — a CSS-tier fix, **no new layouts, no review-board round**.
 
 > **Implementation note (2026-07-03).** Phase 0 sweep
 > (`scripts/review-board/capture-ipad.mjs`) confirmed the defect and narrowed the

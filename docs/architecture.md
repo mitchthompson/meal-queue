@@ -21,7 +21,8 @@ the authenticated owner.
 - `components/app-shell.tsx` owns desktop and mobile navigation.
 - `app/recipes` owns recipe library, editing, serving previews, and cooking
   steps.
-- `app/plans` owns date-range plans and meal-slot scheduling.
+- `app/plans` owns date-range plans and per-day meal scheduling (flat day
+  lists since 2026-07-02).
 - `app/grocery` owns grocery generation and checklist state.
 - `app/settings` owns household planning defaults.
 - `lib/date-utils.ts` owns pure local-calendar date arithmetic and plan-date
@@ -44,8 +45,8 @@ the authenticated owner.
 - `tags` and `recipe_tags`: User-owned recipe categorization.
 - `meal_plans`: Explicit date ranges, order/pickup dates, and a generation
   version.
-- `meal_plan_items`: Cooked recipes, leftovers, or eating-out entries for a date
-  and meal type.
+- `meal_plan_items`: Cooked recipes, leftovers, or eating-out entries for a
+  plan date (`meal_type` is vestigial — days are flat meal lists, 2026-07-02).
 - `grocery_list_items`: Materialized grocery quantities and per-plan user
   checklist state.
 
@@ -56,22 +57,34 @@ derived, human-readable version is [data model](data-model.md).
 
 ### Recipe Save
 
-The client saves the recipe parent, deletes existing ingredients, steps, and tag
-links, then inserts replacements. These requests are not transactional and are
-scheduled for replacement by a database function.
+The client calls the atomic `save_recipe` Postgres function (security invoker,
+so RLS still applies): parent update plus ingredient/step/tag-link replacement
+in one transaction — any invalid child row rolls back the whole save
+(milestone 2, 2026-07-01). The version bump for referencing plans is
+diff-based, firing only when the recipe's ingredient identity set actually
+changes. The MCP `save-recipe` tool uses the same function (service-role path).
 
 ### Plan Mutation
 
-The client inserts, updates, or removes a meal-plan item, then separately reads
-and increments `meal_plans.version`. Grocery lists use that version to detect
-staleness.
+The client inserts, updates, or removes a meal-plan item;
+`meal_plans.version` increments via database triggers scoped to
+grocery-relevant changes (cook items added/removed; recipe or serving
+multiplier changed), with BEFORE-trigger cross-row validations under row locks.
+The client performs no version reads or writes (milestone 3, 2026-07-02).
+Item-level mutations apply optimistically in the UI with targeted per-item
+rollback (milestone 10 PR 2, 2026-07-05).
 
 ### Grocery Generation
 
-The client loads cooked plan items and recipe ingredients, scales quantities,
-then passes them to the tested `buildGroceryRows` domain function. The client
-still deletes all existing grocery rows and inserts the new set, which resets
-checklist state.
+The client calls the transactional `regenerate_grocery_list(p_plan_id)`
+function, which rebuilds the list server-side as an upsert by stable identity
+(normalized name | unit | pantry classification) — checked / on-hand /
+pantry-override state survives for unchanged items, and obsolete rows are
+removed only after the replacement upsert succeeds (milestone 4, 2026-07-02).
+Staleness is plan-level (`meal_plans.groceries_version` vs `version`) and is
+surfaced as a banner with an explicit Generate/Update button — nothing
+regenerates on page load (milestone 10 PR 1, 2026-07-05). The pure
+scaling/normalization logic in `lib/grocery.ts` remains vitest-covered.
 
 ## Invariants
 
@@ -120,28 +133,32 @@ stack). See [decisions](decisions.md) and
 
 ## Known Structural Debt
 
-- Core route files contain UI, state management, queries, and domain logic.
-- Display-date formatting remains duplicated across route components.
-- Aggregate writes are composed in the browser instead of database
-  transactions.
+- Route files own UI and per-screen state; data access is extracted to
+  per-page hooks in `lib/hooks/` (milestone 6, 2026-07-02), but hook/UI
+  interaction behavior has no automated coverage (open design flag).
 - Generated Supabase database types are not present.
 
 ## Test Boundaries
 
-Vitest currently covers:
+Vitest (138 tests across 9 files as of 2026-07-11) covers the `lib/` domain
+logic:
 
-- Local calendar formatting and date arithmetic.
-- Plan default and next-start calculations.
-- Ingredient scaling and three-decimal rounding.
-- Grocery normalization, exact-match grouping, pantry separation, and source
+- Local calendar formatting, date arithmetic, and plan defaults.
+- Ingredient scaling, rounding, grocery normalization/grouping, and source
   keys.
+- Error mapping (`lib/errors.ts`).
+- The import pipeline (`lib/import/*` schemas, prompt, extraction,
+  normalization, fetch guards) and the `draftToFormState` mapper.
 
-Database transactions, row-level security, and UI interactions do not yet have
-automated coverage in the committed baseline. Milestone 1.5 (on
-`codex/atomic-recipe-saves`, 2026-06-27) adds a CI pgTAP suite that exercises the
-`save_recipe` function — atomicity rollback, RLS/owner-scope, and version-bump
-invalidation — against an ephemeral local Supabase stack on GitHub Actions
-(no cloud credentials). Broader UI-interaction coverage remains open.
+The database layer is covered by pgTAP in CI (milestone 1.5, first green
+2026-07-01): 108 assertions across three suites — `save_recipe`
+atomicity/RLS/version-bump, plan-integrity triggers, and grocery state
+preservation — against an ephemeral local Supabase stack on GitHub Actions (no
+cloud credentials).
+
+UI-interaction coverage remains open (an open design flag). Per-change
+Playwright harnesses live in `scripts/review-board/` and run locally at
+verification time, not in CI.
 
 ## Deploy & Operations
 
@@ -169,8 +186,9 @@ files, or generated build output.
 
 ### Applying Database Migrations
 
-Existing Supabase records are live data. There is no Supabase CLI installed; all
-schema changes are applied by hand through the Supabase SQL editor.
+Existing Supabase records are live data. The Supabase CLI is used for local/CI
+testing only (see Tooling Status below); all prod schema changes are applied by
+hand through the Supabase SQL editor.
 
 For each schema change:
 
@@ -195,10 +213,11 @@ migration-file contract and baseline policy.
 
 Production runs on Vercel.
 
-> **Flagged assumption (unconfirmed):** push to `main` auto-deploys to Vercel.
-> The exact deploy trigger/branch and whether a manual promote step exists are
-> not yet confirmed — see [design flags](design-flags.md). Treat any push to
-> `main` as a release action requiring approval.
+Merging or pushing to `main` auto-deploys production, and branch pushes create
+preview deployments; there is no manual promote step (confirmed by observation
+2026-07-01 — see the resolved "Vercel deploy trigger" entry in
+[design flags](design-flags.md)). Treat any push to `main` as a release action
+requiring approval.
 
 Deploy order:
 
@@ -216,7 +235,9 @@ Deploy order:
 ### Tooling Status
 
 - Git remote: `https://github.com/mitchthompson/meal-queue.git`.
-- GitHub CLI is not installed; pull requests use GitHub's web interface.
+- GitHub CLI (`gh`) is installed and holds two accounts; act as the repo owner
+  per command — `GH_TOKEN=$(gh auth token --user mitchthompson) gh ...` (the
+  machine-wide active account `2a-webteam` gets a 403 on push to this repo).
 - Supabase CLI: used for **local/CI testing only** (an ephemeral local stack +
   pgTAP, as of milestone 1.5, 2026-06-27). Prod database changes are still
   hand-applied through the Supabase SQL editor; `supabase db push` is not run
