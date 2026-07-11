@@ -1,14 +1,16 @@
 # Current State
 
-Last reviewed: 2026-07-08 (**Post-use UX fixes shipped & deployed** — three issues from real use (Today deep-link CTAs; the add-meal full-screen takeover; "Shop this plan") built on `codex/ux-feedback-fixes` off `main` `cc1e6ec`; an adversarial review found + fixed 4 edge/a11y issues; gate green + a real-app pass (12 shots, 0 console errors); owner signed off the review board → merged to `main` & deployed to Vercel. Zero schema, zero deps. See Active Handoff / [progress-log](progress-log.md). **Aside:** Milestone 11 (password reset) is built and verified on `codex/password-reset` (committed there, unpushed/unmerged): vitest 138/138, `verify-reset-pass` 25/25 (incl. a real Mailpit recovery-email round-trip), senior `/code-review` (high) clean, board pin **AR1: A**. Owner gates still open before merge: AR2 sign-off, Supabase redirect URLs, a prod real-device pass, then commit/PR/merge. Prior 2026-07-05: **Milestone 10 complete — PR 2 (optimistic writes) shipped & deployed** — PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`) is live on Vercel prod: item-level mutations (grocery toggle/bucket/pantry/on-hand, plan adjustServing/removeItem/addMeal) now patch local React state before the write and roll back per-item on failure, and the plan/recipe form saves dropped their blocking refetches (the atomic `save_recipe` RPC await stays); senior `/code-review` (high) found + fixed 3 issues (a refresh-after-write rollback regression, a concurrent stale-snapshot clobber hardened to **targeted functional rollback**, and a same-millisecond temp-id collision); **vitest 138/138**, new `verify-optimistic-pass` **16/16** (a grocery check and a plan remove each render <200ms under a 1500ms-delayed network, and both roll back + show the red error on `route.abort`), regression harnesses re-run green (shop 22/22, recipes 22/22, import 26/26); PR #35 CI green + `main` post-merge CI green on the first run; the docs-wrap `7a0df26` from PR 1 rode along inside PR #35, so `origin/main` and local `main` are back in sync; zero schema, zero deps. This closes the "no optimistic UI" flag and completes milestone 10. Prior 2026-07-05: **Milestone 10 PR 1 (Shop stale banner) shipped & deployed** — PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`) is live on Vercel prod: the Shop page's silent regenerate-on-load is replaced by an amber staleness banner + explicit Generate/Update button — it **never auto-regenerates** and the list stays usable while stale. Board pin **SB1: A (amber)** signed off; senior `/code-review` (high) applied one fix (the new banner briefly flashed the previous plan's state on a plan switch → reset `setStale(false)` at the top of `loadGroceryItems`); **vitest 138/138**, new `verify-shop-pass` harness **22/22** (proves no regen-on-load and that checked items survive a user-triggered update — the M4 guarantee, now user-initiated); post-merge `main` CI needed one rerun (the known transient `supabase start` `54322` port-bind flake, not a code issue); zero schema, zero deps. Prior 2026-07-05: **Milestone 9 (Resilience) shipped & deployed** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, a recipe-detail 404, a `toAuthErrorMessage` mapper, and the 17-site raw-`setError(x.message)` sweep; EB1 signed off, **vitest 138/138**, prod 404 panel live; zero schema, zero deps. Earlier the same day a planning session **scoped milestones 9-15** — seven builder-ready specs in `docs/plans/` (M9 now shipped; M10 responsiveness, M11 password reset, M12 grocery unit merge (DB), M13 plan copy, M14 dark mode, M15 empty states), recipe-import handoff format, owner forks locked. **M10 was then approved and shipped (above); M11 is approved and built on `codex/password-reset` (verified, unmerged, owner gates open); M12-M15 remain unapproved.** See Active Handoff. Prior session 2026-07-04: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
+Last reviewed: 2026-07-11 (**doc de-rot pass** — the 2026-07-11 doc audit's corrections applied across the doc set ([plans/doc-derot-2026-07-11.md](plans/doc-derot-2026-07-11.md)); no code changed. Git reality restated: M11 is **committed** on `codex/password-reset` (`391ebe1` feat · `e2b7ea5` test · `b92db61` docs wrap), rebased onto `main` `6fb32b2` (PR #36), unpushed/unmerged, owner gates unchanged. Prior 2026-07-08: **Post-use UX fixes shipped & deployed** — three issues from real use (Today deep-link CTAs; the add-meal full-screen takeover; "Shop this plan") built on `codex/ux-feedback-fixes` off `main` `cc1e6ec`; an adversarial review found + fixed 4 edge/a11y issues; gate green + a real-app pass (12 shots, 0 console errors); owner signed off the review board → merged to `main` & deployed to Vercel. Zero schema, zero deps. See Active Handoff / [progress-log](progress-log.md). **Aside:** Milestone 11 (password reset) is built and verified on `codex/password-reset` (committed there, unpushed/unmerged): vitest 138/138, `verify-reset-pass` 25/25 (incl. a real Mailpit recovery-email round-trip), senior `/code-review` (high) clean, board pin **AR1: A**. Owner gates still open before merge: AR2 sign-off, Supabase redirect URLs, a prod real-device pass, then push/PR/merge. Prior 2026-07-05: **Milestone 10 complete — PR 2 (optimistic writes) shipped & deployed** — PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`) is live on Vercel prod: item-level mutations (grocery toggle/bucket/pantry/on-hand, plan adjustServing/removeItem/addMeal) now patch local React state before the write and roll back per-item on failure, and the plan/recipe form saves dropped their blocking refetches (the atomic `save_recipe` RPC await stays); senior `/code-review` (high) found + fixed 3 issues (a refresh-after-write rollback regression, a concurrent stale-snapshot clobber hardened to **targeted functional rollback**, and a same-millisecond temp-id collision); **vitest 138/138**, new `verify-optimistic-pass` **16/16** (a grocery check and a plan remove each render <200ms under a 1500ms-delayed network, and both roll back + show the red error on `route.abort`), regression harnesses re-run green (shop 22/22, recipes 22/22, import 26/26); PR #35 CI green + `main` post-merge CI green on the first run; the docs-wrap `7a0df26` from PR 1 rode along inside PR #35, so `origin/main` and local `main` are back in sync; zero schema, zero deps. This closes the "no optimistic UI" flag and completes milestone 10. Prior 2026-07-05: **Milestone 10 PR 1 (Shop stale banner) shipped & deployed** — PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`) is live on Vercel prod: the Shop page's silent regenerate-on-load is replaced by an amber staleness banner + explicit Generate/Update button — it **never auto-regenerates** and the list stays usable while stale. Board pin **SB1: A (amber)** signed off; senior `/code-review` (high) applied one fix (the new banner briefly flashed the previous plan's state on a plan switch → reset `setStale(false)` at the top of `loadGroceryItems`); **vitest 138/138**, new `verify-shop-pass` harness **22/22** (proves no regen-on-load and that checked items survive a user-triggered update — the M4 guarantee, now user-initiated); post-merge `main` CI needed one rerun (the known transient `supabase start` `54322` port-bind flake, not a code issue); zero schema, zero deps. Prior 2026-07-05: **Milestone 9 (Resilience) shipped & deployed** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, a recipe-detail 404, a `toAuthErrorMessage` mapper, and the 17-site raw-`setError(x.message)` sweep; EB1 signed off, **vitest 138/138**, prod 404 panel live; zero schema, zero deps. Earlier the same day a planning session **scoped milestones 9-15** — seven builder-ready specs in `docs/plans/` (M9 now shipped; M10 responsiveness, M11 password reset, M12 grocery unit merge (DB), M13 plan copy, M14 dark mode, M15 empty states), recipe-import handoff format, owner forks locked. **M10 was then approved and shipped (above); M11 is approved and built on `codex/password-reset` (verified, unmerged, owner gates open); M12-M15 remain unapproved.** See Active Handoff. Prior session 2026-07-04: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
 
 ## Current build phase
 
-**Milestone 11 (password reset) is built on `codex/password-reset` and awaiting
-owner gates — nothing is committed or merged** (2026-07-06). Built from
+**Milestone 11 (password reset) is committed on `codex/password-reset` (3
+commits: `391ebe1` feat · `e2b7ea5` test · `b92db61` docs wrap, rebased onto
+`main` `6fb32b2` after PR #36) and awaiting owner gates — unpushed, unmerged**
+(built 2026-07-06; git state re-verified 2026-07-11). Built from
 [plans/password-reset.md](plans/password-reset.md): `components/auth-gate.tsx`
 gains a "Forgot password?" link + `requestPasswordReset`
 (`resetPasswordForEmail` → `${origin}/reset-password`, reusing M9's
@@ -104,13 +106,19 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 ## Stable Baseline
 
 - **In flight (not on `main`):** `codex/password-reset` holds the **Milestone 11
-  (password reset)** build — uncommitted working-tree changes (`components/auth-gate.tsx`,
+  (password reset)** build, committed as three commits and rebased onto `main`
+  `6fb32b2` (a `codex/password-reset-prerebase` backup ref preserves the
+  pre-rebase branch): `391ebe1` feat (`components/auth-gate.tsx`,
   `app/reset-password/{page,layout}.tsx`, `app/globals.css` `.auth-links`,
-  `docs/design-system.md`, and four `scripts/review-board/*reset*.mjs`). Verified
-  green (138/138, 13 routes, `verify-reset-pass` 25/25) but **not committed, not
-  merged** — awaiting AR2 sign-off + owner gates. See Active Handoff.
-- **`main`:** at `cc1e6ec` (**docs wrap of M10 PR 2**, pushed this session — was
-  local-only; `origin/main` and local `main` now in sync) atop `1d16ef8` (**Milestone 10 PR 2 (optimistic writes), PR #35** — merge of `codex/optimistic-writes`: item-level mutations in `lib/hooks/use-grocery-list.ts`, `use-plan.ts`, and `use-recipes.ts` made optimistic with targeted per-item rollback, plan/recipe form saves dropped their blocking refetches, new `scripts/review-board/verify-optimistic-pass.mjs` latency probe; this merge also carried the docs-wrap `7a0df26` from PR 1; deployed to Vercel prod, `/grocery`+`/plans`+`/recipes` 200 live) atop `41fa28b` (**Milestone 10 PR 1 (Shop stale banner), PR #34** — merge of `codex/shop-stale-banner`: replaced the silent regenerate-on-load in `lib/hooks/use-grocery-list.ts` with a `stale` flag + amber `.shop-stale-banner`/`.shop-stale-btn` in `app/grocery/page.tsx` (token-only, SB1: A); added `scripts/review-board/verify-shop-pass.mjs` (22 assertions) + the SB1 board capture/gen tooling; deployed to Vercel prod, `/grocery` 200 live) atop `8f1cd46` (**Milestone 9 (Resilience), PR #33** — merge of `codex/error-boundaries`: root `error.tsx`/`global-error.tsx`/`not-found.tsx`/`loading.tsx` boundaries, a recipe-detail 404 via render-time `notFound()`, the `toAuthErrorMessage` mapper, and the 17-site raw-error sweep; deployed to Vercel prod, `/nonexistent` → 404 branded panel confirmed live) atop `3dcf791` (**docs wrap of the tags-cap hotfix, PR #32** — merge of `codex/docs-import-hotfix`, docs-only) atop `cbb1c57` (**import tags-cap hotfix, PR #31** — `codex/fix-import-tags-cap`: raised the request-schema `tags` cap 50→500 and added the `conflicting_source` error code so validation failures stop reading as "(not both)"; server-only, deployed) atop `88a6bc5` (**Recipe Import PR 2 / Phase C** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
+  `docs/design-system.md`), `e2b7ea5` test (the four
+  `scripts/review-board/*reset*.mjs`), `b92db61` docs wrap. Working tree clean.
+  Verified green (138/138, 13 routes, `verify-reset-pass` 25/25) but
+  **unpushed, not merged** — awaiting AR2 sign-off + owner gates. See Active
+  Handoff.
+- **`main`:** at `6fb32b2` (**PR #36, post-use UX fixes** — merge of
+  `codex/ux-feedback-fixes`: `97e6c57` feat + `1a62a9b` docs wrap; local and
+  `origin/main` in sync, re-verified 2026-07-11) atop `cc1e6ec` (**docs wrap of
+  M10 PR 2**) atop `1d16ef8` (**Milestone 10 PR 2 (optimistic writes), PR #35** — merge of `codex/optimistic-writes`: item-level mutations in `lib/hooks/use-grocery-list.ts`, `use-plan.ts`, and `use-recipes.ts` made optimistic with targeted per-item rollback, plan/recipe form saves dropped their blocking refetches, new `scripts/review-board/verify-optimistic-pass.mjs` latency probe; this merge also carried the docs-wrap `7a0df26` from PR 1; deployed to Vercel prod, `/grocery`+`/plans`+`/recipes` 200 live) atop `41fa28b` (**Milestone 10 PR 1 (Shop stale banner), PR #34** — merge of `codex/shop-stale-banner`: replaced the silent regenerate-on-load in `lib/hooks/use-grocery-list.ts` with a `stale` flag + amber `.shop-stale-banner`/`.shop-stale-btn` in `app/grocery/page.tsx` (token-only, SB1: A); added `scripts/review-board/verify-shop-pass.mjs` (22 assertions) + the SB1 board capture/gen tooling; deployed to Vercel prod, `/grocery` 200 live) atop `8f1cd46` (**Milestone 9 (Resilience), PR #33** — merge of `codex/error-boundaries`: root `error.tsx`/`global-error.tsx`/`not-found.tsx`/`loading.tsx` boundaries, a recipe-detail 404 via render-time `notFound()`, the `toAuthErrorMessage` mapper, and the 17-site raw-error sweep; deployed to Vercel prod, `/nonexistent` → 404 branded panel confirmed live) atop `3dcf791` (**docs wrap of the tags-cap hotfix, PR #32** — merge of `codex/docs-import-hotfix`, docs-only) atop `cbb1c57` (**import tags-cap hotfix, PR #31** — `codex/fix-import-tags-cap`: raised the request-schema `tags` cap 50→500 and added the `conflicting_source` error code so validation failures stop reading as "(not both)"; server-only, deployed) atop `88a6bc5` (**Recipe Import PR 2 / Phase C** — merge of `codex/import-ui` (PR #29): the in-app import UI — `components/recipe-import.tsx`, `lib/hooks/use-import.ts` + `draft-to-form.ts`, the shared `saveRecipeForm` seam, token-only import CSS; deployed to Vercel prod, `/recipes` import flow live; the same PR also carried the PR-1 docs-wrap `9601b1f`) atop `11834f9` (**Recipe Import PR 1** — `codex/import-api`: the app's first server-side route `POST /api/import-recipe` + `lib/import/*`, additive and inert), `45d5260` (recipe-import spec) and the iPad-coherence merges — the full
   reflow (PRs #13–#16), review round 1
   (PRs #17–#18), the complete v2 sweep (PRs #19–#22, merge `74da4ea`), the
   **ESLint/CI lint gate (PR #23, merge `83d0b86`)**, the **2026-07-03
@@ -264,7 +272,9 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   the takeover (WebKit ≠ Playwright). Review-board capture scripts + seed live in
   the session scratchpad (not committed).
 - **Prior (2026-07-06):** **Milestone 11 (password reset) built on
-  `codex/password-reset` (off `main` `cc1e6ec`) — uncommitted, unmerged.** Owner
+  `codex/password-reset` (off `main` `cc1e6ec`; since committed as
+  `391ebe1`/`e2b7ea5`/`b92db61` and rebased onto `6fb32b2` — unpushed,
+  unmerged).** Owner
   approved starting M11. Built per [plans/password-reset.md](plans/password-reset.md):
   the "Forgot password?" link + `requestPasswordReset` in `components/auth-gate.tsx`,
   and `app/reset-password/page.tsx` + `layout.tsx`. Senior `/code-review` (high)
@@ -278,7 +288,7 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   Mailpit recovery-email round-trip; the harness restores the reviewer password
   and self-heals). Zero schema, zero deps. **Still open (owner-side):** AR2
   sign-off, the Supabase-dashboard redirect URLs, and a prod real-device pass —
-  then commit/PR/merge. Also pushed the stranded M10-PR2 docs wrap `cc1e6ec` to
+  then push/PR/merge. Also pushed the stranded M10-PR2 docs wrap `cc1e6ec` to
   `origin/main` (was local-only).
 - **Prior (2026-07-05):** **Milestone 10 PR 2 (optimistic writes) shipped &
   deployed.** PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`, branch
@@ -327,12 +337,11 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   centering, auth pass-through). vitest **138/138**, verify harnesses 15/22/26,
   prod 404 panel live. Zero schema, zero deps. (Earlier the same day, docs-only:
   milestones 9-15 scoped into builder-ready specs — see progress-log.)
-- **Next action: finish M11 on `codex/password-reset` — the build is done and
-  green; it is blocked on owner gates, not on code.** The branch has **uncommitted
-  working-tree changes** (nothing committed yet): `components/auth-gate.tsx`,
-  `app/reset-password/{page,layout}.tsx`, `app/globals.css` (`.auth-links`),
-  `docs/design-system.md`, and `scripts/review-board/{verify-reset,capture-reset,capture-reset-variants,gen-board-reset}.mjs`
-  (the board HTML + `shots-reset/` are gitignored). Sequence to close it out:
+- **Next action: finish M11 on `codex/password-reset` — the build is done,
+  green, and committed (`391ebe1` feat · `e2b7ea5` test · `b92db61` docs wrap,
+  rebased onto `main` `6fb32b2`); it is blocked on owner gates, not on code.**
+  The working tree is clean and the branch is unpushed (the board HTML +
+  `shots-reset/` are gitignored). Sequence to close it out:
   1. **AR2 sign-off** — the reset page (form + expired-link state) is the last open
      board pin (AR1: A already shipped in code). If the owner asks for an AR2 tweak,
      apply it in `app/reset-password/page.tsx` (copy) or `app/globals.css` (token-only)
@@ -341,10 +350,10 @@ the Needs-Mitchell real-device pass. See Active Handoff.
      `https://meal-queue.vercel.app/reset-password` and
      `http://localhost:3000/reset-password` to Redirect URLs; confirm Site URL.
      Live reset breaks without this.
-  3. **Commit** (on the owner's word) — group as `feat:` (auth-gate + reset route +
-     `.auth-links`) and `test:`/`chore:` (review-board scripts); Conventional
-     Commits, no `Co-Authored-By`. Then **PR** as owner (`GH_TOKEN=$(gh auth token
-     --user mitchthompson)`), green CI, **merge on the word** (deploys to Vercel).
+  3. **Push + PR** (on the owner's word) — the commits already exist
+     (`391ebe1` feat · `e2b7ea5` test · `b92db61` docs wrap). Push and open the
+     PR as owner (`GH_TOKEN=$(gh auth token --user mitchthompson)`), green CI,
+     **merge on the word** (deploys to Vercel).
   4. **Prod real-device pass (Needs-Mitchell):** one real reset on iPhone Safari
      after deploy (WebKit ≠ Playwright).
   - **To re-drive the harness locally:** stack must be up **with mailpit**
@@ -383,8 +392,9 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   AR2 board sign-off + the Supabase-dashboard redirect URLs (and, post-deploy, the
   prod real-device pass).
 - **Environment notes:** the working branch is now **`codex/password-reset`** (M11,
-  uncommitted + unmerged); `origin/main` and local `main` are in sync at `cc1e6ec`
-  (the M10-PR2 docs wrap pushed this session). Many older
+  committed + rebased onto `6fb32b2`, unpushed); `origin/main` and local `main`
+  are in sync at `6fb32b2` (PR #36). A `codex/password-reset-prerebase` backup
+  ref preserves the pre-rebase branch. Many older
   merged `codex/*` feature branches remain locally (harmless refs — prune with
   `git branch --delete` if desired). `.env.local` includes
   `ANTHROPIC_API_KEY` (sk-ant-, present locally); **Vercel has `ANTHROPIC_API_KEY`
@@ -409,12 +419,13 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   `.mcp.json` (owner OAuth pending first use); `gh` holds both accounts
   (`2a-webteam` active machine-wide, `mitchthompson` pinned per command via
   `GH_TOKEN=$(gh auth token --user mitchthompson)`); local Supabase stack runs
-  on Colima. **Currently left up (2026-07-06) running WITH mailpit** — started via
+  on Colima. **Found DOWN on 2026-07-11 (the Colima/Docker daemon is not
+  running)** — the stack had been left up on 2026-07-06 running WITH mailpit.
+  To re-drive the reset harness, start it via
   `supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,supavisor`
-  (mailpit **not** excluded) because reset-email testing needs the mail catcher;
-  this deviates from the standard start command, which lists `mailpit` in the
-  excludes. Restart with the standard exclude to return to normal, or leave it
-  (harmless). Reviewer account (`reviewer@local.test`) password was changed and
+  (mailpit **not** excluded — reset-email testing needs the mail catcher; the
+  standard start command lists `mailpit` in the excludes).
+  Reviewer account (`reviewer@local.test`) password was changed and
   restored to `review-pass-1234` by the reset harness. Verify with `supabase
   status` before relying on it; local DB already seeded with the review-board
   reviewer + recipes; the harnesses seed/tear down their own isolated data.
@@ -459,7 +470,7 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | 8 | Recipe Import (in-app) | **Done (2026-07-04)** — PR 1 (server route, PR #28 `11834f9`) + **PR 2 / Phase C (import UI, PR #29 `codex/import-ui` → `main` `88a6bc5`)**: paste/URL → LLM parse → review → save via shared `saveRecipeForm`; vitest 125/125, verify-recipes-pass 22/22 (C1 neutral) + verify-import-pass 26/26, deployed to prod. Phases A/B/C/D all shipped; only the owner real-device pass remains. Spec: [plans/recipe-import.md](plans/recipe-import.md) |
 | 9 | Resilience (error/loading/not-found boundaries + raw-error sweep) | **Done (2026-07-05)** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, recipe-detail 404, `toAuthErrorMessage`, 17-site sweep; EB1 signed off, vitest 138/138, deployed. Spec: [plans/error-boundaries.md](plans/error-boundaries.md) |
 | 10 | Responsiveness (Shop stale banner + optimistic writes) | **Done (2026-07-05)** — PR #34 (`41fa28b`): amber staleness banner replaces silent regen-on-load, SB1: A, `verify-shop-pass` 22/22; **PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`): optimistic item mutations with targeted per-item rollback, form saves shed blocking refetches, senior review fixed 3 issues, `verify-optimistic-pass` 16/16**. Both deployed; closes the "no optimistic UI" flag. Spec: [plans/responsiveness.md](plans/responsiveness.md) |
-| 11 | Password reset | **In progress (2026-07-06)** — built on `codex/password-reset` (uncommitted, unmerged): forgot-password link + `requestPasswordReset` in `auth-gate.tsx`, new `/reset-password` route. Senior review clean, 3 notes applied, board **AR1: A** shipped in code (`.auth-links`), `verify-reset-pass` 25/25. **AR2 sign-off + Supabase redirect URLs + prod pass pending.** [plans/password-reset.md](plans/password-reset.md) |
+| 11 | Password reset | **In progress (2026-07-06)** — built on `codex/password-reset` (committed `391ebe1`/`e2b7ea5`/`b92db61`, rebased onto `6fb32b2`; unpushed, unmerged): forgot-password link + `requestPasswordReset` in `auth-gate.tsx`, new `/reset-password` route. Senior review clean, 3 notes applied, board **AR1: A** shipped in code (`.auth-links`), `verify-reset-pass` 25/25. **AR2 sign-off + Supabase redirect URLs + prod pass pending.** [plans/password-reset.md](plans/password-reset.md) |
 | 12-15 | Scoped batch (2026-07-05): unit merge (DB), plan copy, dark mode, empty states | **Specced, not started** — four builder-ready specs in `docs/plans/`; owner picks order and gives per-milestone go-aheads. [roadmap.md](roadmap.md) Scoped Milestones |
 
 ## Architecture snapshot

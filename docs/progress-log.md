@@ -46,6 +46,12 @@ Three issues the owner hit in real use, built on `codex/ux-feedback-fixes` (off
 
 ## 2026-07-06 - Milestone 11 (password reset) built on branch, AR1 signed off — NOT committed/merged
 
+> [Update 2026-07-11: this session's work was subsequently committed as
+> `391ebe1` (feat) / `e2b7ea5` (test) / `b92db61` (docs wrap), and the branch
+> was rebased onto `main` `6fb32b2` after PR #36 merged; "uncommitted" below
+> describes the mid-session state only. The branch remains unpushed/unmerged
+> behind the same owner gates.]
+
 Owner approved starting M11. Built the whole milestone from the locked spec
 ([plans/password-reset.md](plans/password-reset.md)) on `codex/password-reset`
 (off `main` `cc1e6ec`). **Everything below is uncommitted working-tree work** —

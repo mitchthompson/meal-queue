@@ -369,8 +369,9 @@ Spec: [plans/password-reset.md](plans/password-reset.md) · Branch `codex/passwo
 `updateUser`. Sign-up confirmation messaging stays deferred (owner decision
 2026-07-05). Uses M9's `toAuthErrorMessage`.
 
-**Status (2026-07-06): built and verified on `codex/password-reset`, uncommitted
-+ unmerged.** `auth-gate.tsx` forgot-password link + `requestPasswordReset`; new
+**Status (2026-07-06, git state updated 2026-07-11): built and verified on
+`codex/password-reset`; committed as `391ebe1` (feat) / `e2b7ea5` (test) /
+`b92db61` (docs wrap) and rebased onto `main` `6fb32b2` — unpushed, unmerged.** `auth-gate.tsx` forgot-password link + `requestPasswordReset`; new
 `app/reset-password/{page,layout}.tsx`. Senior `/code-review` (high) clean; 3
 low-severity notes applied (`disabled={busy}`, toggle-clears-status, title case).
 Board round **AR** caught a real sign-in link collision → **owner picked AR1: A**
@@ -378,7 +379,8 @@ Board round **AR** caught a real sign-in link collision → **owner picked AR1: 
 pending.** `verify-reset-pass.mjs` 25/25 (real Mailpit round-trip), vitest
 138/138, build 13 routes. Zero schema, zero deps. **Owner gates before merge:**
 AR2 sign-off · Supabase-dashboard redirect URLs (`/reset-password`, prod +
-`localhost:3000`) · prod real-device pass · then commit/PR/merge.
+`localhost:3000`) · prod real-device pass · then push/PR/merge (the commits
+already exist).
 
 ### 12. Grocery unit merge (dimension-aware grouping)
 
