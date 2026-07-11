@@ -318,8 +318,8 @@ All seven were interviewed and specced in one session (owner verdicts recorded
 in each spec's §1 table); each has a builder-ready spec in `docs/plans/`
 written for a lower-capability executor. **M9 shipped 2026-07-05 (PR #33,
 deployed); M10 complete 2026-07-05 (PR #34 + PR #35, deployed); M11 in progress
-2026-07-06 (built on `codex/password-reset`, awaiting AR2 sign-off + owner gates,
-not merged) — M12-M15 remain to build** — the owner picks the order and gives the
+2026-07-06 (built on `codex/password-reset`; AR2 signed off + redirect URLs
+configured 2026-07-11, merge in motion) — M12-M15 remain to build** — the owner picks the order and gives the
 go-ahead per milestone. Recommended order below
 (dependencies noted); board pins for M10/M11/M13/M15 can bundle into one review
 round; M14 needs its own round.
@@ -375,12 +375,12 @@ Spec: [plans/password-reset.md](plans/password-reset.md) · Branch `codex/passwo
 `app/reset-password/{page,layout}.tsx`. Senior `/code-review` (high) clean; 3
 low-severity notes applied (`disabled={busy}`, toggle-clears-status, title case).
 Board round **AR** caught a real sign-in link collision → **owner picked AR1: A**
-(stacked links, `.auth-links` in `app/globals.css`); **AR2 (reset page) sign-off
-pending.** `verify-reset-pass.mjs` 25/25 (real Mailpit round-trip), vitest
-138/138, build 13 routes. Zero schema, zero deps. **Owner gates before merge:**
-AR2 sign-off · Supabase-dashboard redirect URLs (`/reset-password`, prod +
-`localhost:3000`) · prod real-device pass · then push/PR/merge (the commits
-already exist).
+(stacked links, `.auth-links` in `app/globals.css`); **AR2 (reset page): signed
+off 2026-07-11, verdict A — kept as built.** `verify-reset-pass.mjs` 25/25 (real
+Mailpit round-trip), vitest 138/138, build 13 routes. Zero schema, zero deps.
+**Owner gates:** redirect URLs configured 2026-07-11 (`/reset-password`, prod +
+`localhost:3000`, Site URL confirmed) · push/PR/merge word given 2026-07-11 ·
+post-deploy prod real-device pass.
 
 ### 12. Grocery unit merge (dimension-aware grouping)
 

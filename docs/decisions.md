@@ -425,7 +425,8 @@ all locked in the specs' §1 tables:
   toggle, and the tab title is title-cased "Reset Password". `/reset-password`
   gates on **session presence** (not specifically a recovery event) — an
   authenticated user can change their password there too; not a security issue
-  (`updateUser` needs a valid session). **AR2 (reset page) sign-off still pending.**
+  (`updateUser` needs a valid session). **AR2 (reset page): signed off
+  2026-07-11 — owner verdict A, kept as built. Both AR pins are resolved.**
 - **Optimistic UI (M10 PR 2): "everything client-writable"**, interpreted as
   a binding per-mutation table: item-level mutations get true
   apply-then-rollback optimism; `createPlan`/`savePlanMeta`/
@@ -442,8 +443,9 @@ all locked in the specs' §1 tables:
   `units.base_factor` column (data-driven, not hardcoded in the function);
   old-key rows normalize state-intact with `bool_and` merge semantics.
 - **Execution rails:** per-milestone go-ahead required. **M9 + M10 shipped
-  (2026-07-05); M11 approved and in progress (2026-07-06, built on branch,
-  awaiting AR2 sign-off + owner gates + merge); M12–M15 remain unapproved.**
+  (2026-07-05); M11 approved and in progress (2026-07-06, built on branch;
+  AR2 signed off + redirect URLs configured 2026-07-11, merge in motion; the
+  post-deploy prod pass remains); M12–M15 remain unapproved.**
   Recommended order 12 → 13 → 14 → 15 (dependencies in
   [roadmap.md](roadmap.md)); board pins for M13/M15 may bundle into one round,
   M14 gets its own.
