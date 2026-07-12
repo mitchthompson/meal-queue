@@ -75,8 +75,9 @@ Beyond primary-key and unique indexes, the schema defines:
 
 ## `public.units`
 
-Controlled vocabulary of measurement unit codes used for V1 exact-match ingredient combining on
-grocery lists. Globally readable (not user-scoped). Seeded with 13 rows via
+Controlled vocabulary of measurement unit codes used for dimension-aware ingredient combining on
+grocery lists (M12, 2026-07-11: volume merges with volume, weight with weight; count units only on
+an exact code match). Globally readable (not user-scoped). Seeded with 13 rows via
 `insert ... on conflict (code) do nothing`.
 
 | Column | Type | Null | Default | Notes |
@@ -84,6 +85,7 @@ grocery lists. Globally readable (not user-scoped). Seeded with 13 rows via
 | `code` | `text` | no | — | Primary key. Unit code, e.g. `tsp`, `cup`, `g`. |
 | `label` | `text` | no | — | Human-readable label, e.g. `teaspoon`. |
 | `unit_type` | `text` | no | — | `CHECK (unit_type in ('volume','weight','count','other'))`. |
+| `base_factor` | `numeric(12,6)` | no | — | Conversion to the dimension's base unit — ml (volume), g (weight), self (count). Exact US-customary definitions to 6 decimals (e.g. `cup` = 236.588236). Added by migration `20260711225000_grocery_unit_merge.sql`; a new unit row must supply it. |
 | `created_at` | `timestamptz` | no | `now()` | |
 
 - **Primary key:** `code`
@@ -301,7 +303,7 @@ the aggregation key.
 | `is_pantry_staple` | `boolean` | no | `false` | |
 | `is_on_hand` | `boolean` | no | `false` | |
 | `is_checked` | `boolean` | no | `false` | |
-| `source_key` | `text` | no | — | Aggregation/dedup key identifying how the row was combined. |
+| `source_key` | `text` | no | — | Stable aggregation identity: `lower(name)\|<dimension>\|<pantryflag>` where dimension is `vol`/`wt` for volume/weight units and the literal unit code for count units (M12). Unique per plan. Pre-M12 rows keep `name\|unit_code\|flag` (and pre-M4 rows a `v<n>\|` prefix) until their plan's next regeneration migrates them in place. |
 | `created_at` | `timestamptz` | no | `now()` | |
 
 - **Primary key:** `id`

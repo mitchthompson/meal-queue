@@ -26,8 +26,11 @@ replaced decisions as superseded rather than silently deleting them.
 - Structured `recipe_steps` are canonical. Optional `instructions_raw` is kept
   for imports and debugging.
 - Ingredient units come from a controlled list.
-- Grocery quantities combine only when normalized ingredient name, unit, and
-  pantry classification match exactly. Unit conversion is deferred.
+- Grocery quantities combine within a measurement dimension: volume merges
+  with volume and weight with weight (summed via `units.base_factor`,
+  displayed in the largest contributing unit), count units only on an exact
+  code match; pantry classification always separates buckets (M12,
+  2026-07-11). Before M12, combining required an exact unit match.
 - Tags are user-created, with starter suggestions supplied by the app.
 
 ### Recipe Import (planned 2026-07-03 — spec: [plans/recipe-import.md](plans/recipe-import.md))
@@ -445,7 +448,8 @@ all locked in the specs' §1 tables:
   old-key rows normalize state-intact with `bool_and` merge semantics.
 - **Execution rails:** per-milestone go-ahead required. **M9 + M10 shipped
   (2026-07-05); M11 shipped (built 2026-07-06; merged + deployed + owner prod
-  pass 2026-07-11, PR #37); M12–M15 remain unapproved.**
+  pass 2026-07-11, PR #37); M12 shipped (2026-07-11, PR #39, migration
+  applied to prod); M13–M15 remain unapproved.**
   Recommended order 12 → 13 → 14 → 15 (dependencies in
   [roadmap.md](roadmap.md)); board pins for M13/M15 may bundle into one round,
   M14 gets its own.
@@ -564,6 +568,34 @@ Shipped same-session from the owner's mid-cook report (PR #38, `main`
   deleting an old imported recipe removes it from current AND past plans, so
   the owner re-imports after the cooking day, or hand-edits steps to keep the
   recipe id.
+
+### Milestone 12 build decisions (2026-07-11)
+
+M12 (grocery unit merge) built and shipped from the locked spec
+([plans/unit-merge.md](plans/unit-merge.md)); PR #39 (`main` `257a836`),
+migration `20260711225000_grocery_unit_merge.sql` hand-applied to prod the
+same day (backup → preflight → apply → verify → rolled-back smoke).
+Build-time decisions on top of the scoping verdicts above:
+
+- **The upsert's `DO UPDATE` also sets `unit_code`** (deviation from the
+  spec's "keeps its current shape"). A bucket's display unit legitimately
+  changes when a larger unit joins it between regenerations (tsp bucket gains
+  a cup contribution → row must display cup); freezing `unit_code` would
+  desync the row from its own amount. State columns stay untouched. Proven by
+  pgTAP: the unit upgrades in place without splitting the bucket or losing
+  checked state.
+- **"Keep the smallest id" is `(array_agg(id order by id))[1]`** — core
+  Postgres has no `min(uuid)` aggregate (caught by the first local pgTAP run,
+  42883). Identical semantics; uuid ordering is well-defined.
+- **The old-key flag segment is carried from the stored key, never recomputed
+  from the row** — the key holds the recipe-derived pantry classification
+  while the column is the mutable UI override (M4 design); recomputing would
+  corrupt identities for overridden rows.
+- **The in-function key migration is a per-plan no-op once normalized**: a
+  migrated key computes to itself, so repeated regenerations do nothing. Live
+  preflight measured the one-time blast radius: 8 rows across 6 plans merge,
+  every pair with uniform checked state — the conservative `bool_and` loses
+  nothing on real data.
 
 ## Superseded Decisions
 

@@ -78,9 +78,15 @@ rollback (milestone 10 PR 2, 2026-07-05).
 
 The client calls the transactional `regenerate_grocery_list(p_plan_id)`
 function, which rebuilds the list server-side as an upsert by stable identity
-(normalized name | unit | pantry classification) — checked / on-hand /
-pantry-override state survives for unchanged items, and obsolete rows are
-removed only after the replacement upsert succeeds (milestone 4, 2026-07-02).
+(normalized name | dimension | pantry classification, where dimension is
+`vol`/`wt` for volume/weight units and the literal unit code for count units —
+milestone 12, 2026-07-11) — checked / on-hand / pantry-override state survives
+for unchanged items, and obsolete rows are removed only after the replacement
+upsert succeeds (milestone 4, 2026-07-02). Same-dimension amounts are summed
+in a base unit via `units.base_factor` and displayed in the largest
+contributing unit at 3 decimals; pre-M12 rows are migrated to the new identity
+in place on their plan's next regeneration, merging any colliding rows'
+state with `bool_and`.
 Staleness is plan-level (`meal_plans.groceries_version` vs `version`) and is
 surfaced as a banner with an explicit Generate/Update button — nothing
 regenerates on page load (milestone 10 PR 1, 2026-07-05). The pure
@@ -92,8 +98,9 @@ scaling/normalization logic in `lib/grocery.ts` remains vitest-covered.
 - A plan's `end_date` must not precede its `start_date`.
 - Cook and leftover items require a recipe; eating-out items do not.
 - Recipe steps are ordered uniquely within a recipe.
-- Grocery amounts combine only for the same normalized name, unit, and pantry
-  classification.
+- Grocery amounts combine only for the same normalized name, measurement
+  dimension (volume with volume, weight with weight, count units per exact
+  code), and pantry classification.
 - Future migrations must preserve existing live data.
 
 ## MCP Boundary
@@ -140,7 +147,7 @@ stack). See [decisions](decisions.md) and
 
 ## Test Boundaries
 
-Vitest (138 tests across 9 files as of 2026-07-11) covers the `lib/` domain
+Vitest (141 tests across 9 files as of 2026-07-11) covers the `lib/` domain
 logic:
 
 - Local calendar formatting, date arithmetic, and plan defaults.
@@ -151,10 +158,10 @@ logic:
   normalization, fetch guards) and the `draftToFormState` mapper.
 
 The database layer is covered by pgTAP in CI (milestone 1.5, first green
-2026-07-01): 108 assertions across three suites — `save_recipe`
-atomicity/RLS/version-bump, plan-integrity triggers, and grocery state
-preservation — against an ephemeral local Supabase stack on GitHub Actions (no
-cloud credentials).
+2026-07-01): 141 assertions across four suites — `save_recipe`
+atomicity/RLS/version-bump, plan-integrity triggers, grocery state
+preservation, and the dimension-aware unit merge (milestone 12) — against an
+ephemeral local Supabase stack on GitHub Actions (no cloud credentials).
 
 UI-interaction coverage remains open (an open design flag). Per-change
 Playwright harnesses live in `scripts/review-board/` and run locally at

@@ -3,7 +3,60 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-11 (latest, evening) - Cook-feedback fixes shipped (PR #38): "to taste" amounts + step-boundary prompt rule; M16 scoped
+## 2026-07-11 (latest, night) - Milestone 12 shipped (PR #39): dimension-aware grocery unit merge, fifth migration applied to prod
+
+Owner picked the recommended order (12 → 13 → 14 → 15) and gave every gate
+word same-session: SQL review → "commit and pr" → "apply" → "merge then wrap".
+Built to the locked spec ([plans/unit-merge.md](plans/unit-merge.md)); the
+whole DB ritual ran end to end in one evening. Zero client-code changes, zero
+deps.
+
+- **The migration (`20260711225000_grocery_unit_merge.sql`):**
+  `units.base_factor numeric(12,6) not null` (exact US-customary factors,
+  base ml/g/self; data-driven, nothing hardcoded in the function) + a
+  rewritten `regenerate_grocery_list`. Identity becomes
+  `name|vol/wt/code|flag`; amounts sum as
+  `amount x serving_multiplier x base_factor` and display in the largest
+  contributing unit at 3 decimals (`1 cup + 8 tbsp` → `1.5 cup`); count units
+  keep their code in the key so item/clove/slice never merge. Signature,
+  `security invoker`, pinned `search_path`, plan row lock, and phase order all
+  unchanged from M4. Old-key rows migrate in place pre-upsert; colliding rows
+  collapse into the smallest-id row with `bool_and` state. The old key's flag
+  segment is carried over (never recomputed) so pantry overrides survive.
+- **Two deviations, both deliberate and recorded in
+  [decisions.md](decisions.md):** the `DO UPDATE` also sets `unit_code`
+  (display unit legitimately changes when a larger unit joins a bucket), and
+  "smallest id" is `(array_agg(id order by id))[1]` because core Postgres has
+  no `min(uuid)` — the first local pgTAP run caught that (42883, all four
+  suites red); one fix, next run fully green.
+- **Verification:** fresh `supabase db reset` proves schema + baseline + all
+  five migrations (re-apply idempotent — the column-add skips); `supabase
+  test db` **141/141** (108 + the new 33-assertion suite covering all 11 spec
+  cases at exact numbers, plus the display-unit in-place upgrade); app gate
+  eslint / tsc / vitest 141/141 clean; PR #39 CI green first try (app-checks
+  51s, db-tests 1m3s incl. the baseline drift guard); `main` post-merge CI
+  green first run; prod probes `/`, `/grocery`, `/recipes` all 200.
+- **Prod ritual (owner said "apply"):** backup
+  `~/meal-queue-backup-2026-07-11-1633.dump` (424K, 10-table manifest
+  verified) → read-only preflight: 0 unparseable keys, 13/13 unit codes, and
+  the collision report — **8 rows across 6 plans** will merge (mayonnaise
+  cup+tbsp x3 plans, apple cider vinegar tbsp+tsp x2, sugar cup+tbsp x1,
+  neutral oil tbsp+tsp x2), every pair with uniform checked state, so
+  `bool_and` loses nothing on real data; 687 pre-M4 `v<n>|` keys noted in
+  dormant plans (the standing per-plan strip handles them) → single-transaction
+  hand-apply via psql → verify (13/13 factors exact, function body live,
+  grants intact) → **rolled-back live smoke** on the current plan (Jul 10-16,
+  v7): 52 rows → 52 rows, 28 checked → 28 checked, 33 rows on dimension keys
+  (`chicken stock|vol|1` → 9.000 cup); ROLLBACK left zero residue
+  (groceries_version still 7, 0 dimension keys, 52 rows).
+- **Nothing user-visible changed yet:** lists merge per-plan on the next
+  user-initiated regeneration (M10's Shop banner). The 8 preflight rows merge
+  whenever those plans are next regenerated.
+- pgTAP baseline is now **141**; `lib/grocery.ts` stays a byte-identical
+  documented vestige. Branch `codex/grocery-unit-merge` merged and deleted
+  (local+remote).
+
+## 2026-07-11 (evening) - Cook-feedback fixes shipped (PR #38): "to taste" amounts + step-boundary prompt rule; M16 scoped
 
 Real-use session: the owner hit three issues mid-cook (One-Pot Chicken and
 Rice, an NYT import). Two fixed and deployed same-session; the third scoped as

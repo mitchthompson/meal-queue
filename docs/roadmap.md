@@ -318,10 +318,11 @@ All seven were interviewed and specced in one session (owner verdicts recorded
 in each spec's §1 table); each has a builder-ready spec in `docs/plans/`
 written for a lower-capability executor. **M9 shipped 2026-07-05 (PR #33,
 deployed); M10 complete 2026-07-05 (PR #34 + PR #35, deployed); M11 shipped
-2026-07-11 (PR #37, deployed, owner prod device pass done) — M12-M15 remain to
+2026-07-11 (PR #37, deployed, owner prod device pass done); M12 shipped
+2026-07-11 (PR #39, migration applied to prod) — M13-M15 remain to
 build** — the owner picks the order and gives the
 go-ahead per milestone. Recommended order below
-(dependencies noted); board pins for M10/M11/M13/M15 can bundle into one review
+(dependencies noted); board pins for M13/M15 can bundle into one review
 round; M14 needs its own round.
 
 ### 9. Resilience (error/loading boundaries + raw-error sweep) — DONE
@@ -385,15 +386,24 @@ post-merge CI green first run. Zero schema, zero deps.
 (`/reset-password`, prod + `localhost:3000`, Site URL confirmed) · merge word
 given · prod real-device pass done.
 
-### 12. Grocery unit merge (dimension-aware grouping)
+### 12. Grocery unit merge (dimension-aware grouping) — DONE
 
-Spec: [plans/unit-merge.md](plans/unit-merge.md) · Branch `codex/grocery-unit-merge`
+Spec: [plans/unit-merge.md](plans/unit-merge.md) · Branch
+`codex/grocery-unit-merge` (merged + deleted)
 
-**DB milestone (fifth migration; full ritual).** `units.base_factor` column +
-a rewritten `regenerate_grocery_list` that merges volume-with-volume and
-weight-with-weight (display in the largest contributing unit); count units
-never merge; old-key rows normalized state-intact (`bool_and`). pgTAP grows to
-≥130. Independent of M9–M11; pairs naturally after M10's banner.
+**Done 2026-07-11: PR #39 (`codex/grocery-unit-merge` → `main` `257a836`);
+migration `20260711225000_grocery_unit_merge.sql` hand-applied to prod the
+same day (backup → preflight → apply → verify → rolled-back live smoke).**
+The fifth migration: `units.base_factor` column (exact US-customary factors,
+data-driven) + a rewritten `regenerate_grocery_list` that merges
+volume-with-volume and weight-with-weight (identity `name|vol/wt|flag`,
+summed in base units, displayed in the largest contributing unit at 3
+decimals); count units never merge across codes; old-key rows migrate in
+place state-intact, colliding rows collapse with `bool_and`. pgTAP grew
+108 → **141** (new 33-assertion suite, all 11 spec cases at exact numbers).
+Preflight measured 8 rows across 6 plans merging on real data, all with
+uniform checked state. Zero client-code changes; `lib/grocery.ts` untouched.
+Lists merge per-plan on the next user-initiated regeneration (M10 banner).
 
 ### 13. Plan copy ("Start from a previous week")
 
@@ -431,8 +441,8 @@ Spec: [plans/step-ingredients.md](plans/step-ingredients.md) · Branch
 `codex/step-ingredients` (proposed)
 
 Scoped 2026-07-11 from real-use feedback (wrong chips while cooking One-Pot
-Chicken and Rice). **DB milestone** (takes the next migration slot after
-whichever of M12/this ships first): the import LLM emits per-step
+Chicken and Rice). **DB milestone** (would be the sixth migration — M12's
+fifth shipped 2026-07-11): the import LLM emits per-step
 `ingredient_indexes`, `save_recipe` resolves them to a new nullable
 `recipe_steps.ingredient_ids uuid[]` (both-shape `p_steps` keeps every legacy
 caller working), and cook mode trusts the mapping — the name-match heuristic

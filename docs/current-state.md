@@ -1,11 +1,26 @@
 # Current State
 
-Last reviewed: 2026-07-11, evening (**Cook-feedback fixes shipped — PR #38 (`codex/cook-display-fixes` → `main` `be3fa74`) merged and deployed same-session** from the owner's real-use report mid-cook: zero ingredient amounts now render **"to taste"** instead of "0 tsp" (new `formatIngredientAmount` in `lib/grocery.ts` — detail list, cook-mode chips, Shop list; the importer stores "to taste" as `amount: 0` by design and no display site knew), and the import prompt now **keeps the source's step boundaries** (an NYT recipe's ~5 steps had been split into 16 one-sentence steps; future imports only). The third issue — cook-mode chips mismatching their step (the known name-match heuristic) — is scoped as **candidate M16** ([plans/step-ingredients.md](plans/step-ingredients.md)): step↔ingredient link captured at import, owner forks NOT yet locked. Gate: vitest 141/141 (+3), CI green first try both PR and post-merge `main`, prod probes 200. Zero schema, zero deps. Owner follow-ups: re-import One-Pot Chicken after tonight (recipe delete cascades to plan items) or hand-edit its steps; M16 fork interview. Prior the same day: **Milestone 11 shipped** — the owner signed off AR2 (verdict A, last open pin) and configured the Supabase redirect URLs; PR #37 (`codex/password-reset` → `main` `7e66dd5`) merged and deployed the same day, and the owner completed the prod real-device pass (live iPhone Safari reset, confirmed working). M11 is fully closed; zero schema, zero deps. Also same day: the tracked `.claude/skills/{onboard,wrap}` were swapped for symlinks into `~/Dev/claude-skills` (chore `88a7a53`). Prior the same day: **doc de-rot pass** — the 2026-07-11 doc audit's corrections applied across the doc set ([plans/doc-derot-2026-07-11.md](plans/doc-derot-2026-07-11.md)); no code changed. Git reality restated: M11 is **committed** on `codex/password-reset` (`391ebe1` feat · `e2b7ea5` test · `b92db61` docs wrap), rebased onto `main` `6fb32b2` (PR #36), unpushed/unmerged, owner gates unchanged; the de-rot pair (`6482a5e`/`8abb9b3`) and a 2026-07-11 skills-symlink chore commit sat on the same branch (all since merged via PR #37, above). Prior 2026-07-08: **Post-use UX fixes shipped & deployed** — three issues from real use (Today deep-link CTAs; the add-meal full-screen takeover; "Shop this plan") built on `codex/ux-feedback-fixes` off `main` `cc1e6ec`; an adversarial review found + fixed 4 edge/a11y issues; gate green + a real-app pass (12 shots, 0 console errors); owner signed off the review board → merged to `main` & deployed to Vercel. Zero schema, zero deps. See Active Handoff / [progress-log](progress-log.md). **Aside:** Milestone 11 (password reset) is built and verified on `codex/password-reset` (committed there, unpushed/unmerged): vitest 138/138, `verify-reset-pass` 25/25 (incl. a real Mailpit recovery-email round-trip), senior `/code-review` (high) clean, board pin **AR1: A**. Owner gates still open before merge: AR2 sign-off, Supabase redirect URLs, a prod real-device pass, then push/PR/merge. Prior 2026-07-05: **Milestone 10 complete — PR 2 (optimistic writes) shipped & deployed** — PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`) is live on Vercel prod: item-level mutations (grocery toggle/bucket/pantry/on-hand, plan adjustServing/removeItem/addMeal) now patch local React state before the write and roll back per-item on failure, and the plan/recipe form saves dropped their blocking refetches (the atomic `save_recipe` RPC await stays); senior `/code-review` (high) found + fixed 3 issues (a refresh-after-write rollback regression, a concurrent stale-snapshot clobber hardened to **targeted functional rollback**, and a same-millisecond temp-id collision); **vitest 138/138**, new `verify-optimistic-pass` **16/16** (a grocery check and a plan remove each render <200ms under a 1500ms-delayed network, and both roll back + show the red error on `route.abort`), regression harnesses re-run green (shop 22/22, recipes 22/22, import 26/26); PR #35 CI green + `main` post-merge CI green on the first run; the docs-wrap `7a0df26` from PR 1 rode along inside PR #35, so `origin/main` and local `main` are back in sync; zero schema, zero deps. This closes the "no optimistic UI" flag and completes milestone 10. Prior 2026-07-05: **Milestone 10 PR 1 (Shop stale banner) shipped & deployed** — PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`) is live on Vercel prod: the Shop page's silent regenerate-on-load is replaced by an amber staleness banner + explicit Generate/Update button — it **never auto-regenerates** and the list stays usable while stale. Board pin **SB1: A (amber)** signed off; senior `/code-review` (high) applied one fix (the new banner briefly flashed the previous plan's state on a plan switch → reset `setStale(false)` at the top of `loadGroceryItems`); **vitest 138/138**, new `verify-shop-pass` harness **22/22** (proves no regen-on-load and that checked items survive a user-triggered update — the M4 guarantee, now user-initiated); post-merge `main` CI needed one rerun (the known transient `supabase start` `54322` port-bind flake, not a code issue); zero schema, zero deps. Prior 2026-07-05: **Milestone 9 (Resilience) shipped & deployed** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, a recipe-detail 404, a `toAuthErrorMessage` mapper, and the 17-site raw-`setError(x.message)` sweep; EB1 signed off, **vitest 138/138**, prod 404 panel live; zero schema, zero deps. Earlier the same day a planning session **scoped milestones 9-15** — seven builder-ready specs in `docs/plans/` (M9 now shipped; M10 responsiveness, M11 password reset, M12 grocery unit merge (DB), M13 plan copy, M14 dark mode, M15 empty states), recipe-import handoff format, owner forks locked. **M10 was then approved and shipped (above); M11 is approved and built on `codex/password-reset` (verified, unmerged, owner gates open); M12-M15 remain unapproved.** See Active Handoff. Prior session 2026-07-04: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
+Last reviewed: 2026-07-11, night (**Milestone 12 (grocery unit merge) shipped end to end — PR #39 (`codex/grocery-unit-merge` → `main` `257a836`) merged, and the fifth migration `20260711225000_grocery_unit_merge.sql` hand-applied to prod the same evening** with the full ritual: backup (424K, manifest verified) → preflight (8 rows across 6 plans will merge, all uniform-state, so `bool_and` loses nothing; 0 unparseable keys; 13/13 units) → single-transaction apply → verify (13/13 exact `base_factor`s, function live, grants intact) → rolled-back live smoke on the current plan (52→52 rows, 28→28 checked, zero residue after ROLLBACK). `regenerate_grocery_list` now merges volume-with-volume and weight-with-weight (identity `name|vol/wt|flag`, summed via `units.base_factor`, displayed in the largest contributing unit at 3 decimals); count units never merge across codes; old-key rows migrate in place state-intact on each plan's next regeneration. pgTAP **108 → 141** (new 33-assertion suite, all 11 spec cases at exact numbers). Two recorded deviations: the upsert's `DO UPDATE` also sets `unit_code`, and smallest-id selection uses `(array_agg(id order by id))[1]` (no `min(uuid)` in core Postgres — caught by the first local pgTAP run). Zero client-code changes (`lib/grocery.ts` untouched), zero deps; lists merge per-plan on the next user-initiated regeneration via the Shop banner. Gate: CI green first try on the PR and post-merge `main`, prod probes 200. **M13–M15 are now the pickable set.** Prior the same day: **Cook-feedback fixes shipped — PR #38 (`codex/cook-display-fixes` → `main` `be3fa74`) merged and deployed same-session** from the owner's real-use report mid-cook: zero ingredient amounts now render **"to taste"** instead of "0 tsp" (new `formatIngredientAmount` in `lib/grocery.ts` — detail list, cook-mode chips, Shop list; the importer stores "to taste" as `amount: 0` by design and no display site knew), and the import prompt now **keeps the source's step boundaries** (an NYT recipe's ~5 steps had been split into 16 one-sentence steps; future imports only). The third issue — cook-mode chips mismatching their step (the known name-match heuristic) — is scoped as **candidate M16** ([plans/step-ingredients.md](plans/step-ingredients.md)): step↔ingredient link captured at import, owner forks NOT yet locked. Gate: vitest 141/141 (+3), CI green first try both PR and post-merge `main`, prod probes 200. Zero schema, zero deps. Owner follow-ups: re-import One-Pot Chicken after tonight (recipe delete cascades to plan items) or hand-edit its steps; M16 fork interview. Prior the same day: **Milestone 11 shipped** — the owner signed off AR2 (verdict A, last open pin) and configured the Supabase redirect URLs; PR #37 (`codex/password-reset` → `main` `7e66dd5`) merged and deployed the same day, and the owner completed the prod real-device pass (live iPhone Safari reset, confirmed working). M11 is fully closed; zero schema, zero deps. Also same day: the tracked `.claude/skills/{onboard,wrap}` were swapped for symlinks into `~/Dev/claude-skills` (chore `88a7a53`). Prior the same day: **doc de-rot pass** — the 2026-07-11 doc audit's corrections applied across the doc set ([plans/doc-derot-2026-07-11.md](plans/doc-derot-2026-07-11.md)); no code changed. Git reality restated: M11 is **committed** on `codex/password-reset` (`391ebe1` feat · `e2b7ea5` test · `b92db61` docs wrap), rebased onto `main` `6fb32b2` (PR #36), unpushed/unmerged, owner gates unchanged; the de-rot pair (`6482a5e`/`8abb9b3`) and a 2026-07-11 skills-symlink chore commit sat on the same branch (all since merged via PR #37, above). Prior 2026-07-08: **Post-use UX fixes shipped & deployed** — three issues from real use (Today deep-link CTAs; the add-meal full-screen takeover; "Shop this plan") built on `codex/ux-feedback-fixes` off `main` `cc1e6ec`; an adversarial review found + fixed 4 edge/a11y issues; gate green + a real-app pass (12 shots, 0 console errors); owner signed off the review board → merged to `main` & deployed to Vercel. Zero schema, zero deps. See Active Handoff / [progress-log](progress-log.md). **Aside:** Milestone 11 (password reset) is built and verified on `codex/password-reset` (committed there, unpushed/unmerged): vitest 138/138, `verify-reset-pass` 25/25 (incl. a real Mailpit recovery-email round-trip), senior `/code-review` (high) clean, board pin **AR1: A**. Owner gates still open before merge: AR2 sign-off, Supabase redirect URLs, a prod real-device pass, then push/PR/merge. Prior 2026-07-05: **Milestone 10 complete — PR 2 (optimistic writes) shipped & deployed** — PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`) is live on Vercel prod: item-level mutations (grocery toggle/bucket/pantry/on-hand, plan adjustServing/removeItem/addMeal) now patch local React state before the write and roll back per-item on failure, and the plan/recipe form saves dropped their blocking refetches (the atomic `save_recipe` RPC await stays); senior `/code-review` (high) found + fixed 3 issues (a refresh-after-write rollback regression, a concurrent stale-snapshot clobber hardened to **targeted functional rollback**, and a same-millisecond temp-id collision); **vitest 138/138**, new `verify-optimistic-pass` **16/16** (a grocery check and a plan remove each render <200ms under a 1500ms-delayed network, and both roll back + show the red error on `route.abort`), regression harnesses re-run green (shop 22/22, recipes 22/22, import 26/26); PR #35 CI green + `main` post-merge CI green on the first run; the docs-wrap `7a0df26` from PR 1 rode along inside PR #35, so `origin/main` and local `main` are back in sync; zero schema, zero deps. This closes the "no optimistic UI" flag and completes milestone 10. Prior 2026-07-05: **Milestone 10 PR 1 (Shop stale banner) shipped & deployed** — PR #34 (`codex/shop-stale-banner` → `main` `41fa28b`) is live on Vercel prod: the Shop page's silent regenerate-on-load is replaced by an amber staleness banner + explicit Generate/Update button — it **never auto-regenerates** and the list stays usable while stale. Board pin **SB1: A (amber)** signed off; senior `/code-review` (high) applied one fix (the new banner briefly flashed the previous plan's state on a plan switch → reset `setStale(false)` at the top of `loadGroceryItems`); **vitest 138/138**, new `verify-shop-pass` harness **22/22** (proves no regen-on-load and that checked items survive a user-triggered update — the M4 guarantee, now user-initiated); post-merge `main` CI needed one rerun (the known transient `supabase start` `54322` port-bind flake, not a code issue); zero schema, zero deps. Prior 2026-07-05: **Milestone 9 (Resilience) shipped & deployed** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, a recipe-detail 404, a `toAuthErrorMessage` mapper, and the 17-site raw-`setError(x.message)` sweep; EB1 signed off, **vitest 138/138**, prod 404 panel live; zero schema, zero deps. Earlier the same day a planning session **scoped milestones 9-15** — seven builder-ready specs in `docs/plans/` (M9 now shipped; M10 responsiveness, M11 password reset, M12 grocery unit merge (DB), M13 plan copy, M14 dark mode, M15 empty states), recipe-import handoff format, owner forks locked. **M10 was then approved and shipped (above); M11 is approved and built on `codex/password-reset` (verified, unmerged, owner gates open); M12-M15 remain unapproved.** See Active Handoff. Prior session 2026-07-04: **Recipe Import PR 2 / Phase C shipped** — the in-app import UI. Built C1–C6 on `codex/import-ui` (round-5 verdicts applied), Phase D senior review fixed 3 bugs + 3 cleanups, gate green (vitest 125/125, `verify-recipes-pass` 22/22 proving the C1 seam neutral, `verify-import-pass` 26/26); **PR #29 merged to `main` (`88a6bc5`) and deployed to Vercel prod** — the `/recipes` import flow is live. Same PR carried the PR-1 docs-wrap commit `9601b1f`. **Milestone 8 (Recipe Import) is functionally complete** — phases A/B/C/D all shipped. **First real use then surfaced a tags-cap bug — an NYT paste failed with a misleading "(not both)" 400 because the request schema capped `tags` at 50 and the household has 82 — fixed in a hotfix (PR #31, `main` `cbb1c57`): cap 50→500 + a `conflicting_source` code so field errors read clearly. Owner confirmed a live NYT paste import works end to end.** See Active Handoff. Prior: PR 1 server route PR #28 (`11834f9`); iPad coherence PRs #26–#27)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
 
 ## Current build phase
+
+**Milestone 12 (grocery unit merge) is complete — PR #39
+(`codex/grocery-unit-merge` → `main` `257a836`) merged 2026-07-11 and the
+fifth migration applied to prod the same evening.** Built from
+[plans/unit-merge.md](plans/unit-merge.md): `units.base_factor numeric(12,6)`
+(exact US-customary factors, data-driven) + a rewritten
+`regenerate_grocery_list` — buckets key on `name|vol/wt/code|flag`, sum in
+base units (ml/g), display in the largest contributing unit at 3 decimals;
+count units never merge across codes; pantry classification still separates;
+old-key rows migrate in place with `bool_and` collapse for collisions. Same
+signature/security/lock/phases as M4. New pgTAP suite: 33 assertions, all 11
+spec cases (suite total **141**). Prod ritual complete (backup → preflight →
+apply → verify → rolled-back smoke; details in
+[progress-log.md](progress-log.md)). Zero client changes, zero deps.
+Milestones 0–12 are complete (below); **M13–M15 wait on the owner's pick.**
 
 **Milestone 11 (password reset) is complete — PR #37 (`codex/password-reset`
 → `main` `7e66dd5`) merged and deployed 2026-07-11, and the owner completed
@@ -29,7 +44,6 @@ post-merge CI green on the first run (1m7s), prod probes `/` 200 +
 owner gates cleared 2026-07-11: AR2 verdict A, redirect URLs configured,
 merge word given, prod iPhone pass done.** The PR also carried the 2026-07-11
 doc de-rot pair, the skills-symlink chore, and the gate-record docs wrap.
-Milestones 0–11 are complete (below).
 
 **Milestone 10 is complete** (2026-07-05). **PR 2 (optimistic writes) is shipped
 and deployed** (PR #35 `1d16ef8`): item-level mutations in
@@ -51,8 +65,8 @@ boundaries, a recipe-detail 404, a `toAuthErrorMessage` mapper, and a 17-site
 raw-error sweep through `toErrorMessage`. Milestones 0–8 are all done.
 **The reflow and the v2 sweep (milestone 7) are both complete.**
 Milestones 0–4, mini-M5, milestone 6, and milestone 7 are done; the
-database layer is atomic, race-free, and state-preserving (108 pgTAP
-assertions in CI), with data layers in `lib/hooks/`. The redesign
+database layer is atomic, race-free, and state-preserving (141 pgTAP
+assertions in CI since M12), with data layers in `lib/hooks/`. The redesign
 ([redesign-brief.md](redesign-brief.md)) shipped screen by screen on
 2026-07-02 (Cook PR #13, Today PR #14, Shop PR #15, Plan PR #16), review
 round 1 (PRs #17–#18) landed the same day, and the **v2 sweep shipped in
@@ -110,11 +124,20 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Stable Baseline
 
-- **In flight (not on `main`):** nothing. `codex/cook-display-fixes` merged as
-  PR #38 and was deleted local+remote (`codex/password-reset` likewise, PR #37;
+- **In flight (not on `main`):** nothing. `codex/grocery-unit-merge` merged as
+  PR #39 and was deleted local+remote (`codex/cook-display-fixes` likewise,
+  PR #38; `codex/password-reset` likewise, PR #37;
   the local `codex/password-reset-prerebase` backup ref is obsolete — safe to
   prune). Working tree clean, local `main` = `origin/main`.
-- **`main`:** at `be3fa74` (**PR #38, cook-feedback fixes** — merge of
+- **`main`:** at `257a836` (**PR #39, Milestone 12 grocery unit merge** —
+  merge of `codex/grocery-unit-merge`: `8eb9eb4` feat — migration
+  `20260711225000_grocery_unit_merge.sql` (`units.base_factor` + the
+  dimension-aware `regenerate_grocery_list` rewrite), `supabase/schema.sql`
+  updated, CI baseline regenerated · `b7cb5dd` test —
+  `supabase/tests/grocery_unit_merge_test.sql` (33 assertions, pgTAP total
+  141); migration hand-applied to prod 2026-07-11 with the full ritual;
+  deployed, `/`+`/grocery`+`/recipes` 200) atop `b566822` (docs wrap of
+  PR #38) atop `be3fa74` (**PR #38, cook-feedback fixes** — merge of
   `codex/cook-display-fixes`: `f13c9fb` fix — zero amounts render "to taste"
   via `formatIngredientAmount` in `lib/grocery.ts`, used by
   `app/recipes/[id]/page.tsx` (detail list + cook-mode chips) and
@@ -147,29 +170,43 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   auto-deploys (confirmed); Cook was owner-verified on-device in prod, and the
   iPad chrome + width fixes were confirmed live in the production CSS bundle and
   on the owner's iPad Pro.
-- **Prod database:** all four migrations in `supabase/migrations/` are applied
+- **Prod database:** all five migrations in `supabase/migrations/` are applied
   and verified (`save_recipe`, Data API grants, plan-integrity triggers,
-  grocery state preservation). `supabase/schema.sql` is canonical and in sync;
+  grocery state preservation, grocery unit merge — the fifth applied
+  2026-07-11 with backup `~/meal-queue-backup-2026-07-11-1633.dump`, preflight,
+  and a rolled-back live smoke). `supabase/schema.sql` is canonical and in sync;
   the timestamped baseline copy is CI/local-only. schema.sql was consolidated
   2026-07-03 (historical inline `ALTER`s folded into the base DDL, 735 → 699
   lines) — proven effect-identical by a fresh-build `pg_dump` diff, so prod is
   unaffected.
 - **CI:** GitHub Actions on every PR — app checks (**lint** / typecheck /
-  vitest / build) and DB tests (ephemeral Supabase stack, 108 pgTAP assertions
-  across three suites), CLI pinned 2.109.0, NOTESTS guard. The db-tests job
+  vitest / build) and DB tests (ephemeral Supabase stack, 141 pgTAP assertions
+  across four suites), CLI pinned 2.109.0, NOTESTS guard. The db-tests job
   also guards baseline drift — a "Baseline schema matches schema.sql" step runs
   before `supabase start` and fails if the baseline migration and `schema.sql`
   diverge (2026-07-03). Lint runs
   `eslint . --max-warnings=0` on the flat config (PR #23); `next build` no
   longer lints (`eslint.ignoreDuringBuilds`). Thirty-plus PRs merged (through
-  PR #38, 2026-07-11) plus several
+  PR #39, 2026-07-11) plus several
   direct-to-main follow-up merges; CI has been green (one transient
   `supabase start` port-bind flake on `main` — `54322 already in use` — cleared
   by a job rerun, not a repo issue).
   `actions/checkout` and `actions/setup-node` are now on `@v5` (2026-07-03,
   merge `2e8bc09`), clearing the Node-20 runtime deprecation;
   `supabase/setup-cli@v1` stays (no v5) and `node-version: 20` is unchanged.
-- **Latest verification:** 2026-07-11 evening (cook-feedback fixes, PR #38):
+- **Latest verification:** 2026-07-11 night (Milestone 12, PR #39): onboard
+  baseline green (eslint / tsc / vitest 141/141) and pre-change pgTAP 108/108
+  on the local stack; post-change fresh `supabase db reset` green (schema +
+  baseline + all five migrations; re-apply proven idempotent), `supabase test
+  db` **141/141** across four suites (first run caught `min(uuid)` — 42883,
+  no such aggregate — fixed with `(array_agg(id order by id))[1]`, second run
+  fully green); eslint / tsc / vitest 141/141 clean (app untouched); PR #39 CI
+  green first try (app-checks 51s, db-tests 1m3s incl. the baseline drift
+  guard), **`main` post-merge CI green on the first run**; prod probes `/`,
+  `/grocery`, `/recipes` all 200. Prod apply verified live: 13/13 exact
+  `base_factor`s, function body swapped (security invoker, grants intact),
+  rolled-back smoke 52→52 rows / 28→28 checked / zero residue. Prior —
+  2026-07-11 evening (cook-feedback fixes, PR #38):
   onboard baseline green (eslint / tsc / vitest 138/138), then post-change
   eslint clean, tsc clean, **vitest 141/141** (+2 `formatIngredientAmount`,
   +1 prompt step-boundary), `next build` 13 routes; PR #38 CI green first try
@@ -286,7 +323,20 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Active Handoff
 
-- **Just done (2026-07-11, evening):** **Cook-feedback fixes shipped end to
+- **Just done (2026-07-11, night):** **Milestone 12 (grocery unit merge)
+  shipped end to end (PR #39 → `main` `257a836`; fifth migration applied to
+  prod).** Owner picked the recommended order 12 → 13 → 14 → 15 and gave all
+  gate words same-session. `units.base_factor` + the dimension-aware
+  `regenerate_grocery_list` rewrite; pgTAP 108 → **141** (new 33-assertion
+  suite); two recorded deviations (upsert also sets `unit_code`;
+  `(array_agg(id order by id))[1]` for smallest-uuid). Prod ritual complete:
+  backup `~/meal-queue-backup-2026-07-11-1633.dump` → preflight (8 rows / 6
+  plans will merge, all uniform-state; 687 dormant pre-M4 v-prefixed keys
+  noted, handled by the standing per-plan strip) → apply → verify → rolled-back
+  smoke (52→52 rows, 28→28 checked, zero residue). Nothing user-visible
+  changes until each plan's next Shop-banner regeneration. Zero client code,
+  zero deps; `lib/grocery.ts` untouched. Branch deleted local+remote.
+- **Prior (2026-07-11, evening):** **Cook-feedback fixes shipped end to
   end (PR #38 → `main` `be3fa74`, deployed).** The owner reported three issues
   mid-cook: (1) "0 tsp salt" in cook mode — the importer stores "to taste" as
   `amount: 0` by design, no display site knew; fixed with
@@ -399,23 +449,24 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   centering, auth pass-through). vitest **138/138**, verify harnesses 15/22/26,
   prod 404 panel live. Zero schema, zero deps. (Earlier the same day, docs-only:
   milestones 9-15 scoped into builder-ready specs — see progress-log.)
-- **Next action: await the owner's pick from M12–M15** (plus the two
+- **Next action: await the owner's pick from M13–M15** (plus the two
   cook-feedback follow-ups above: the One-Pot Chicken re-import/hand-edit is
   owner-run; **candidate M16** needs its fork interview before it can join the
   pickable set) (see
-  [roadmap.md](roadmap.md) Scoped Milestones; recommended order 12 → 13 → 14 →
-  15). Each milestone needs its own explicit owner go-ahead before any code.
-  For whoever picks up: run `/onboard`, then open the chosen builder-ready spec
-  in `docs/plans/` and follow it —
-  M12 grocery unit-merge ([plans/unit-merge.md](plans/unit-merge.md), branch
-  `codex/grocery-unit-merge`, **the one DB milestone**: fifth migration, full
-  backup → preflight → apply → verify ritual, migration before dependent
-  client merge); M13 plan copy ([plans/plan-copy.md](plans/plan-copy.md),
-  branch `codex/plan-copy`, touches `createPlan`); M14 dark mode
+  [roadmap.md](roadmap.md) Scoped Milestones; remaining recommended order
+  13 → 14 → 15). Each milestone needs its own explicit owner go-ahead before
+  any code. For whoever picks up: run `/onboard`, then open the chosen
+  builder-ready spec in `docs/plans/` and follow it —
+  M13 plan copy ([plans/plan-copy.md](plans/plan-copy.md),
+  branch `codex/plan-copy`, touches `createPlan`; pure mapping logic lands
+  vitest-covered in `lib/plan-copy.ts`); M14 dark mode
   ([plans/dark-mode.md](plans/dark-mode.md), needs its own board round for the
   dark token VALUES); M15 empty states
-  ([plans/empty-states.md](plans/empty-states.md), last). Nothing is in
-  flight; the tree is clean.
+  ([plans/empty-states.md](plans/empty-states.md), last). An owner-run tail
+  from M12: tap the Shop banner's Update on the current plan sometime and
+  sanity-check the merged list reads correctly in the app (the DB ritual
+  proved it server-side; this is the eyes-on-real-data confirmation). Nothing
+  is in flight; the tree is clean.
   - **Reset-harness re-drive runbook** (only if `/reset-password` ever needs
     local re-verification): stack up **with mailpit**
     (`supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,supavisor`
@@ -444,12 +495,15 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   prod), one open-site URL import, the paywall-redirect path, and
   keyboard-over-textarea + safe-area under the teal save bar (Playwright
   WebKit ≠ real Safari; the NYT paste path is already owner-confirmed live).
-- **Blockers:** none. M11 is fully closed (merged, deployed, owner prod
-  device pass done, all 2026-07-11). M12–M15 wait on the owner's pick.
+- **Blockers:** none. M11 and M12 are fully closed (both 2026-07-11; M12's
+  migration is live on prod). M13–M15 wait on the owner's pick.
 - **Environment notes:** the working branch is **`main`**, in sync with
-  `origin/main` at `be3fa74` (PR #38). `codex/cook-display-fixes` and
+  `origin/main` at `257a836` + the M12 docs wrap (PR #39).
+  `codex/grocery-unit-merge`, `codex/cook-display-fixes`, and
   `codex/password-reset` are merged and deleted (local+remote); the local
-  `codex/password-reset-prerebase` backup ref is obsolete (prune at will). The Supabase-dashboard redirect URLs for
+  `codex/password-reset-prerebase` backup ref is obsolete (prune at will).
+  A fresh prod backup exists at `~/meal-queue-backup-2026-07-11-1633.dump`
+  (424K, taken for the M12 apply). The Supabase-dashboard redirect URLs for
   `/reset-password` (prod + `localhost:3000`) are configured (owner,
   2026-07-11). Many older
   merged `codex/*` feature branches remain locally (harmless refs — prune with
@@ -476,16 +530,19 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   `.mcp.json` (owner OAuth pending first use); `gh` holds both accounts
   (`2a-webteam` active machine-wide, `mitchthompson` pinned per command via
   `GH_TOKEN=$(gh auth token --user mitchthompson)`); local Supabase stack runs
-  on Colima. **Found DOWN on 2026-07-11 (the Colima/Docker daemon is not
-  running)** — the stack had been left up on 2026-07-06 running WITH mailpit.
-  To re-drive the reset harness, start it via
+  on Colima. **Left UP at the 2026-07-11 night wrap** (booted for the M12 pgTAP
+  work) running the standard exclude set (mailpit excluded); local DB is at
+  the fresh post-M12 state (`supabase db reset` ran, so review-board seed data
+  was wiped — the harnesses seed their own). To re-drive the reset harness,
+  start the stack via
   `supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,supavisor`
   (mailpit **not** excluded — reset-email testing needs the mail catcher; the
   standard start command lists `mailpit` in the excludes).
-  Reviewer account (`reviewer@local.test`) password was changed and
-  restored to `review-pass-1234` by the reset harness. Verify with `supabase
-  status` before relying on it; local DB already seeded with the review-board
-  reviewer + recipes; the harnesses seed/tear down their own isolated data.
+  The review-board reviewer account (`reviewer@local.test` /
+  `review-pass-1234`) and its recipes were **wiped by the M12 `supabase db
+  reset`** — re-seed before the next board/harness session (the harnesses
+  seed/tear down their own isolated data, but the reviewer login itself must
+  exist). Verify with `supabase status` before relying on the stack.
 
 ## Page status
 
@@ -499,7 +556,7 @@ the other three are stubs the redesign brief supersedes).
 | Recipes (list) | `/recipes` (`app/recipes/page.tsx`) | Working — v2 pass shipped (PR #21): page title + card labels, teal links, 44px targets, full-width save, serves line + sample-data seeder removed; atomic `save_recipe` RPC live; mobile editor takeover (PR #17); **in-app import shipped (PR #29): Import button + `?import=1` → paste/URL → LLM parse → review screen → save via the shared `saveRecipeForm`** (`components/recipe-import.tsx`, `lib/hooks/use-import.ts`); save/delete patch the list locally instead of a full reload (M10 PR 2, PR #35); data layer in `lib/hooks/use-recipes.ts` |
 | Recipe detail | `/recipes/[id]` (`app/recipes/[id]/page.tsx`) | Working — v2 pass shipped (PR #22): flat hairline rows, full-width teal "Start cooking" (launches `components/cook-mode.tsx`), breadcrumb + one-row actions, pantry-badge quirk fixed; a bad id now renders the not-found boundary (M9, PR #33); zero amounts render "to taste" in the ingredient list and cook-mode chips (PR #38, 2026-07-11) |
 | Plan | `/plans` (`app/plans/page.tsx`) | Working — flat day lists (no lunch/dinner division, PR #18; `meal_type` vestigial); adding a meal opens a **full-screen takeover** (`components/plan-add-meal.tsx`, 2026-07-08 — replaced the inline quick-add that fought the iOS keyboard; same recents-first search + Enter/Shift+Enter, all three modes); reads `?plan`/`?new` deep links; "Shop this plan" exit; day items in `components/plan-day-items.tsx`; item writes (serving/add/remove) are optimistic with per-item rollback (M10 PR 2, PR #35); data layer in `lib/hooks/use-plan.ts` |
-| Shop | `/grocery` (`app/grocery/page.tsx`) | Working — reflow chunky direction (pinned order bar, 30px checks, sticky sections); transactional state-preserving regeneration underneath; **no longer regenerates on load — a stale plan shows an amber banner + explicit Generate/Update button (M10 PR 1, PR #34, SB1: A)**; reads `?plan=<id>` to land on a specific plan (from the plan screen's "Shop this plan", 2026-07-08); item writes (check/pantry/on-hand) are optimistic with per-item rollback (M10 PR 2, PR #35); zero-amount rows render "to taste" (PR #38, 2026-07-11); data layer in `lib/hooks/use-grocery-list.ts` |
+| Shop | `/grocery` (`app/grocery/page.tsx`) | Working — reflow chunky direction (pinned order bar, 30px checks, sticky sections); transactional state-preserving regeneration underneath; **no longer regenerates on load — a stale plan shows an amber banner + explicit Generate/Update button (M10 PR 1, PR #34, SB1: A)**; reads `?plan=<id>` to land on a specific plan (from the plan screen's "Shop this plan", 2026-07-08); item writes (check/pantry/on-hand) are optimistic with per-item rollback (M10 PR 2, PR #35); zero-amount rows render "to taste" (PR #38, 2026-07-11); same-dimension duplicates merge into one line in the largest contributing unit on regeneration (M12, PR #39, 2026-07-11); data layer in `lib/hooks/use-grocery-list.ts` |
 | Settings | `/settings` (`app/settings/page.tsx`) | Working — v2 pass shipped (PR #20): iOS-style rows, page title + card labels, 44px targets, full-width teal save; `ensureUserSettings` runs once per sign-in; settings defaults now share one `DEFAULT_USER_SETTINGS` source of truth mirroring SQL (2026-07-03) |
 | Reset password | `/reset-password` (`app/reset-password/page.tsx`) | Working — M11 (PR #37, 2026-07-11): recovery-session form (loading / expired-link / new-password states) reached from the reset email; gates on session presence; no `docs/pages/` stub — intent lives in [plans/password-reset.md](plans/password-reset.md) |
 
@@ -531,7 +588,8 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | 9 | Resilience (error/loading/not-found boundaries + raw-error sweep) | **Done (2026-07-05)** — PR #33 (`codex/error-boundaries` → `main` `8f1cd46`): root boundaries, recipe-detail 404, `toAuthErrorMessage`, 17-site sweep; EB1 signed off, vitest 138/138, deployed. Spec: [plans/error-boundaries.md](plans/error-boundaries.md) |
 | 10 | Responsiveness (Shop stale banner + optimistic writes) | **Done (2026-07-05)** — PR #34 (`41fa28b`): amber staleness banner replaces silent regen-on-load, SB1: A, `verify-shop-pass` 22/22; **PR #35 (`codex/optimistic-writes` → `main` `1d16ef8`): optimistic item mutations with targeted per-item rollback, form saves shed blocking refetches, senior review fixed 3 issues, `verify-optimistic-pass` 16/16**. Both deployed; closes the "no optimistic UI" flag. Spec: [plans/responsiveness.md](plans/responsiveness.md) |
 | 11 | Password reset | **Done (2026-07-11)** — PR #37 (`codex/password-reset` → `main` `7e66dd5`), deployed: forgot-password link + `requestPasswordReset` in `auth-gate.tsx`, new `/reset-password` route. Senior review clean, board **AR1: A + AR2: A**, `verify-reset-pass` 25/25, Supabase redirect URLs configured, **owner prod iPhone reset pass confirmed**. [plans/password-reset.md](plans/password-reset.md) |
-| 12-15 | Scoped batch (2026-07-05): unit merge (DB), plan copy, dark mode, empty states | **Specced, not started** — four builder-ready specs in `docs/plans/`; owner picks order and gives per-milestone go-aheads. [roadmap.md](roadmap.md) Scoped Milestones |
+| 12 | Grocery unit merge (dimension-aware grouping) | **Done (2026-07-11)** — PR #39 (`codex/grocery-unit-merge` → `main` `257a836`); fifth migration `20260711225000_grocery_unit_merge.sql` applied to prod same day (full ritual, rolled-back live smoke). `units.base_factor` + dimension-keyed `regenerate_grocery_list`; pgTAP 108 → 141. [plans/unit-merge.md](plans/unit-merge.md) |
+| 13-15 | Scoped batch (2026-07-05): plan copy, dark mode, empty states | **Specced, not started** — three builder-ready specs in `docs/plans/`; owner picks order and gives per-milestone go-aheads. [roadmap.md](roadmap.md) Scoped Milestones |
 | 16 | Step↔ingredient link (accurate cook-mode chips) | **Candidate (2026-07-11), forks not locked** — DB milestone scoped from real-use feedback; needs an owner fork interview before build. Interim fixes ("to taste" display + prompt step-boundary rule) shipped in PR #38. [plans/step-ingredients.md](plans/step-ingredients.md) |
 
 ## Architecture snapshot
@@ -547,8 +605,8 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
   orchestrates multi-request writes.
 - Plain CSS design-token system in `app/globals.css` (no Tailwind);
   `lib/design-tokens.ts` mirrors the few values TS needs (manifest, viewport).
-- Tests: vitest for `lib/` domain logic (138 across 9 files); pgTAP for the
-  database layer (108 across three suites) on an ephemeral local/CI stack.
+- Tests: vitest for `lib/` domain logic (141 across 9 files); pgTAP for the
+  database layer (141 across four suites) on an ephemeral local/CI stack.
 - `supabase/schema.sql` canonical; forward-only migrations in
   `supabase/migrations/`; prod applies by hand (runbook: backup → preflight →
   apply → verify → rolled-back smoke), **migration before dependent client
