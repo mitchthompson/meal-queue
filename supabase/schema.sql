@@ -1,29 +1,34 @@
 -- Enable extensions
 create extension if not exists pgcrypto;
 
--- Controlled units for V1 exact-match combining
+-- Controlled units for dimension-aware combining. base_factor (added by
+-- migration 20260711225000_grocery_unit_merge.sql) converts an amount to the
+-- dimension's base unit — ml for volume, g for weight, self for count — using
+-- the exact US-customary definitions to 6 decimals. regenerate_grocery_list
+-- sums buckets in the base unit and displays in the largest contributing unit.
 create table if not exists public.units (
   code text primary key,
   label text not null,
   unit_type text not null check (unit_type in ('volume', 'weight', 'count', 'other')),
+  base_factor numeric(12,6) not null,
   created_at timestamptz not null default now()
 );
 
-insert into public.units (code, label, unit_type)
+insert into public.units (code, label, unit_type, base_factor)
 values
-  ('tsp', 'teaspoon', 'volume'),
-  ('tbsp', 'tablespoon', 'volume'),
-  ('cup', 'cup', 'volume'),
-  ('fl_oz', 'fluid ounce', 'volume'),
-  ('ml', 'milliliter', 'volume'),
-  ('l', 'liter', 'volume'),
-  ('oz', 'ounce', 'weight'),
-  ('lb', 'pound', 'weight'),
-  ('g', 'gram', 'weight'),
-  ('kg', 'kilogram', 'weight'),
-  ('item', 'item', 'count'),
-  ('clove', 'clove', 'count'),
-  ('slice', 'slice', 'count')
+  ('tsp', 'teaspoon', 'volume', 4.928922),
+  ('tbsp', 'tablespoon', 'volume', 14.786765),
+  ('cup', 'cup', 'volume', 236.588236),
+  ('fl_oz', 'fluid ounce', 'volume', 29.573530),
+  ('ml', 'milliliter', 'volume', 1.0),
+  ('l', 'liter', 'volume', 1000.0),
+  ('oz', 'ounce', 'weight', 28.349523),
+  ('lb', 'pound', 'weight', 453.592370),
+  ('g', 'gram', 'weight', 1.0),
+  ('kg', 'kilogram', 'weight', 1000.0),
+  ('item', 'item', 'count', 1.0),
+  ('clove', 'clove', 'count', 1.0),
+  ('slice', 'slice', 'count', 1.0)
 on conflict (code) do nothing;
 
 create table if not exists public.user_settings (
@@ -606,12 +611,15 @@ create trigger bump_plan_version
 after insert or update or delete on public.meal_plan_items
 for each row execute function public.bump_plan_version_on_grocery_change();
 
--- Grocery state preservation (added by migration 20260702023356_grocery_state_preservation.sql).
+-- Grocery state preservation (added by migration 20260702023356_grocery_state_preservation.sql)
+-- + dimension-aware unit merge (migration 20260711225000_grocery_unit_merge.sql).
 -- Transactional, state-preserving grocery regeneration: upserts by the stable
--- row identity (name|unit|pantry, no version prefix), preserving is_checked /
+-- row identity (name|dimension|pantry — 'vol'/'wt' for volume/weight units, the
+-- unit code itself for count units, no version prefix), preserving is_checked /
 -- is_on_hand / pantry overrides for surviving rows; obsolete rows are removed
 -- only after the upsert succeeds; staleness = meal_plans.groceries_version
--- distinct from version.
+-- distinct from version. Amounts are summed in the dimension's base unit via
+-- units.base_factor and displayed in the largest contributing unit.
 -- Row identity is unique within a plan (verified on live data, including with
 -- legacy prefixes stripped). Enables the atomic upsert below.
 create unique index if not exists grocery_list_items_plan_source_key_uidx
@@ -639,38 +647,125 @@ begin
     raise exception 'meal plan % not found or not owned by the caller', p_plan_id;
   end if;
 
-  -- One-time normalization of legacy 'v<version>|' prefixed keys, so rows
-  -- generated before this migration match the stable identity and keep their
-  -- user state through their first new-style regeneration.
+  -- One-time normalization of legacy 'v<version>|' prefixed keys (pre-M4
+  -- rows), so every row below parses as name|unit|flag.
   update public.grocery_list_items
      set source_key = regexp_replace(source_key, '^v[0-9]+\|', '')
    where meal_plan_id = p_plan_id
      and source_key ~ '^v[0-9]+\|';
 
-  -- Upsert the fresh aggregate (same semantics as lib/grocery.ts
-  -- buildGroceryRows: cook items only, amounts scaled by serving multiplier,
-  -- grouped by normalized name + unit + pantry classification, 3-decimal
-  -- rounding, display name = trimmed original). The DO UPDATE deliberately
-  -- touches ONLY amount and display name: is_checked, is_on_hand, and the
+  -- Migrate surviving rows from the old identity (name|unit_code|flag) to the
+  -- dimension identity (name|vol/wt/code|flag), preserving user state. The
+  -- flag segment is carried over from the stored key, NOT recomputed from the
+  -- row: the key holds the recipe-derived classification while the column is
+  -- the mutable pantry override (milestone 4). Old rows whose new keys now
+  -- collide collapse into the smallest-id row with bool_and state — checked /
+  -- on-hand only if EVERY merged part was. Already-migrated keys compute to
+  -- themselves, so this whole block is a no-op on normalized data.
+  with keyed as (
+    select g.id, g.is_checked, g.is_on_hand,
+           k.parts[1] || '|'
+             || coalesce(
+                  (select case u.unit_type
+                            when 'volume' then 'vol'
+                            when 'weight' then 'wt'
+                            else u.code
+                          end
+                   from public.units u
+                   where u.code = k.parts[2]),
+                  k.parts[2])
+             || '|' || k.parts[3] as new_key
+    from public.grocery_list_items g
+    cross join lateral (select regexp_match(g.source_key, '^(.*)\|([^|]*)\|([01])$') as parts) k
+    where g.meal_plan_id = p_plan_id
+      and k.parts is not null
+  ),
+  grouped as (
+    select new_key,
+           -- smallest uuid; core Postgres has no min(uuid) aggregate
+           (array_agg(id order by id))[1] as keep_id,
+           bool_and(is_checked) as all_checked,
+           bool_and(is_on_hand) as all_on_hand
+    from keyed
+    group by new_key
+    having count(*) > 1
+  ),
+  collapsed as (
+    update public.grocery_list_items g
+       set is_checked = gr.all_checked,
+           is_on_hand = gr.all_on_hand
+      from grouped gr
+     where g.id = gr.keep_id
+     returning g.id
+  )
+  delete from public.grocery_list_items g
+  using keyed k
+  join grouped gr on gr.new_key = k.new_key
+  where g.id = k.id
+    and g.id <> gr.keep_id;
+
+  -- Second pass over the survivors: stamp the migrated key. (Separate
+  -- statement so the delete above and this update never touch the same row
+  -- inside one statement's snapshot.)
+  update public.grocery_list_items g
+     set source_key = k.new_key
+    from (
+      select g2.id,
+             p.parts[1] || '|'
+               || coalesce(
+                    (select case u.unit_type
+                              when 'volume' then 'vol'
+                              when 'weight' then 'wt'
+                              else u.code
+                            end
+                     from public.units u
+                     where u.code = p.parts[2]),
+                    p.parts[2])
+               || '|' || p.parts[3] as new_key
+      from public.grocery_list_items g2
+      cross join lateral (select regexp_match(g2.source_key, '^(.*)\|([^|]*)\|([01])$') as parts) p
+      where g2.meal_plan_id = p_plan_id
+        and p.parts is not null
+    ) k
+   where g.id = k.id
+     and k.new_key is distinct from g.source_key;
+
+  -- Upsert the fresh aggregate. Buckets group by normalized name + dimension
+  -- ('vol'/'wt', or the unit code itself for count units) + recipe-derived
+  -- pantry classification. Amounts are summed in the base unit
+  -- (amount * serving_multiplier * base_factor) and displayed in the largest
+  -- contributing unit, 3-decimal rounding. The DO UPDATE touches ONLY amount,
+  -- display name, and unit_code (the display unit can legitimately change
+  -- when a larger unit joins the bucket): is_checked, is_on_hand, and the
   -- (possibly overridden) is_pantry_staple are preserved.
   insert into public.grocery_list_items
     (meal_plan_id, ingredient_name, amount, unit_code, is_pantry_staple, source_key)
   select
     p_plan_id,
     min(btrim(i.name)),
-    round(sum(i.amount * m.serving_multiplier)::numeric, 3),
-    i.unit_code,
+    round((sum(i.amount * m.serving_multiplier * u.base_factor)
+           / max(u.base_factor))::numeric, 3),
+    (array_agg(i.unit_code order by u.base_factor desc))[1],
     i.is_pantry_staple,
-    lower(btrim(i.name)) || '|' || i.unit_code || '|'
-      || case when i.is_pantry_staple then '1' else '0' end
+    lower(btrim(i.name)) || '|'
+      || case u.unit_type when 'volume' then 'vol'
+                          when 'weight' then 'wt'
+                          else i.unit_code end
+      || '|' || case when i.is_pantry_staple then '1' else '0' end
   from public.meal_plan_items m
   join public.ingredients i on i.recipe_id = m.recipe_id
+  join public.units u on u.code = i.unit_code
   where m.meal_plan_id = p_plan_id
     and m.slot_type = 'cook'
-  group by lower(btrim(i.name)), i.unit_code, i.is_pantry_staple
+  group by lower(btrim(i.name)),
+           case u.unit_type when 'volume' then 'vol'
+                            when 'weight' then 'wt'
+                            else i.unit_code end,
+           i.is_pantry_staple
   on conflict (meal_plan_id, source_key) do update
     set amount = excluded.amount,
-        ingredient_name = excluded.ingredient_name;
+        ingredient_name = excluded.ingredient_name,
+        unit_code = excluded.unit_code;
 
   -- Remove obsolete rows only after the replacement upsert succeeded (any
   -- failure above aborts the whole transaction, leaving the old list intact).
@@ -680,10 +775,15 @@ begin
       select 1
       from public.meal_plan_items m
       join public.ingredients i on i.recipe_id = m.recipe_id
+      join public.units u on u.code = i.unit_code
       where m.meal_plan_id = p_plan_id
         and m.slot_type = 'cook'
-        and lower(btrim(i.name)) || '|' || i.unit_code || '|'
-              || case when i.is_pantry_staple then '1' else '0' end = g.source_key
+        and lower(btrim(i.name)) || '|'
+              || case u.unit_type when 'volume' then 'vol'
+                                  when 'weight' then 'wt'
+                                  else i.unit_code end
+              || '|' || case when i.is_pantry_staple then '1' else '0' end
+            = g.source_key
     );
 
   -- Stamp: this list now reflects the plan's current version.
