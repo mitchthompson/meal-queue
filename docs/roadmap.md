@@ -488,6 +488,11 @@ Prod history backs it: Crispy Chicken Thighs on all 31 cooked Thursdays, Hurst
 15-Bean Soup on 24 of 29 Sundays. Zero schema, zero deps; one board round.
 Supersedes M13.
 
+**Status (2026-10-03): built, draft PR #43, waiting on the owner's review and
+merge.** Board verdicts WS1-WS4: A (pre-decided); senior review found no
+blockers and its fixes are in; vitest 160/160, `verify-weekday-suggestions`
+45/45. Board: https://claude.ai/artifact/DXCEANK4ut6fgW3Yy945UU
+
 ### 18. Amounts in the steps (and retire cook mode)
 
 Spec: [plans/amounts-in-steps.md](plans/amounts-in-steps.md) · Branches
@@ -504,14 +509,28 @@ until "apply", backup first). In-step amounts don't scale, which is accepted:
 every planned meal in history is at base servings. Cook mode (the
 step-by-step takeover) is removed. Zero schema, zero deps. Supersedes M16.
 
+**Status (2026-10-03): PR 1 built, draft PR #44** (AS1: A and AS2: A, both
+owner-confirmed on the board; harnesses 16/16, 5/5, 26/26). The live smoke
+failed two of four criteria, so the import rule was tightened twice; a
+re-smoke waits on the owner. **PR 2's tooling is draft PR #42** (vitest
+171/171); its Phase 10 local dry run waits on an explicit owner approval
+(the permission checker refused it twice), then Phase 11 (prod export and
+proposals) and Phase 12 (the apply, after PR 1 is merged and deployed).
+Board: https://claude.ai/artifact/RuNnGZCmujoDrAtLXCBMuS
+
 ### 19. Upkeep: Node and platform
 
 CI's `node-version: 20` is past end of life (April 2026), the `@supabase/*`
 packages now require Node ≥ 22 (CI only warns), and nothing pins Vercel's
 Node version. Scope: CI on a current LTS, the same version pinned for Vercel
 (`engines` or the project setting), green build and deploy. Next.js 16 stays a
-later, separate decision (15.5.x still receives security fixes). Small; spec
-when picked.
+later, separate decision (15.5.x still receives security fixes).
+
+**Status (2026-10-03): built, draft PR #41.** Spec
+[plans/node-upkeep.md](plans/node-upkeep.md): `engines.node` `24.x`, read by
+Vercel and by `actions/setup-node`. CI resolved Node v24.21.0, and app checks,
+DB tests, and the Vercel preview are green. Merging changes the production
+runtime.
 
 ### Pinned
 

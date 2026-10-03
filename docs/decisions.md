@@ -632,6 +632,50 @@ dark mode). Each milestone still needs its own go-ahead before code.
   postcss override raised 8.5.10 → 8.5.28, since `npm audit fix` cannot move
   an override; `npm audit` 8 → 0.
 
+### Away-run build decisions (2026-10-03)
+
+- **Grant (owner, in chat):** for this run only, milestones 17, 18 (PR 1
+  plus PR 2's tooling) and 19, plus docs housekeeping. Commits, pushes, and
+  draft PRs on feature branches; no merges, `main` and prod untouched. The
+  M18 live smoke import and the read-only prod export with Haiku proposals
+  were allowed (about $0.30). Every later permission refusal went back to the
+  owner; none was worked around.
+- **Design pins pre-decided, all recommended:** M17 WS1 A (labeled list), WS2
+  A (card above the first day), WS3 A (soft teal button), WS4 A (green status
+  line); M18 AS1 A (quiet muted note), AS2 A (keep "Start cooking →"). The
+  variant boards were still published, and the owner confirmed AS1 and AS2
+  on the M18 board.
+- **M17 senior-review fixes (PR #43):** rows still being saved don't count as
+  planned for the usuals group; Enter is ignored while a write is in flight
+  and the usual buttons disable while saving; the Add the usuals card and
+  `addUsuals` filter on today computed live (R9, for a tab left open past
+  midnight) while the habit window stays on the page-load day (R14); temp-id
+  guards in `removeItem`, `adjustServing`, and the leftover-source list (a
+  waiver of the spec's do-not-touch list for those lines only). Deferred to
+  design-flags: rollback after an ambiguous network failure, and focus after
+  the card unmounts.
+- **M18 import rule, revised after the live smoke:** the first smoke (one
+  Haiku call, about $0.003) left the chicken without an amount and invented a
+  remainder ("the remaining 1 tbsp oil"). The rule now says main ingredients
+  get amounts too (in parentheses when putting the amount first would reword
+  the source), keeps the "otherwise leave that mention without an amount"
+  fallback for partial uses, never works out a remainder, and extends the
+  never-invent guard to "pinch" and "as needed". Its examples avoid the smoke
+  recipe's wording, so a re-smoke can't pass by construction.
+- **M19 (spec [plans/node-upkeep.md](plans/node-upkeep.md)):** one pin,
+  `"engines": { "node": "24.x" }`. Vercel reads `engines.node` before the
+  dashboard setting (Vercel discontinued 20.x on 2026-10-01), and CI's
+  `actions/setup-node` reads the same pin through `node-version-file:
+  package.json`. `24.x`, not an open range, so Vercel never jumps a major
+  without review.
+- **Docs placement for a multi-PR run:** each feature's own docs (design
+  system sections, page docs, the review-board README) ride on its PR, so the
+  docs match the code at merge. The session status docs and the M19 spec ride
+  on one docs branch.
+- **`npm audit` `braces` advisory:** no fix taken. It is dev-only, has no
+  patched release, and the only offered fix is a semver-major downgrade of
+  `eslint-config-next`. Tracked in [design-flags.md](design-flags.md).
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)
