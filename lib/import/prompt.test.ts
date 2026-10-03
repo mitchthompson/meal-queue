@@ -39,6 +39,10 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("not only seasonings");
     expect(prompt).toContain("never work out a remainder");
     expect(prompt).toContain("otherwise leave that mention without an amount");
+    expect(prompt).toContain("Insert only the amount and unit");
+    expect(prompt).toContain("never copy an ingredient line's prep note");
+    expect(prompt).toContain('"season to taste" stays "season to taste"');
+    expect(prompt).toContain("even when the subtraction is obvious");
   });
 
   it("handles an empty tag list", () => {
