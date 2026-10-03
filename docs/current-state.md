@@ -1,11 +1,23 @@
 # Current State
 
-Last reviewed: 2026-10-02 (**Onboard after an 83-day gap, a security patch, and a re-plan.** Onboard found `npm audit` regressed to 8 findings (1 critical in `next` 15.5.19) and the local stack down; git, PR, and CI state matched the docs and the baseline was green. **PR #40** (`codex/deps-security` → `main` `0dcabab`) shipped the in-range `npm audit fix` plus the postcss override 8.5.10 → 8.5.28: `npm audit` 8 → 0, CI green on the PR and post-merge `main`, prod 200. An owner interview then reset the queue to **17 → 18 → 19 → 14** (weekday suggestions, amounts in steps + retire cook mode, Node upkeep, dark mode); M13 and M15 dropped, M16 superseded. Specs [plans/weekday-suggestions.md](plans/weekday-suggestions.md) and [plans/amounts-in-steps.md](plans/amounts-in-steps.md) written and fork-locked (F1 a, F2 a, W1 a). Prior: 2026-07-11 night, Milestone 12 shipped (PR #39, fifth migration applied to prod); full history in [progress-log.md](progress-log.md).)
+Last reviewed: 2026-10-03 (**Away-run: M17, M18, and M19 built to draft PRs; nothing merged.** With every design pin pre-decided (WS1-WS4 A, AS1/AS2 A, the latter owner-confirmed on the board) and a commit, push, and draft-PR grant (no merges), the session opened **PR #41** (M19, Node 24 via `engines.node`, CI on v24.21.0), **PR #43** (M17 weekday suggestions + Add the usuals, senior-review fixes in), **PR #44** (M18 PR 1: cook mode retired, steps note, step-amounts import rule; the live smoke failed 2 of 4 criteria and the rule was tightened twice, re-smoke pending), **PR #42** (M18 PR 2 backfill tooling; the local dry run waits on an owner approval after two permission refusals), and **PR #45** (docs: backup runbook, `braces` flag, M19 spec, this wrap). `npm audit` went 0 → 5 high overnight (one dev-only `braces` advisory, no fix released). Prior: 2026-10-02 onboard, PR #40 security patch, re-plan; full history in [progress-log.md](progress-log.md).)
 
 Cold-start fast-read for Meal Queue — a single-household meal planner and
 grocery generator. Start here, then follow the links into the detailed docs.
 
 ## Current build phase
+
+**Away-run build (2026-10-03): five draft PRs, nothing merged.** Built from the
+fork-locked specs with every design pin pre-decided: M17 to **PR #43**
+([plans/weekday-suggestions.md](plans/weekday-suggestions.md)), M18 PR 1 to
+**PR #44** and PR 2's tooling to **PR #42**
+([plans/amounts-in-steps.md](plans/amounts-in-steps.md)), M19 to **PR #41**
+([plans/node-upkeep.md](plans/node-upkeep.md)), and the session docs to
+**PR #45**. CI is green on #41, #42, and #43 (#44 was re-running after its
+docs commit). Two M18 gates are open: a re-smoke of the tightened import rule
+(owner approval for one more paid call), and the Phase 10 local backfill dry
+run (the auto-mode permission checker refused it twice; it needs an approval
+that names the script steps). See Active Handoff.
 
 **Re-plan after real use (2026-10-02).** First session after an 83-day gap: a
 dependency security patch shipped (PR #40, `main` `0dcabab`, `npm audit` 8 → 0),
@@ -16,8 +28,8 @@ steps + retire cook mode ([plans/amounts-in-steps.md](plans/amounts-in-steps.md)
 M19 Node upkeep, then M14 dark mode. M13 (plan copy) and M15 (empty states)
 were dropped and M16 (step-ingredient link) superseded by M18; see
 [roadmap.md](roadmap.md) Re-plan and [decisions.md](decisions.md). Both new specs
-are builder-ready (forks answered). Nothing is in flight; M17 waits on the
-owner's build go-ahead.
+are builder-ready (forks answered). All three were built the next day
+(above).
 
 **Milestone 12 (grocery unit merge) is complete — PR #39
 (`codex/grocery-unit-merge` → `main` `257a836`) merged 2026-07-11 and the
@@ -136,12 +148,15 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Stable Baseline
 
-- **In flight (not on `main`):** nothing. `codex/deps-security` merged as
-  PR #40 and was deleted local+remote. Stale local refs remain (harmless,
-  prune at will): `codex/grocery-unit-merge` (PR #39; its remote is gone but
-  the local ref survived, contrary to the 2026-07-11 wrap),
-  `codex/password-reset-prerebase`, and about twenty older merged `codex/*`
-  branches. Local `main` = `origin/main`.
+- **In flight (not on `main`), all draft PRs, all pushed:**
+  **#41** `codex/node-upkeep` (M19), **#43** `codex/weekday-suggestions`
+  (M17), **#44** `codex/amounts-in-steps` (M18 PR 1), **#42**
+  `codex/step-amounts-backfill` (M18 PR 2 tooling), **#45**
+  `codex/docs-2026-10-03` (session docs). Nothing merged. The 22 merged local
+  `codex/*` refs were deleted 2026-10-03; `codex/password-reset-prerebase` was
+  kept (3 commits not in `main`). Origin still carries 19 merged `codex/*`
+  branches (prune on the owner's word). Local `main` = `origin/main` at
+  `0a66ec8`.
 - **`main`:** at `0dcabab` (**PR #40, dependency security patch** — merge of
   `codex/deps-security`: `436e82a` chore(deps), the in-range `npm audit fix`
   (next 15.5.19 → 15.5.27) plus the postcss override 8.5.10 → 8.5.28;
@@ -214,7 +229,18 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   Node 20 reached end of life 2026-04-30 and the `@supabase/*` packages now
   declare Node ≥ 22 (CI prints engine warnings only); moving CI and Vercel to
   a current LTS is milestone 19.
-- **Latest verification:** 2026-10-02 (security patch, PR #40): onboard
+- **Latest verification:** 2026-10-03 (away-run, all on branches): onboard
+  baseline green (eslint / tsc / vitest 141/141). **#41:** local gate
+  unchanged, CI on Node v24.21.0 green (app checks 43s, DB tests 1m12s, Vercel
+  preview). **#43:** vitest 160/160 (also UTC+14 and UTC-11), build 13/13,
+  `verify-weekday-suggestions` 45/45, `verify-shop-pass` 22/22,
+  `verify-optimistic-pass` 16/16, CI green. **#44:** vitest 143/143, build
+  13/13, `verify-detail-pass` 16/16, `verify-amounts-pass` 5/5,
+  `verify-import-pass` 26/26; **the Phase 6 live smoke FAILED 2 of 4 criteria**
+  (no chicken amount; "the remaining 1 tbsp oil" invented), rule tightened,
+  re-smoke pending. **#42:** vitest 171/171, CI green; Phase 10 dry run not
+  run (permission refusals). `npm audit` 5 high (dev-only `braces`), prod-only
+  audit 0. Prior: 2026-10-02 (security patch, PR #40): onboard
   baseline green (eslint / tsc / vitest 141/141); after the patch eslint clean,
   tsc clean, vitest 141/141, `next build` 13/13 static pages, `npm audit` 0
   (was 8: 1 critical, 5 high, 2 moderate); `npm ci --dry-run` on the new
@@ -354,7 +380,15 @@ the Needs-Mitchell real-device pass. See Active Handoff.
 
 ## Active Handoff
 
-- **Just done (2026-10-02):** onboard after an 83-day gap (drift: `npm audit`
+- **Just done (2026-10-03):** the away-run. M19, M17, M18 PR 1, and M18
+  PR 2's tooling built by Sonnet builders from the specs, reviewed by the
+  orchestrator, senior-reviewed by Opus (no blockers on #43 or #44; fixes
+  applied), and opened as draft PRs #41-#45. Design pins pre-decided as A;
+  the owner confirmed AS1 and AS2 on the M18 board. Boards: M17
+  https://claude.ai/artifact/DXCEANK4ut6fgW3Yy945UU, M18
+  https://claude.ai/artifact/RuNnGZCmujoDrAtLXCBMuS. The M18 live smoke cost
+  about $0.003. No merge, no prod write.
+- **Prior (2026-10-02):** onboard after an 83-day gap (drift: `npm audit`
   at 8 findings incl. 1 critical, the local stack down with Colima's docker
   context missing, a stale local `codex/grocery-unit-merge` ref), then
   **PR #40** (security patch, `main` `0dcabab`, `npm audit` 8 → 0, deployed),
@@ -395,18 +429,36 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   moved to Still open below.)
 - **Earlier sessions (2026-07-04 → 2026-07-11):** see
   [progress-log.md](progress-log.md).
-- **Next action: Milestone 17, weekday suggestions + Add the usuals, waits on
-  the owner's build go-ahead.** On the go: from a clean `main`, follow
-  [plans/weekday-suggestions.md](plans/weekday-suggestions.md) from Phase 0 on
-  branch `codex/weekday-suggestions` (Phase 0 also repairs the two
-  date-rotted plan harnesses). STOP ① is the WS1-WS4 board round, published
-  as a NEW review artifact (a distinct review under the board-URL rule); no UI
-  code before its verdicts. Forks F1/F2 are answered (both (a)). After M17:
-  M18 ([plans/amounts-in-steps.md](plans/amounts-in-steps.md): two PRs plus an
-  owner-gated prod backfill; W1 answered, no wake lock), then M19 (Node
-  upkeep; spec when picked), then M14 (dark mode). Each milestone needs its
-  own go-ahead before code. The local stack is down: `colima start`, then
-  `supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,mailpit,supavisor`.
+- **Next action: the owner reviews the boards and draft PRs; the agent then
+  closes M18's two open gates.** In order:
+  1. **#41 (M19)** merges on the owner's word (it moves prod to Node 24; then
+     probe `/`, `/grocery`, `/recipes`, `/plans` for 200 and
+     `POST /api/import-recipe` with `{}` for 400).
+  2. **#43 (M17)** merges on the owner's word; then prod probes and the
+     owner's real-iPhone check that the usuals group stays above the keyboard.
+  3. **#44 (M18 PR 1)**, before merge: (a) one more live smoke of the
+     tightened rule, after the owner approves one paid call (about $0.003).
+     Run it from a checkout that has `.env.local` (the main checkout, `git
+     switch --detach codex/amounts-in-steps`), a dev server on 3123 with the
+     local `NEXT_PUBLIC_SUPABASE_*` inline, then the spec's Phase 6 block (in
+     zsh use a function, not `$N`), and judge the four criteria; inputs are in
+     `~/meal-queue-m18-smoke/`. (b) Rebase on `main` after #43 merges: expect
+     conflicts in `app/globals.css` (the add-meal takeover comment),
+     `scripts/review-board/README.md` (both add a section before Caveats), and
+     `docs/design-system.md` (the `.cook-mode` sentence M17 appended after);
+     also fix the stale "same as Cook mode" comment in
+     `components/plan-add-meal.tsx`. Re-run the gate and the three harnesses,
+     then the owner's merge word.
+  4. **Backfill** (M18 Phases 10-12, after #44 is deployed) on
+     `codex/step-amounts-backfill`: Phase 10's local dry run needs an owner
+     approval that names the script's `export --target local`, `propose
+     --responses`, and `sql`, the output directory (outside the repo), and the
+     psql runs of check, rehearsal, apply, and revert against the local DB.
+     Then Phase 11 (prod export plus Haiku proposals, review artifact) and
+     Phase 12 on the owner's "apply" (backup first: architecture.md Prod
+     Backups). Then merge #42.
+  5. **#45 (docs)** any time; after the merges, true up this file.
+  Then M14 (dark mode, [plans/dark-mode.md](plans/dark-mode.md)).
   - **Reset-harness re-drive runbook** (only if `/reset-password` ever needs
     local re-verification): stack up **with mailpit**
     (`supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,supavisor`
@@ -422,13 +474,20 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   hand-editing them (re-importing means deleting the recipe, which cascades
   to its plan history), and tap the Shop banner's Update on a current plan
   once to eyeball M12's merged units on real data.
-- **Blockers:** none. M17 waits only on the owner's build go-ahead.
-- **Environment notes:** **open Claude Code at the repo root**
+- **Blockers:** none on the code. Open gates: the owner's merge words, the
+  M18 re-smoke approval, and the Phase 10 approval (the auto-mode permission
+  checker also refused linking `.env.local` into a worktree; run anything that
+  needs the API key from the main checkout).
+- **Environment notes:** **left 2026-10-03:** the main checkout back on a
+  clean `main`, no extra worktrees, no dev server; the local stack UP on
+  Colima (standard excludes); the local DB holds the `reviewer@local.test`
+  seed (4 recipes, the July plan) plus an `Import Verify Pancakes` recipe and
+  the `wsverify@local.test` auth user. **Open Claude Code at the repo root**
   (`~/Dev/meal-queue/meal-queue`), not its parent folder: from the parent,
   `/onboard` and `/wrap` never appear in the slash menu, and the repo's
   `CLAUDE.md`, `.mcp.json` (read-only Supabase MCP), and
   `.claude/settings.local.json` don't load (found 2026-10-02). The working
-  branch is **`main`** at `0dcabab` (PR #40) plus the 2026-10-02 docs commit;
+  branch is **`main`** at `0a66ec8` (the 2026-10-02 docs commit atop PR #40), with the five draft PRs listed under Stable Baseline;
   stale local refs are listed under Stable Baseline.
   A fresh prod backup exists at `~/meal-queue-backup-2026-07-11-1633.dump`
   (424K, taken for the M12 apply). The Supabase-dashboard redirect URLs for
@@ -458,20 +517,19 @@ the Needs-Mitchell real-device pass. See Active Handoff.
   `.mcp.json` (owner OAuth pending first use); `gh` holds both accounts
   (`2a-webteam` active machine-wide, `mitchthompson` pinned per command via
   `GH_TOKEN=$(gh auth token --user mitchthompson)`); local Supabase stack runs
-  on Colima. **Found DOWN on 2026-10-02:** Colima was stopped and its
-  `colima` docker context was missing (`colima start` recreates it, then the
-  standard `supabase start -x ...`). The local DB was last left at the fresh
-  post-M12 state (`supabase db reset` ran, so review-board seed data was
-  wiped; the harnesses seed their own). To re-drive the reset harness,
+  on Colima. If it is found down (as on 2026-10-02, when Colima's `colima`
+  docker context was missing), `colima start` recreates it, then the standard
+  `supabase start -x ...`. It was left UP on 2026-10-03 with the reviewer seed
+  re-loaded (see the top of these notes). To re-drive the reset harness,
   start the stack via
   `supabase start -x vector,logflare,realtime,imgproxy,studio,edge-runtime,supavisor`
   (mailpit **not** excluded — reset-email testing needs the mail catcher; the
   standard start command lists `mailpit` in the excludes).
   The review-board reviewer account (`reviewer@local.test` /
-  `review-pass-1234`) and its recipes were **wiped by the M12 `supabase db
-  reset`** — re-seed before the next board/harness session (the harnesses
-  seed/tear down their own isolated data, but the reviewer login itself must
-  exist). Verify with `supabase status` before relying on the stack.
+  `review-pass-1234`) exists again with its seed recipes and July plan
+  (re-seeded 2026-10-03 by the M18 capture; `seed-review.sql` is idempotent).
+  The harnesses seed and tear down their own isolated data. Verify with
+  `supabase status` before relying on the stack.
 
 ## Page status
 
@@ -522,9 +580,9 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
 | 14 | Dark mode (system-follow) | **Specced, not started; fourth in the 2026-10-02 order** (after 17 → 18 → 19). [plans/dark-mode.md](plans/dark-mode.md) |
 | 15 | Richer empty states | **Dropped (2026-10-02)** — mostly serves a brand-new account. [plans/empty-states.md](plans/empty-states.md) (history) |
 | 16 | Step↔ingredient link (accurate cook-mode chips) | **Superseded (2026-10-02) by M18** — cook mode is unused and being retired. [plans/step-ingredients.md](plans/step-ingredients.md) (research only) |
-| 17 | Weekday suggestions + Add the usuals | **Specced, builder-ready; next up, waits on the owner's go-ahead** (forks F1/F2 answered). [plans/weekday-suggestions.md](plans/weekday-suggestions.md) |
-| 18 | Amounts in the steps (and retire cook mode) | **Specced, builder-ready** (fork W1 answered: no wake lock); two PRs plus an owner-gated prod backfill. [plans/amounts-in-steps.md](plans/amounts-in-steps.md) |
-| 19 | Upkeep: Node and platform | **Scoped (2026-10-02)** — CI and Vercel to a current Node LTS; spec when picked. [roadmap.md](roadmap.md) Re-plan |
+| 17 | Weekday suggestions + Add the usuals | **Built, draft PR #43 (2026-10-03)**: WS1-WS4 A, senior-review fixes in, harness 45/45, CI green; waits on the owner's merge word. [plans/weekday-suggestions.md](plans/weekday-suggestions.md) |
+| 18 | Amounts in the steps (and retire cook mode) | **PR 1 built, draft PR #44** (AS1/AS2 A, owner-confirmed; re-smoke of the tightened rule pending); **PR 2 tooling, draft PR #42** (dry run pending an owner approval); prod backfill after PR 1 deploys. [plans/amounts-in-steps.md](plans/amounts-in-steps.md) |
+| 19 | Upkeep: Node and platform | **Built, draft PR #41 (2026-10-03)**: `engines.node` 24.x for Vercel and CI; CI on v24.21.0 green; merge changes the prod runtime. [plans/node-upkeep.md](plans/node-upkeep.md) |
 
 ## Architecture snapshot
 
@@ -582,13 +640,13 @@ top-nav — all screens, CSS-only (PRs #26–#27; [plans/ipad-support.md](plans/
   teal save bar (Playwright WebKit ≠ real Safari). Two unpinned CSS values remain
   flagged for owner eyes — `.import-textarea` min-height `9rem` and the
   `.import-progress` `1.1s` sweep (see [design-flags.md](design-flags.md)).
-- `npm audit`: root **0** as of 2026-10-02 (PR #40; it had regressed to 8
-  over the summer, 1 critical in `next`). `mcp/` shows 7 (1 low, 3 moderate,
-  3 high), unaddressed: a local stdio server, out of scope unless a task names
-  it (its 2026-07-03 in-range fix had taken it 9 → 0).
-- Node: CI runs Node 20 (end of life 2026-04-30), `@supabase/*` declare
-  Node ≥ 22 (CI warns only), and Vercel's Node version isn't pinned:
-  milestone 19.
+- `npm audit`: root **5 high** as of 2026-10-03, all one dev-only `braces`
+  advisory with no patched release (prod-only audit 0); see
+  [design-flags.md](design-flags.md). `mcp/` shows 7 (1 low, 3 moderate,
+  3 high), unaddressed: a local stdio server, out of scope unless a task
+  names it.
+- Node: CI runs Node 20 (end of life 2026-04-30) and Vercel's runtime isn't
+  pinned in the repo; PR #41 (M19) pins 24.x for both.
 - Full register: [design-flags.md](design-flags.md).
 
 ## Where to go next

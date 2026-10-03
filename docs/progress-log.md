@@ -3,7 +3,75 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-10-02 (latest) - Onboard after an 83-day gap: security patch (PR #40), re-plan after real use, M17/M18 specs
+## 2026-10-03 (latest) - Away-run: M17, M18, and M19 built to draft PRs; nothing merged
+
+After onboard the owner stepped away and granted, for this run only, commits,
+pushes, and draft PRs on feature branches (no merges), with every design pin
+pre-decided as each spec's recommended variant. Sonnet builders executed the
+specs, Opus agents did the senior reviews, and the orchestrator reviewed each
+hand-back, committed, opened the PRs, and wrote the docs. No merge, no prod
+write, no schema change, no dependency change.
+
+- **Onboard drift:** `npm audit` went 0 → 5 high overnight. It is one
+  dev-only `braces` advisory (GHSA-vfj7-8cjw-p6xm), which GitHub reviewed at
+  2026-10-02 22:36 UTC, minutes after PR #40's audit read 0; no patched release
+  exists, so it is flagged with no fix taken. Origin still carries 19 merged
+  `codex/*` branches. 22 merged local branches were deleted
+  (`codex/password-reset-prerebase` kept: 3 commits not in `main`). Baseline
+  green (eslint, tsc, vitest 141/141). The session again opened at the parent
+  folder, so `/onboard` was run by hand from the skill file.
+- **M19, PR #41** (`codex/node-upkeep`, spec
+  [plans/node-upkeep.md](plans/node-upkeep.md)): `engines.node` `24.x`, CI
+  `node-version-file: package.json`, the lockfile root `engines` mirrored and
+  nothing else moved. Local gate unchanged (vitest 141/141, build 13/13). CI
+  resolved Node v24.21.0; app checks 43s, DB tests 1m12s, Vercel preview green.
+  Found while specifying: Vercel discontinued Node 20.x on 2026-10-01.
+- **M17, PR #43** (`codex/weekday-suggestions`): Phases 0-5 per the spec,
+  WS1-WS4: A. The Phase 0 harness repair (clock pins, the `.plan-add-meal`
+  selector) took `verify-optimistic-pass` to 16/16 and `verify-shop-pass` to
+  22/22. vitest 160/160 across 10 files (also under UTC+14 and UTC-11), build
+  13/13, `verify-weekday-suggestions` 45/45, 0 console errors. The senior
+  review found no blockers; its fixes landed (a tapped usual no longer drops
+  out mid-insert, a double tap can't add the other usual, a tab left open past
+  midnight can't write yesterday, temp ids are never sent to Postgres) and
+  were re-verified: 160/160, 45/45, 22/22, 16/16, build 13/13. Two findings
+  went to design-flags. Docs on the PR: design-system Plan components, the
+  review-board README, and a full `docs/pages/plans.md` refresh. Board:
+  https://claude.ai/artifact/DXCEANK4ut6fgW3Yy945UU (variants plus as-built).
+- **M18 PR 1, PR #44** (`codex/amounts-in-steps`): cook mode retired, Today's
+  button opens the recipe page, the steps note (AS1: A), and the step-amounts
+  import rule. The owner confirmed AS1 and AS2 on the board
+  (https://claude.ai/artifact/RuNnGZCmujoDrAtLXCBMuS). vitest 143/143, build
+  13/13, `verify-detail-pass` 16/16, `verify-amounts-pass` 5/5,
+  `verify-import-pass` 26/26. **The Phase 6 live smoke failed 2 of 4
+  criteria** (one Haiku call, 1586 input and 370 output tokens): step
+  boundaries held and the salt, pepper, and garlic amounts were right, but the
+  chicken got no amount and step 3 read "the remaining 1 tbsp oil", a
+  remainder the source never states. The rule was tightened twice (the second
+  pass after the senior review caught a dropped partial-use fallback and
+  examples copied from the smoke recipe). A re-smoke waits on the owner. The
+  senior review otherwise found no blockers. The feature docs (design system,
+  recipes and today page docs, routes, data model, the dark-mode and
+  step-ingredients specs) ride on the PR.
+- **M18 PR 2, PR #42** (`codex/step-amounts-backfill`): Appendices A-D
+  installed byte-identical (Appendix D's second fenced block is the expected
+  output, not file content); vitest 171/171 across 10 files; the script loads
+  both TypeScript modules through type stripping. **The Phase 10 dry run did
+  not run:** the auto-mode permission checker refused it twice, first a
+  read-only psql check, then the script's export and propose writing to `~/`.
+  The owner approved "local psql"; the script step still needs an approval
+  that names it.
+- **Also refused by the permission checker:** linking `.env.local` into a
+  worktree. The paid smoke ran from the main checkout, detached at the M18
+  commit, where `.env.local` already lives.
+- **Docs branch, PR #45** (`codex/docs-2026-10-03`): the prod backup runbook
+  in architecture.md (with the migration-apply text corrected to psql or the
+  SQL editor), the `braces` flag, the M19 spec, and this wrap.
+- **Remaining:** the owner reviews the boards and PRs; merge order #41, #43,
+  then #44 after a rebase and the re-smoke, then the backfill (Phases 10-12),
+  then #42; #45 any time.
+
+## 2026-10-02 - Onboard after an 83-day gap: security patch (PR #40), re-plan after real use, M17/M18 specs
 
 First session since 2026-07-11. Onboard checked the docs against reality, the
 owner approved a security patch, then an interview on how the app is used now
