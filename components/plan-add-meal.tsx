@@ -56,7 +56,7 @@ export function PlanAddMeal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const usualsLabelId = useId();
 
-  // Lock the page scroll while the takeover is open (same as Cook mode), close
+  // Lock the page scroll while the takeover is open, close
   // on Escape, and trap Tab focus inside the dialog — the overlay is opaque, so
   // focus must not reach the (still-mounted) controls behind it. All key on
   // activeDay so they attach only while a day is active.

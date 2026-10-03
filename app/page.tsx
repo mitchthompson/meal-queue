@@ -86,7 +86,7 @@ function TodayScreen() {
                 </span>
               ) : null}
               {heroItem.slot_type === "cook" && heroItem.recipe ? (
-                <Link className="tonight-btn" href={`/recipes/${heroItem.recipe.id}?cook=1`}>
+                <Link className="tonight-btn" href={`/recipes/${heroItem.recipe.id}`}>
                   Start cooking →
                 </Link>
               ) : null}

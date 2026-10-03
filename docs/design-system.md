@@ -61,7 +61,7 @@ attention. The cream/terracotta v1 values are retired.
 ### Slate tokens (the v2 dark set)
 
 The dark half of token set v2 ([redesign-brief.md](redesign-brief.md)),
-introduced with Cook and shared by Shop's pinned order bar. Values come from
+introduced with Cook, now used only by Shop's pinned order bar. Values come from
 the approved mockup ([mockups/reflow-v1.html](mockups/reflow-v1.html)). This is
 a scoped surface treatment — not a global dark mode. (Introduced as
 `--color-cook-*` with the Cook screen; renamed to `--color-slate-*` when Shop
@@ -69,16 +69,16 @@ started sharing them.)
 
 | Variable | Value | Role |
 | --- | --- | --- |
-| `--color-slate` | `#131a18` | Dark surface background — Cook takeover, Shop order bar. Also the text color on the amber Next button. |
-| `--color-slate-2` | `#1d2724` | Raised surface on slate — cook chips, Back button, unfilled progress dots. |
-| `--color-slate-text` | `#f3f6f4` | Primary text on slate. |
-| `--color-slate-text-soft` | `#cbd8d3` | Soft text on slate — cook ingredient-chip text. |
-| `--color-slate-text-muted` | `#9fb0aa` | Secondary text on slate — cook exit/step count, order-bar small line. |
-| `--color-slate-text-dim` | `#5e6b67` | Dimmest text on slate — the wake-lock note. |
-| `--color-slate-border` | `#2a3733` | Chip border on slate. |
+| `--color-slate` | `#131a18` | Dark surface background — Shop order bar. |
+| `--color-slate-2` | `#1d2724` | Raised surface on slate. Referenced by no selector since milestone 18; kept for milestone 14 (dark mode). |
+| `--color-slate-text` | `#f3f6f4` | Primary text on slate (Shop order bar). |
+| `--color-slate-text-soft` | `#cbd8d3` | Soft text on slate. Referenced by no selector since milestone 18; kept for milestone 14 (dark mode). |
+| `--color-slate-text-muted` | `#9fb0aa` | Secondary text on slate — order-bar small line. |
+| `--color-slate-text-dim` | `#5e6b67` | Dimmest text on slate. Referenced by no selector since milestone 18; kept for milestone 14 (dark mode). |
+| `--color-slate-border` | `#2a3733` | Border on slate. Referenced by no selector since milestone 18; kept for milestone 14 (dark mode). |
 
 Amber on slate comes from the global `--brand-2` / `--color-accent`
-(`#e8a13d`): cook progress/Next/focus ring, and the Shop order-bar count.
+(`#e8a13d`): the Shop order-bar count.
 Slate surfaces inherit the native `--font-body` stack. `--color-check-border`
 (`#c6ccc6`) is the rest-state border of Shop's 30px checkboxes.
 
@@ -107,7 +107,7 @@ These raw tokens have **no alias** and are referenced by their full `--color-*` 
 Retired in v2 — `body` is flat `var(--bg)` at every breakpoint.
 
 There is **no dark mode** and no `prefers-color-scheme` query. The one dark
-surface is the Cook takeover (`.cook-mode`), which uses the scoped
+surface is the Shop order bar (`.shop-orderbar`), which uses the scoped
 `--color-slate-*` tokens rather than a theme switch.
 
 ---
@@ -126,7 +126,7 @@ plain CSS tokens in `globals.css :root`.
 
 - Body: `font-size: 16px`, `line-height: 1.6`, antialiased.
 - Headings: `line-height: 1.25`, `letter-spacing: -0.015em`, weight 700.
-- `tabular-nums` on amounts (cook chips, shop counts) via `font-variant-numeric`.
+- `tabular-nums` on amounts (shop counts) via `font-variant-numeric`.
 - Recipe title (`.recipe-title-row h1`) uses fluid sizing: `clamp(1.6rem, 2.4vw, 2.2rem)`.
 - Eyebrow (`.eyebrow`): uppercase, `letter-spacing: 0.08em`, `--brand`, weight 700, `0.8rem`.
 
@@ -238,7 +238,7 @@ specifies the phone layout.
 
 - `.tonight-card`: the hero — `--brand` surface, `--surface` text, radius
   `18px`, big balanced title; label/meta use the on-primary tint tokens; the
-  white `.tonight-btn` deep-links into Cook mode (`?cook=1`).
+  white `.tonight-btn` links to the recipe page (`/recipes/<id>`).
 - `.today-strip`: deadline strip — surface card, 9px `--brand-2` dot, bold
   line + muted `small`; whole strip is a link to `/grocery`.
 - `.today-week`: `.card` with hairline-separated rows — 44px uppercase day
@@ -277,8 +277,7 @@ meal list — no L/D sub-slots; `.plan-slot` now styles a meal row and
   (`components/plan-add-meal.tsx`) — a fixed light-themed overlay
   (`inset: 0`, z-index 30, above the tabbar) with a sticky safe-area header
   (day label + Close) and a 640px-capped body hosting the same quick-add mode
-  pills and `.quick-add-row` results. Same fixed-overlay recipe as
-  `.cook-mode`, but on the app's light theme.
+  pills and `.quick-add-row` results.
 - `.quick-add-usuals` (milestone 17, WS1: A): the "Usually on <Weekday>s"
   group between the search box and the results. It is a `role="group"` grid
   (`gap: 0.4rem`, the `.quick-add-results` value) of plain `.quick-add-row`
@@ -350,7 +349,7 @@ mobile takeover. Reuses existing patterns wherever possible — `.pill` /
 ingredient/step/tag markup in the review form.
 
 - `.import-submit`: the full-width teal action bar — joined to the shared
-  `.settings-save, .recipes-save, .recipe-cook-btn` group (radius `12px`,
+  `.settings-save, .recipes-save` group (radius `12px`,
   `0.9rem` padding, weight 700, `var(--brand)`). Used for both "Import recipe"
   (entry) and "Save recipe" (review).
 - `.import-callout`: the amber soft-fail callout for a blocked/paywalled URL
@@ -366,26 +365,6 @@ ingredient/step/tag markup in the review form.
 - `.import-original`: the "Original" toggle body — `max-height: 40vh`,
   `overflow-y: auto`, `white-space: pre-wrap`, `var(--surface)`/`var(--line)`
   skin, muted `0.9rem`.
-
-### Cook-mode takeover
-
-`components/cook-mode.tsx` + the `.cook-*` selectors. A `position: fixed;
-inset: 0` full-screen dialog at `z-index: 30` (above the mobile tabbar's 20),
-styled entirely from the `--color-slate-*` tokens and the global amber:
-
-- One step at a time: amber uppercase step label, step body at `1.7rem`/700
-  with `text-wrap: balance`, that step's ingredients as chips (`999px` pills on
-  `--color-slate-2`, `tabular-nums` amounts).
-- Progress: flexed 4px bars (`.cook-dots`), filled with `--brand-2`
-  up to the current step; decorative (`aria-hidden`).
-- Nav: giant amber Next (`flex: 1`, radius `16px`, `1.25rem` padding) beside a
-  30%-width slate Back (visibility-hidden on step 1 to keep layout stable);
-  last step relabels Next to "Done — mark cooked".
-- Screen wake-lock while mounted (best-effort, re-acquired on
-  `visibilitychange`); the "screen stays awake" note renders only while the
-  lock is actually held.
-- Safe-area aware top and bottom (`env(safe-area-inset-*)`); body scroll is
-  locked behind the takeover; Escape exits.
 
 ### Error & not-found boundaries
 
@@ -417,6 +396,12 @@ auth-panel language.
 
 - `.error-text` → `var(--color-danger)`; `.success-text` → `var(--color-success)`.
 - `.muted` utility → `var(--muted)`, `0.85rem`.
+- `.recipe-steps-note` (milestone 18, AS1: A): the quiet line at the top of the
+  recipe page's Steps card (`margin: 0.15rem 0 0.35rem`, `var(--muted)`,
+  `0.85rem`). Shown only when the recipe has steps and Preview servings differs
+  from base; copy "Amounts in the steps are for {base} servings." ("serving"
+  when base is 1). Step amounts are plain text, so the stepper does not scale
+  them.
 - `.auth-links`: column-stacked wrapper for the secondary text links under the
   auth form (the mode toggle + the "Forgot password?" link, milestone 11) —
   `flex-direction: column`, `align-items: flex-start`, `gap: 0.6rem`,

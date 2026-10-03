@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGate } from "@/components/auth-gate";
-import { CookMode } from "@/components/cook-mode";
-import { formatIngredientAmount } from "@/lib/grocery";
+import { formatAmount, formatIngredientAmount } from "@/lib/grocery";
 import { toErrorMessage } from "@/lib/errors";
 import { StatusMessage } from "@/components/status-message";
 import { supabase } from "@/lib/supabase/client";
@@ -42,11 +41,7 @@ export default function RecipeDetailPage() {
 function RecipeDetailScreen() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const recipeId = params.id;
-  // Today's "Start cooking" deep-links here with ?cook=1 to open the takeover
-  // as soon as the steps have loaded.
-  const autoCook = searchParams.get("cook") === "1";
 
   const [recipe, setRecipe] = useState<RecipeRecord | null>(null);
   const [ingredients, setIngredients] = useState<IngredientRecord[]>([]);
@@ -57,7 +52,6 @@ function RecipeDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cooking, setCooking] = useState(false);
   const [missing, setMissing] = useState(false);
 
   const pantryCount = useMemo(
@@ -135,7 +129,6 @@ function RecipeDetailScreen() {
     setUnitLabelByCode(
       Object.fromEntries(((unitsRes.data ?? []) as Array<{ code: string; label: string }>).map((unit) => [unit.code, unit.label])),
     );
-    setCooking(autoCook && ((stepsRes.data ?? []) as StepRecord[]).length > 0);
 
     setLoading(false);
   }
@@ -266,10 +259,12 @@ function RecipeDetailScreen() {
 
             <article className="panel recipe-view-section">
               <h2 className="recipes-card-label">Steps</h2>
-              {steps.length > 0 ? (
-                <button className="recipe-cook-btn" onClick={() => setCooking(true)} type="button">
-                  Start cooking
-                </button>
+              {steps.length > 0 && scaleFactor !== 1 ? (
+                <p className="recipe-steps-note">
+                  {`Amounts in the steps are for ${formatAmount(Number(recipe.base_servings))} ${
+                    Number(recipe.base_servings) === 1 ? "serving" : "servings"
+                  }.`}
+                </p>
               ) : null}
               {steps.length === 0 ? <p className="muted">No steps.</p> : null}
               <ol className="recipe-step-list">
@@ -290,22 +285,6 @@ function RecipeDetailScreen() {
             ) : null}
           </div>
         </section>
-      ) : null}
-
-      {cooking && recipe && steps.length > 0 ? (
-        <CookMode
-          ingredients={ingredients.map((ingredient) => ({
-            id: ingredient.id,
-            name: ingredient.name,
-            amount: formatIngredientAmount(
-              Number(ingredient.amount) * scaleFactor,
-              unitLabelByCode[ingredient.unit_code] ?? ingredient.unit_code,
-            ),
-          }))}
-          onExit={() => setCooking(false)}
-          recipeName={recipe.name}
-          steps={steps}
-        />
       ) : null}
     </AppShell>
   );

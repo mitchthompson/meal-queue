@@ -32,6 +32,19 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("Never split a source step");
   });
 
+  it("states the step-amounts rule", () => {
+    expect(prompt).toContain("STEP AMOUNTS");
+    expect(prompt).toContain("at its first mention in that step");
+    expect(prompt).toContain('stay "to taste"');
+    expect(prompt).toContain("not only seasonings");
+    expect(prompt).toContain("never work out a remainder");
+    expect(prompt).toContain("otherwise leave that mention without an amount");
+    expect(prompt).toContain("Insert only the amount and unit");
+    expect(prompt).toContain("never copy an ingredient line's prep note");
+    expect(prompt).toContain('"season to taste" stays "season to taste"');
+    expect(prompt).toContain("even when the subtraction is obvious");
+  });
+
   it("handles an empty tag list", () => {
     const empty = buildSystemPrompt([]);
     expect(empty).toContain("no tags");
