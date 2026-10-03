@@ -36,6 +36,8 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("STEP AMOUNTS");
     expect(prompt).toContain("at its first mention in that step");
     expect(prompt).toContain('stay "to taste"');
+    expect(prompt).toContain("not only seasonings");
+    expect(prompt).toContain("never work out a remainder");
   });
 
   it("handles an empty tag list", () => {
