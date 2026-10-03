@@ -38,6 +38,7 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain('stay "to taste"');
     expect(prompt).toContain("not only seasonings");
     expect(prompt).toContain("never work out a remainder");
+    expect(prompt).toContain("otherwise leave that mention without an amount");
   });
 
   it("handles an empty tag list", () => {
