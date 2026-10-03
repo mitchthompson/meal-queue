@@ -1,6 +1,7 @@
-// Recipe-detail v2 pass verification: layout assertions + cook-mode and
-// servings-stepper behavior checks + as-built shots (390px and 1280px).
-// Local stack only. Template lineage: verify-recipes-pass.mjs (round 3).
+// Recipe-detail v2 pass verification: layout assertions + servings-stepper and
+// steps-note behavior checks (cook mode retired in milestone 18) + as-built
+// shots (390px and 1280px). Local stack only.
+// Template lineage: verify-recipes-pass.mjs (round 3).
 import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
@@ -81,13 +82,7 @@ const run = async () => {
   check("pantry badge un-quirked (RD4)", badge, "rgb(122, 90, 23)|11.84px");
   const amount = await page.locator(".recipe-amount").first().evaluate((el) => getComputedStyle(el).color);
   check("amounts stay muted", amount, "rgb(94, 107, 103)");
-  const cookBtn = await page.locator(".recipe-cook-btn").evaluate((el) => {
-    const b = el.getBoundingClientRect(); const p = el.closest("article").getBoundingClientRect();
-    const s = getComputedStyle(el);
-    const pad = parseFloat(getComputedStyle(el.closest("article")).paddingLeft) * 2;
-    return `${Math.abs(b.width - (p.width - pad)) < 3 ? "full" : "partial"}|${s.backgroundColor}|${b.height >= 44 ? ">=44" : "small"}`;
-  });
-  check("Start cooking full-width teal (RD2)", cookBtn, "full|rgb(18, 105, 94)|>=44");
+  check("no Start cooking button (M18)", String(await page.locator(".recipe-cook-btn").count()), "0");
   const stepBtnH = await page.locator(".servings-input-row .secondary-btn").first().evaluate((el) => el.getBoundingClientRect().height);
   check("servings stepper >= 44px (RD3)", stepBtnH >= 44 ? "yes" : `no (${stepBtnH}px)`, "yes");
   const backLink = await page.locator(".recipe-back-link").evaluate((el) => {
@@ -100,31 +95,34 @@ const run = async () => {
 
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: path.join(OUT, "AB-detail.jpg"), type: "jpeg", quality: 85 });
-  await page.evaluate(() => document.querySelector(".recipe-cook-btn").scrollIntoView({ block: "start" }));
+  await page.evaluate(() => document.querySelector(".recipe-step-list").scrollIntoView({ block: "start" }));
   await page.evaluate(() => window.scrollBy(0, -8));
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(OUT, "AB-detail-steps.jpg"), type: "jpeg", quality: 85 });
+  check("steps note hidden at base servings (M18)", String(await page.locator(".recipe-steps-note").count()), "0");
 
-  // ---- behavior: stepper scales, cook mode opens/exits, ?cook=1 deep link ----
+  // ---- behavior: stepper scales, steps note, legacy ?cook=1 link ----
   const firstAmount = await page.locator(".recipe-amount").first().textContent();
   await page.locator(".servings-input-row .secondary-btn").nth(1).click();
   await page.waitForTimeout(400);
   const scaledAmount = await page.locator(".recipe-amount").first().textContent();
   check("stepper rescales amounts", firstAmount !== scaledAmount ? "yes" : `no (${firstAmount})`, "yes");
 
-  await page.locator(".recipe-cook-btn").click();
-  await page.waitForSelector(".cook-mode, [class*=cook]", { timeout: 10000 });
-  const cookVisible = await page.evaluate(() => !!document.querySelector('[class*="cook"]'));
-  check("Start cooking opens the takeover", cookVisible ? "yes" : "no", "yes");
-  await page.screenshot({ path: path.join(OUT, "AB-detail-cook.jpg"), type: "jpeg", quality: 85 });
+  const note = ((await page.locator(".recipe-steps-note").textContent().catch(() => null)) ?? "(missing)").trim();
+  check("steps note appears off base servings (M18)", note, "Amounts in the steps are for 2 servings.");
+  await page.evaluate(() => document.querySelector(".recipe-step-list").scrollIntoView({ block: "start" }));
+  await page.evaluate(() => window.scrollBy(0, -60));
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: path.join(OUT, "AB-detail-scaled.jpg"), type: "jpeg", quality: 85 });
   // Let the page's in-flight requests settle before navigating away, or the
   // aborted settings POST logs a harness-only "Failed to fetch".
   await page.waitForTimeout(1200);
 
   await page.goto(`${BASE}/recipes/${recipeId}?cook=1`, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(2500);
-  const autoCook = await page.evaluate(() => !!document.querySelector('[class*="cook"]'));
-  check("?cook=1 deep link still auto-opens", autoCook ? "yes" : "no", "yes");
+  await page.waitForSelector(".recipe-step-list", { timeout: 15000 });
+  await page.waitForTimeout(1500);
+  const cookNodes = await page.evaluate(() => document.querySelectorAll('[class*="cook"]').length);
+  check("legacy ?cook=1 link renders the plain page (M18)", String(cookNodes), "0");
 
   await ctx.close();
 

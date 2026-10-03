@@ -42,8 +42,8 @@ progress-log has the full story). Reuse for the v2 sweep and future rounds.
   round-3 (Recipes library + editor) and round-4 (recipe detail) direction
   mocks; same pattern as the Settings variants.
 - `verify-recipes-pass.mjs` / `verify-detail-pass.mjs` — layout assertions
-  + behavior round-trips (live `save_recipe` save; Cook takeover, stepper
-  rescale, `?cook=1` deep link) + as-built shots.
+  + behavior round-trips (live `save_recipe` save; stepper rescale) +
+  as-built shots.
 - `gen-board-r3.mjs` / `gen-board-r4.mjs` — the round boards; r4 is the
   final milestone-7 record (all rounds' pins resolved). Boards deploy in
   place to the same artifact URL — always redeploy, never mint a new link.
@@ -71,6 +71,20 @@ progress-log has the full story). Reuse for the v2 sweep and future rounds.
   `verify-optimistic-pass.mjs` pin the clock to 2026-07-08, inside their July
   seeds, and `verify-shop-pass.mjs` waits on `.plan-add-meal` (the add-meal
   takeover) instead of the retired `.quick-add-card`.
+
+## Milestone 18 additions
+
+- `capture-amounts-variants.mjs` / `gen-board-amounts.mjs`: the AS board (steps
+  note A/B, Today button label A/B); shots in `shots-amounts/`, board
+  `review-board-m18.html`.
+- `verify-amounts-pass.mjs`: Today's cook button opens `/recipes/<id>` (no
+  `?cook=1`) and no cook takeover renders. Pins the browser clock to
+  2026-07-02, inside the seeded plan, so it writes nothing.
+- `verify-detail-pass.mjs` no longer checks the Cook takeover (retired in
+  milestone 18); it checks the steps note and that a legacy `?cook=1` link
+  renders the plain page.
+- `capture.mjs` is the historical round-1 capture; its Cook phase now logs
+  PHASE SKIPPED.
 
 ## Caveats
 
