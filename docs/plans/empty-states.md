@@ -1,5 +1,7 @@
 # Milestone 15: Richer empty states — build spec for handoff
 
+> **DROPPED 2026-10-02.** See the roadmap's Re-plan (2026-10-02). Kept for history; do not build.
+
 **Audience:** this plan will be executed by a lower-capability builder model. Everything is spelled out. Builder: follow it literally; where it says STOP, stop and ask. Where a value or behavior is not specified here, do NOT invent it — flag it in `docs/design-flags.md` and ask.
 
 ---

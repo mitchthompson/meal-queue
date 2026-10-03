@@ -319,11 +319,9 @@ in each spec's §1 table); each has a builder-ready spec in `docs/plans/`
 written for a lower-capability executor. **M9 shipped 2026-07-05 (PR #33,
 deployed); M10 complete 2026-07-05 (PR #34 + PR #35, deployed); M11 shipped
 2026-07-11 (PR #37, deployed, owner prod device pass done); M12 shipped
-2026-07-11 (PR #39, migration applied to prod) — M13-M15 remain to
-build** — the owner picks the order and gives the
-go-ahead per milestone. Recommended order below
-(dependencies noted); board pins for M13/M15 can bundle into one review
-round; M14 needs its own round.
+2026-07-11 (PR #39, migration applied to prod).** The
+[2026-10-02 re-plan](#re-plan-2026-10-02) dropped M13 and M15, superseded
+M16, and kept M14 (dark mode) as the fourth pick.
 
 ### 9. Resilience (error/loading boundaries + raw-error sweep) — DONE
 
@@ -405,7 +403,11 @@ Preflight measured 8 rows across 6 plans merging on real data, all with
 uniform checked state. Zero client-code changes; `lib/grocery.ts` untouched.
 Lists merge per-plan on the next user-initiated regeneration (M10 banner).
 
-### 13. Plan copy ("Start from a previous week")
+### 13. Plan copy ("Start from a previous week") — DROPPED 2026-10-02
+
+**Dropped 2026-10-02:** the owner rarely reuses whole weeks; the real need is
+per-weekday habits (beans on Sunday, chicken on Thursday), now milestone 17.
+The spec stays for history.
 
 Spec: [plans/plan-copy.md](plans/plan-copy.md) · Branch `codex/plan-copy`
 
@@ -426,7 +428,15 @@ ships unapproved. Template-wide change: both-scheme sweep + Needs-Mitchell
 real-device digest required. Any time; best late so new UI (banners, empty
 states) is swept once.
 
-### 15. Richer empty states
+**Order (2026-10-02 re-plan): fourth, after 17 → 18 → 19.** Milestone 18
+retires cook mode, so this spec's Cook-takeover clauses become moot by the
+time it is picked up.
+
+### 15. Richer empty states — DROPPED 2026-10-02
+
+**Dropped 2026-10-02:** shared empty states mostly help a brand-new account;
+this household's established data rarely shows those screens. The spec stays
+for history.
 
 Spec: [plans/empty-states.md](plans/empty-states.md) · Branch `codex/empty-states`
 
@@ -435,7 +445,12 @@ the four weak page-level empties (Recipes ×2, Shop no-plan, Plan no-plans),
 copy locked in the spec pending board pins ES1–ES2. Zero schema, zero deps.
 Last; benefits from M13's sheet and M14's dark sweep.
 
-### 16. Step↔ingredient link (accurate cook-mode chips) — candidate, forks not locked
+### 16. Step↔ingredient link (accurate cook-mode chips) — SUPERSEDED 2026-10-02 by 18
+
+**Superseded 2026-10-02:** the owner stopped using cook mode and cooks from
+the recipe page, so the chips problem leaves with cook mode, and the real need
+(amounts while cooking) is milestone 18. The spec stays for its `save_recipe`
+research.
 
 Spec: [plans/step-ingredients.md](plans/step-ingredients.md) · Branch
 `codex/step-ingredients` (proposed)
@@ -450,6 +465,57 @@ becomes fallback-only for unmapped recipes. Unlike M12–M15 the §2 owner forks
 are NOT yet locked — needs an owner interview before build. The cheap
 interim fixes (zero-amount "to taste" display + the keep-source-step-boundaries
 prompt rule) shipped 2026-07-11, independent of this milestone.
+
+## Re-plan (2026-10-02)
+
+First session after a three-month gap. Real use since July reshaped the
+queue: the owner cooks from the recipe page (cook mode unused), rarely reuses
+whole weeks, and plans the same meals on the same weekdays. Owner-approved
+order: **17 → 18 → 19 → 14**. Each milestone still needs its own go-ahead
+before code. The same session shipped a dependency security patch first
+(PR #40, `npm audit` 8 → 0).
+
+### 17. Weekday suggestions + Add the usuals
+
+Spec: [plans/weekday-suggestions.md](plans/weekday-suggestions.md) · Branch
+`codex/weekday-suggestions`
+
+Adding a meal to a day suggests the recipes the household usually cooks on
+that weekday ("Usually on Thursdays"), and a one-tap "Add the usuals" places
+every weekday habit on its day in a plan. A habit is a recipe cooked on that
+weekday in at least 3 of the last 8 occurrences (owner decision 2026-10-02).
+Prod history backs it: Crispy Chicken Thighs on all 31 cooked Thursdays, Hurst
+15-Bean Soup on 24 of 29 Sundays. Zero schema, zero deps; one board round.
+Supersedes M13.
+
+### 18. Amounts in the steps (and retire cook mode)
+
+Spec: [plans/amounts-in-steps.md](plans/amounts-in-steps.md) · Branches
+`codex/amounts-in-steps` (PR 1: retire cook mode, servings note, import rule)
+and `codex/step-amounts-backfill` (PR 2: guard + backfill script; merges after
+the prod apply)
+
+Steps carry their amounts ("Season with 2 tsp black pepper"), so cooking from
+the recipe page needs no scrolling back to the ingredient list. New imports
+get this from an import-prompt rule; the existing 35 recipes get a one-time
+backfill (the LLM proposes insert-only rewrites, a mechanical guard rejects
+any wording change, the owner reviews every proposal, and nothing is written
+until "apply", backup first). In-step amounts don't scale, which is accepted:
+every planned meal in history is at base servings. Cook mode (the
+step-by-step takeover) is removed. Zero schema, zero deps. Supersedes M16.
+
+### 19. Upkeep: Node and platform
+
+CI's `node-version: 20` is past end of life (April 2026), the `@supabase/*`
+packages now require Node ≥ 22 (CI only warns), and nothing pins Vercel's
+Node version. Scope: CI on a current LTS, the same version pinned for Vercel
+(`engines` or the project setting), green build and deploy. Next.js 16 stays a
+later, separate decision (15.5.x still receives security fixes). Small; spec
+when picked.
+
+### Pinned
+
+- The owner has a batch of new ideas to brain-dump in a future session.
 
 ## Deferred Fixes (from the 2026-06-11 audit)
 
@@ -510,6 +576,7 @@ Details in [UI_AUDIT_2026-06-11.md](UI_AUDIT_2026-06-11.md).
 - ~~Unit conversions during grocery grouping.~~ — promoted to milestone 12
   (2026-07-05, spec: [plans/unit-merge.md](plans/unit-merge.md)).
 - ~~Meal-plan templates.~~ — promoted to milestone 13 as plan copy, the
-  no-schema variant (2026-07-05, spec: [plans/plan-copy.md](plans/plan-copy.md)).
+  no-schema variant (2026-07-05, spec: [plans/plan-copy.md](plans/plan-copy.md));
+  M13 dropped 2026-10-02 in favor of weekday habits (milestone 17).
 - Recipe sharing, nutrition data, and public-product features.
 - PWA and offline support.

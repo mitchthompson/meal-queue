@@ -3,7 +3,69 @@
 This is an append-only, decision-rich log. Add the newest entry at the top.
 Include outcomes, important tradeoffs, verification, and remaining work.
 
-## 2026-07-11 (latest, night) - Milestone 12 shipped (PR #39): dimension-aware grocery unit merge, fifth migration applied to prod
+## 2026-10-02 (latest) - Onboard after an 83-day gap: security patch (PR #40), re-plan after real use, M17/M18 specs
+
+First session since 2026-07-11. Onboard checked the docs against reality, the
+owner approved a security patch, then an interview on how the app is used now
+reshaped the milestone queue. No app-code change beyond the dependency patch,
+no schema change, no live-data writes (prod was only read).
+
+- **Onboard drift (docs vs reality):** `npm audit` had regressed from 0 to 8
+  (1 critical: `next` 15.5.19, an image-optimizer RCE fixed in 15.5.24; 5
+  high; 2 moderate) and `mcp/` to 7 (3 high; out of scope); the local Supabase
+  stack was down, not "left up" (Colima stopped, its `colima` docker context
+  missing); the local `codex/grocery-unit-merge` ref still existed. Git, PR,
+  and CI state matched the docs; baseline green (eslint, tsc, vitest 141/141);
+  prod `/`, `/grocery`, `/recipes` 200.
+- **Why `/onboard` was missing from the slash menu:** the session was opened
+  at `~/Dev/meal-queue` (the parent folder) instead of the repo root, so the
+  repo's `.claude/skills`, `CLAUDE.md`, `.mcp.json`, and
+  `.claude/settings.local.json` did not load at session start. Fix: open
+  sessions at the repo root (now in current-state's environment notes).
+- **Security patch, PR #40 (`main` `0dcabab`):** in-range `npm audit fix`
+  (next 15.5.27 plus sharp 0.35.5, nanoid, brace-expansion, js-yaml, vitest
+  4.1.11; dev-only vite 8.3.2 / rolldown churn) left 2 findings held in place
+  by the 2026-06-11 `overrides.next.postcss` pin at 8.5.10, which `npm audit
+  fix` cannot move; the pin went to 8.5.28. `npm audit` 8 → 0. Low practical
+  exposure (no `next/image`, Server Actions, or rewrites; Vercel-hosted). Gate:
+  eslint, tsc, vitest 141/141, `next build` 13/13; `npm ci --dry-run` clean
+  under npm 10 / Node 21 (closest local match to CI's Node 20); CI green on the
+  PR (app-checks 53s, db-tests 1m4s) and post-merge `main` (1m9s); prod 200 on
+  `/`, `/grocery`, `/recipes`, `/plans`.
+- **Re-plan (owner interview plus read-only prod queries):** the owner stopped
+  using cook mode (cooks from the recipe page; the pain there is scrolling back
+  to the ingredient list for amounts), rarely reuses whole weeks, and plans the
+  same meals on the same weekdays. Prod history (33 weeks since 2026-02-14, 185
+  cook items): Crispy Chicken Thighs on all 31 cooked Thursdays, Hurst 15-Bean
+  Soup on 24 of 29 Sundays; 0 of 185 cook items use a serving multiplier other
+  than 1. New order **17 → 18 → 19 → 14**: M17 weekday suggestions + Add the
+  usuals (replaces M13 plan copy), M18 amounts in the steps + retire cook mode
+  (replaces M16), M19 Node upkeep, then M14 dark mode; M15 empty states
+  dropped. Recorded in [roadmap.md](roadmap.md) and [decisions.md](decisions.md).
+- **Specs:** [plans/weekday-suggestions.md](plans/weekday-suggestions.md)
+  (habit = cooked on that weekday in at least 3 of its last 8 occurrences; an
+  occurrence is a date with any planned item, inside a 16-week window ending
+  yesterday; cap 3; Add the usuals fills only empty days from today on, one
+  top habit per day; a read-only prod preview finds exactly three habits
+  today: Sunday beans 8/8, Thursday chicken 8/8, Friday cod 4/8) and
+  [plans/amounts-in-steps.md](plans/amounts-in-steps.md) (PR 1 retires cook
+  mode, points Today's button at the recipe page, adds the import rule and an
+  off-base servings note; PR 2 is an insert-only, guard-checked,
+  owner-reviewed backfill of the 35 recipes, applied by an in-place `UPDATE`
+  of `recipe_steps.body` rather than `save_recipe`). Owner fork answers: F1
+  (a), F2 (a), W1 (a, no wake lock). The old M13, M15, and M16 specs carry
+  DROPPED or SUPERSEDED banners.
+- **Found while specifying (now in design-flags):** ingredient display order
+  ties on one `created_at` per save; the step-number stripper eats a leading
+  "3- " in "3- to 4-pound". Also, the plan harnesses `verify-shop-pass` and
+  `verify-optimistic-pass` have rotted (July-dated seeds vs Shop's
+  `end_date >= today`, plus a stale `.quick-add-card` selector); M17's Phase 0
+  repairs them.
+- **Remaining:** M17 waits on the owner's build go-ahead. The owner-run tails
+  (real-device import pass, One-Pot Chicken step cleanup, M12 eyes-on Shop
+  check) are unchanged.
+
+## 2026-07-11 (night) - Milestone 12 shipped (PR #39): dimension-aware grocery unit merge, fifth migration applied to prod
 
 Owner picked the recommended order (12 → 13 → 14 → 15) and gave every gate
 word same-session: SQL review → "commit and pr" → "apply" → "merge then wrap".

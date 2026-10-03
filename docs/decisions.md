@@ -597,6 +597,41 @@ Build-time decisions on top of the scoping verdicts above:
   every pair with uniform checked state — the conservative `bool_and` loses
   nothing on real data.
 
+### Re-plan after real use (2026-10-02)
+
+First session after a three-month gap; the owner described how the app gets
+used now, and prod history (read-only) was checked against it. Owner-approved
+order: **17 → 18 → 19 → 14** (weekday suggestions, amounts in steps, upkeep,
+dark mode). Each milestone still needs its own go-ahead before code.
+
+- **M13 plan copy dropped.** The owner rarely reuses whole weeks. The real
+  pattern is per-weekday habits (Crispy Chicken Thighs on all 31 cooked
+  Thursdays, Hurst 15-Bean Soup on 24 of 29 Sundays), served by milestone 17.
+- **M17 habit rule:** a recipe is a weekday habit when cooked on that weekday
+  in at least 3 of the last 8 occurrences of that weekday. Both the add-screen
+  suggestion group and a one-tap "Add the usuals" ship.
+- **Cook mode is retired (M18).** The owner stopped using the step-by-step
+  takeover and cooks from the recipe page; the friction there is scrolling
+  back to the ingredient list for amounts. M16 (step-ingredient link for
+  cook-mode chips) is superseded, and the chips heuristic leaves with cook
+  mode.
+- **Amounts go into step text, not a structured link (M18).** In-step amounts
+  don't follow the recipe page's servings stepper; accepted because no planned
+  meal in history (0 of 185) uses a serving multiplier other than 1. New
+  imports get amounts from a prompt rule; existing recipes get a one-time,
+  owner-reviewed, insert-only backfill.
+- **M15 empty states dropped.** They mostly serve a brand-new account; this
+  household's data rarely shows those screens.
+- **Fork answers (2026-10-02):** M17 F1 (a), so Add the usuals places only
+  the top-ranked habit on a weekday that has several; M17 F2 (a), so a habit
+  already planned elsewhere that week is still added on its usual day (the
+  control previews every meal before the tap); M18 W1 (a), no wake lock on
+  the recipe page.
+- **Security patch shipped first (PR #40, `main` `0dcabab`):** in-range
+  `npm audit fix` (next 15.5.19 → 15.5.27, the critical) plus the 2026-06-11
+  postcss override raised 8.5.10 → 8.5.28, since `npm audit fix` cannot move
+  an override; `npm audit` 8 → 0.
+
 ## Superseded Decisions
 
 ### CI/local-only baseline migration (2026-06-27)

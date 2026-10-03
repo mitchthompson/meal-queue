@@ -1,5 +1,7 @@
 # Milestone 16 (candidate): Step↔ingredient link — accurate cook-mode chips
 
+> **SUPERSEDED 2026-10-02** by milestone 18 ([amounts-in-steps.md](amounts-in-steps.md)): cook mode is being retired, so per-step chips go with it. Kept for its `save_recipe` research; do not build.
+
 **Status: scoped, owner forks NOT yet locked.** This spec was written 2026-07-11
 after real-use feedback (One-Pot Chicken and Rice: wrong chips on step 3). The
 §2 forks need owner verdicts before this is builder-ready; everything else is
