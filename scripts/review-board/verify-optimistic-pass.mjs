@@ -94,6 +94,7 @@ const run = async () => {
   });
 
   const page = await ctx.newPage();
+  await page.clock.setFixedTime(new Date("2026-07-08T12:00:00")); // seeds are July-dated: pin "today" inside them
   page.on("console", (m) => {
     if (m.type() !== "error") return;
     const text = m.text();
