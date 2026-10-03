@@ -191,11 +191,43 @@ Open `http://localhost:3000`. For the full verification command set, see
 Do not commit `.env.local`, `.codex/`, `recipe-export.json`, Supabase temporary
 files, or generated build output.
 
+### Prod Backups
+
+Supabase's free plan has no automated backups or point-in-time recovery, so a
+manual `pg_dump` comes first before any prod write (migration, backfill, data
+fix). Use libpq's keg-only binaries (v18, compatible with prod's Postgres
+17.6):
+
+```sh
+cd /Users/mitchell/Dev/meal-queue/meal-queue
+DB_URL="$(node -e 'process.loadEnvFile(".env.local"); process.stdout.write(process.env.DATABASE_URL)')"   # never echo it
+STAMP="$(date +%Y-%m-%d-%H%M)"
+/opt/homebrew/opt/libpq/bin/pg_dump "$DB_URL" -Fc -n public -f "$HOME/meal-queue-backup-$STAMP.dump"
+ls -lh "$HOME/meal-queue-backup-$STAMP.dump"
+/opt/homebrew/opt/libpq/bin/pg_restore --list "$HOME/meal-queue-backup-$STAMP.dump" | grep -c "TABLE DATA public"   # expect 10
+```
+
+- Custom format (`-Fc`), `public` schema only. Dumps live in `$HOME`,
+  **outside the repo**. The repo may be public, so dumps and household data
+  never go through GitHub (no gists, no Actions artifacts).
+- The manifest check counts the ten `public` tables. A different count means
+  the dump is incomplete, or the schema changed and this line needs updating.
+- Record the file name and size in the progress log entry for the change it
+  protects. Latest: `~/meal-queue-backup-2026-07-11-1633.dump` (424K, taken
+  before the M12 apply).
+- Restoring is the last-resort fallback and the owner runs it. Rehearse it
+  against the local stack first. A migration's own recovery steps (or a
+  backfill's `revert.sql`) are the fast path.
+
 ### Applying Database Migrations
 
 Existing Supabase records are live data. The Supabase CLI is used for local/CI
 testing only (see Tooling Status below); all prod schema changes are applied by
-hand through the Supabase SQL editor.
+hand, either in the Supabase SQL editor (the early milestones) or with libpq
+`psql` against `DATABASE_URL` in a single transaction (the M12 apply on
+2026-07-11 is the reference run). Every prod write follows the same ritual:
+backup (above), read-only preflight, apply, verify, then a rolled-back smoke
+where the change has behavior to exercise.
 
 For each schema change:
 
@@ -207,8 +239,8 @@ For each schema change:
 5. Keep [`supabase/schema.sql`](../supabase/schema.sql) synchronized as the
    canonical full schema.
 6. Review the pull request before applying SQL (migrations always require a PR).
-7. Run preflight queries in the Supabase SQL editor.
-8. Apply the migration through the SQL editor.
+7. Take a backup (see Prod Backups), then run the preflight queries.
+8. Apply the migration (psql or the SQL editor) in one transaction.
 9. Verify data and application behavior before deploying dependent client code.
 
 Stop if preflight checks return incompatible data. Do not reset the database or
@@ -247,8 +279,8 @@ Deploy order:
   machine-wide active account `2a-webteam` gets a 403 on push to this repo).
 - Supabase CLI: used for **local/CI testing only** (an ephemeral local stack +
   pgTAP, as of milestone 1.5, 2026-06-27). Prod database changes are still
-  hand-applied through the Supabase SQL editor; `supabase db push` is not run
-  against the live project.
+  hand-applied (libpq `psql` or the Supabase SQL editor; see Applying Database
+  Migrations); `supabase db push` is not run against the live project.
 
 ## Related Docs
 

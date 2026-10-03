@@ -6,6 +6,11 @@ Values are never guessed. A missing or unconfirmed value gets a flag here, not a
 
 ## Open
 
+### `npm audit`: 5 high from one dev-only `braces` advisory, no fix released (2026-10-03)
+- **Where it's used:** the ESLint toolchain only: `eslint-config-next` 15.5.20 → `@next/eslint-plugin-next` → `fast-glob` 3.3.1 → `micromatch` 4.0.8 → `braces` 3.0.3. Nothing ships to production (`npm audit --omit=dev` is 0).
+- **What's needed:** GHSA-vfj7-8cjw-p6xm (stack-exhaustion DoS through deeply nested brace patterns) covers every `braces` release (`<= 3.0.3`) and has no patched version yet. npm counts it once per package in the chain, which makes five findings from one advisory. GitHub reviewed it 2026-10-02 22:36 UTC, minutes after PR #40's audit read 0, so that 0 was accurate when taken. `npm audit fix --force` would downgrade `eslint-config-next` to 14.2.35 (a semver-major step back onto the old Next line), so no fix is taken. Exposure is minimal: lint only expands repo-controlled globs, and CI doesn't run `npm audit`. Recheck when `braces` ships a fix; an in-range `npm audit fix` (or an `overrides` pin) should then clear it.
+- **Source:** 2026-10-03 onboard (`npm audit --json`, `gh api /advisories/GHSA-vfj7-8cjw-p6xm`).
+
 ### One color literal evades the hex-grep guard (2026-07-05)
 - **Where it's used:** `app/globals.css` (~line 1911 as of 2026-07-11; the file grows — grep for it): `box-shadow: 0 4px 12px rgba(31, 35, 31, 0.04)` on the mobile `.panel` override.
 - **What's needed:** The house guard (`grep -E '#[0-9a-fA-F]{3,8}' app/globals.css` must hit `:root` only) does not catch `rgba()` values, so this literal — deliberately kept in the PR #19 token sweep as "an elevation cue, not a palette value" — is invisible to the guard. It is also a dark-mode hazard (a dark shadow on a dark bg disappears). Fix is folded into **milestone 14** ([plans/dark-mode.md](plans/dark-mode.md) §4a.3): tokenize as `--shadow-panel` in both schemes and extend verification to grep `rgba(` as well. It was the ONLY literal outside `:root` in the whole file, and no component `.tsx` carries inline colors (full-repo sweep 2026-07-05).
