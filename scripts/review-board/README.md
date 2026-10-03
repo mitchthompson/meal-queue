@@ -48,6 +48,30 @@ progress-log has the full story). Reuse for the v2 sweep and future rounds.
   final milestone-7 record (all rounds' pins resolved). Boards deploy in
   place to the same artifact URL — always redeploy, never mint a new link.
 
+## Milestone 17 additions
+
+- `seed-weekday-suggestions.sql` / `capture-ws-variants.mjs` /
+  `gen-board-ws.mjs`: the WS board (the usuals group in the add-meal
+  takeover; Add the usuals placement, look, and feedback). Variant shots in
+  `shots-ws/`, as-built shots in `shots-ws-verify/`, board
+  `review-board-m17.html`. M17 is a distinct review, so it has its own
+  artifact URL; later M17 rounds redeploy there.
+- `verify-weekday-suggestions.mjs` (45 checks): the takeover group per
+  weekday, Enter on the top usual, Add the usuals (one insert, then a held
+  and aborted write that must roll back and show the red error), and the Shop
+  staleness banner afterwards. It signs up its own `wsverify@local.test`
+  user, because habits read all of a user's plans, seeds a 16-week history,
+  and deletes that user's plans and recipes at the end.
+- Clock pinning: a harness whose seed uses fixed dates calls
+  `page.clock.setFixedTime(new Date("..."))` right after `ctx.newPage()`, so
+  "today" falls inside the seeded plans (Shop only loads plans that end today
+  or later). Pin only to past dates: a clock later than real time makes
+  supabase-js treat the session as expired.
+- Phase 0 repairs (milestone 17): `verify-shop-pass.mjs` and
+  `verify-optimistic-pass.mjs` pin the clock to 2026-07-08, inside their July
+  seeds, and `verify-shop-pass.mjs` waits on `.plan-add-meal` (the add-meal
+  takeover) instead of the retired `.quick-add-card`.
+
 ## Caveats
 
 - `capture.mjs` requires `playwright-core` (resolved from an npx cache path

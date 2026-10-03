@@ -279,6 +279,20 @@ meal list — no L/D sub-slots; `.plan-slot` now styles a meal row and
   (day label + Close) and a 640px-capped body hosting the same quick-add mode
   pills and `.quick-add-row` results. Same fixed-overlay recipe as
   `.cook-mode`, but on the app's light theme.
+- `.quick-add-usuals` (milestone 17, WS1: A): the "Usually on <Weekday>s"
+  group between the search box and the results. It is a `role="group"` grid
+  (`gap: 0.4rem`, the `.quick-add-results` value) of plain `.quick-add-row`
+  buttons under a `.quick-add-usuals-label` that borrows the `.plan-dhead`
+  day-label type (0.72rem, 800, uppercase, `--muted`). It shows only in Cook
+  mode with an empty search, and the list below drops its recipes.
+- `.plan-usuals` (milestone 17, WS2: A, WS3: A): the Add the usuals card
+  above the first day row. It uses the day-card skin (`--surface`, `--line`
+  border, 14px radius, `.plan-slot` padding) with `.plan-usuals-text` (a
+  `.plan-usuals-line` count in 0.9rem 600 plus a `.plan-usuals-list` in
+  `--muted` 0.75rem naming each meal) and `.plan-usuals-btn`, the soft teal
+  Today next-step button (`--color-primary-soft` on `--brand`, 12px radius,
+  44px minimum). It renders only when the tap would add at least one meal.
+  Feedback after the tap is the shared green status line (WS4: A).
 - `.plan-sheet`: the New-plan / Edit-plan panels (2-col date grid), toggled
   from the header; sheets auto-close when the working plan changes.
 - `.plan-generate`: the flow's exit — full-width teal "Shop this plan" link to
