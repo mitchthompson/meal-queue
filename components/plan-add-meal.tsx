@@ -31,6 +31,7 @@ type PlanAddMealProps = Pick<
   | "quickLeftoverOptions"
   | "handleQuickAddKeyDown"
   | "addMeal"
+  | "saving"
 >;
 
 export function PlanAddMeal({
@@ -50,6 +51,7 @@ export function PlanAddMeal({
   quickLeftoverOptions,
   handleQuickAddKeyDown,
   addMeal,
+  saving,
 }: PlanAddMealProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const usualsLabelId = useId();
@@ -156,6 +158,7 @@ export function PlanAddMeal({
                 {quickSuggestions.map((recipe) => (
                   <button
                     className="quick-add-row"
+                    disabled={saving}
                     key={recipe.id}
                     onClick={() => addMeal(activeDay, { slotType: "cook", recipeId: recipe.id, servingMultiplier: 1 })}
                     type="button"

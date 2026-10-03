@@ -129,6 +129,7 @@ function PlanScreen({ userId }: { userId: string }) {
     quickLeftoverOptions,
     handleQuickAddKeyDown,
     addMeal,
+    saving,
   };
 
   return (
