@@ -90,6 +90,13 @@ export function nextDayInRange(day: string, endDate: string) {
   return next <= endDate ? next : null;
 }
 
+// 0 = Sunday ... 6 = Saturday (Date#getDay order, the same order as the
+// user_settings weekday columns). Built from local calendar fields like the
+// helpers above, so a YYYY-MM-DD never shifts across timezones (milestone 17).
+export function weekdayOf(ymd: string) {
+  return parseYmd(ymd).getDay();
+}
+
 // --- Display formatting (shared by dashboard, plans, grocery) -------------
 // All parse local calendar fields via `${ymd}T00:00:00` so labels never shift
 // across timezones (see decisions.md, Dates and Migrations).

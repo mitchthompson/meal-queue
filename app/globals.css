@@ -589,6 +589,23 @@ textarea {
   flex-shrink: 0;
 }
 
+/* "Usually on <Weekday>s" group in the add-meal takeover (milestone 17).
+   Rows are plain .quick-add-row buttons; the label borrows the .plan-dhead
+   day-label type. */
+.quick-add-usuals {
+  display: grid;
+  gap: 0.4rem; /* = .quick-add-results */
+}
+
+.quick-add-usuals-label {
+  margin: 0;
+  font-size: 0.72rem; /* = .plan-dhead */
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 /* Keyboard shortcuts mean nothing to a thumb. */
 @media (hover: none) {
   .quick-add-hint {
@@ -751,6 +768,56 @@ textarea {
 .plan-slot-more .text-btn {
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+/* "Add the usuals" card on the Plan page (milestone 17): a day-card skin
+   with the Today next-step button (.today-next / .today-next-btn). */
+.plan-usuals {
+  margin-top: 0.7rem; /* = .plan-dayrow */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem; /* = .today-next */
+  padding: 0.7rem 0.9rem; /* = .plan-slot */
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px; /* = .plan-dayrow */
+}
+
+.plan-usuals-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem; /* = .plan-slot-main */
+}
+
+.plan-usuals-line {
+  margin: 0;
+  font-size: 0.9rem; /* = .today-next-line */
+  font-weight: 600;
+}
+
+.plan-usuals-list {
+  margin: 0;
+  color: var(--muted); /* = .plan-slot-sub */
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.plan-usuals-btn {
+  flex-shrink: 0;
+  min-height: 44px; /* house touch target, = .quick-add-row */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 12px; /* = .today-next-btn */
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--color-primary-soft);
+  color: var(--brand);
+  cursor: pointer;
 }
 
 /* Full-screen add-meal takeover (components/plan-add-meal.tsx). Replaces the
