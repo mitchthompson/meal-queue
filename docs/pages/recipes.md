@@ -1,7 +1,8 @@
 # Recipes
 
 > Per-page doc. Refreshed 2026-07-02 with the v2 Recipes pass (PR #21) and
-> recipe-detail pass (PR #22). Grounded in `app/recipes/page.tsx`,
+> recipe-detail pass (PR #22), and again 2026-10-03 for milestone 18 (cook
+> mode retired, amounts in the steps). Grounded in `app/recipes/page.tsx`,
 > `app/recipes/[id]/page.tsx`, and `lib/hooks/use-recipes.ts`.
 
 ## Purpose
@@ -9,8 +10,9 @@
 The recipe library and editor. `/recipes` is a searchable, sortable list of
 the household's recipes plus an inline create/edit editor (ingredients,
 steps, tags). `/recipes/[id]` is a read-only detail view with servings
-scaling, flat ingredient/step lists, tags, delete, and the full-screen
-**Cook mode** takeover ("Start cooking", `components/cook-mode.tsx`).
+scaling for the ingredient list, flat ingredient/step lists (step text
+carries its amounts: new imports write them, and existing recipes get them from
+a one-time backfill), tags, and delete.
 
 ## Route(s)
 
@@ -25,8 +27,8 @@ screen in `AuthGate`, and the inner screen renders inside `AppShell`. See
 list links to `/recipes/<id>` ("View recipe") and opens the editor in place
 ("Edit"); the detail view links back to `/recipes` (the "‹ Recipes"
 breadcrumb) and to `/recipes?edit=<id>` ("Edit recipe"). Today's hero
-deep-links to `/recipes/<id>?cook=1`, which auto-opens Cook mode once steps
-load.
+links to `/recipes/<id>`; an old `?cook=1` link is ignored and the plain page
+renders.
 
 ## Key components
 
@@ -56,21 +58,23 @@ load.
 
 **`/recipes/[id]` (`RecipeDetailScreen`)**
 - `AuthGate` → `AppShell`; `useParams` for the id, `useRouter` for the
-  post-delete redirect, `useSearchParams` for `?cook=1`.
+  post-delete redirect.
 - v2 title row (PR #22, RD5): "‹ Recipes" breadcrumb above the h1; Edit
   recipe + a "More" `<details>` danger menu (delete, `window.confirm`)
   share one row on mobile.
 - Overview panel: base servings, "Preview servings" stepper
   (`adjustServings`, min 0.25, step 0.25, 44px controls) driving
-  `scaleFactor`, collapsible Tags `<details>`.
+  `scaleFactor` (ingredient list only; step text does not scale), collapsible
+  Tags `<details>`.
 - Ingredients — flat hairline rows (RD1: B): name + amber `.pantry-badge`
   left, scaled amount (`formatAmount` from `@/lib/grocery`) right; unit
   labels resolved from `units` (falls back to the raw code).
-- Steps — flat hairline rows behind a full-width teal `.recipe-cook-btn`
-  "Start cooking" (RD2) that opens the **Cook mode takeover**
-  (`components/cook-mode.tsx`: one step at a time, wake lock, muted
-  per-step ingredient line). The pre-reflow in-page "focus mode" no longer
-  exists.
+- Steps — flat hairline rows. Step text can carry the amounts it uses (new
+  imports, and existing recipes after the one-time backfill) and does not scale
+  with the stepper, so a muted `.recipe-steps-note` (AS1: A) tops
+  the card while Preview servings differs from base: "Amounts in the steps are
+  for {base} servings." ("serving" when base is 1). The Cook mode takeover and
+  its Start cooking bar no longer exist (retired in milestone 18).
 - Collapsible "Raw Instructions" `<details>` when `instructions_raw` is
   present.
 
@@ -165,9 +169,9 @@ client under owner-based RLS. See [data model](../data-model.md) and
 **`/recipes/[id]`**
 - Loading: `Loading recipe...`; error via `StatusMessage`; no explicit 404
   UI (a null recipe renders nothing).
-- Empty ingredients: `No ingredients.`; empty steps: `No steps.` (the cook
-  button renders only when steps exist).
-- Cooking: full-screen Cook mode takeover; `?cook=1` auto-opens it.
+- Empty ingredients: `No ingredients.`; empty steps: `No steps.`.
+- Steps note: `Amounts in the steps are for {base} servings.` (`serving` when
+  base is 1), only while Preview servings differs from base and steps exist.
 - Deleting: button shows `Deleting...`.
 
 ## Known flags
@@ -177,8 +181,9 @@ See [design flags](../design-flags.md). Still relevant here:
 - **Raw Supabase error strings / no route boundaries** — mini-M5 added
   friendly mapping (`lib/errors.ts`) + `StatusMessage`, but unmapped errors
   still surface raw and there are no `error.tsx` / `loading.tsx` boundaries.
-- **Cook mode ingredient-chip heuristic** — per-step ingredient matching is
-  a name heuristic; owner is judging quality on real recipes over time.
+- **In-step amounts are text.** They do not follow the Preview servings
+  stepper (the steps note says so) and do not update when an ingredient
+  amount is edited.
 - Resolved and gone from this page: non-atomic saves (M2 RPC), stale
   grocery lists after edits (M2 diff-based bumps), oversized route
   components (M6 hooks), pre-reflow layout language (PRs #19–#22).
@@ -191,7 +196,7 @@ language on these screens (PRs #21–#22): shared page-head group
 (`.recipes-head h1` / `.recipes-editor-title` / `.recipe-title-row h1`,
 grouped with `.settings-head h1`), uppercase `.recipes-card-label`s
 (grouped with `.settings-card-label`), full-width teal action bars
-(`.recipes-save` / `.recipe-cook-btn`, grouped with `.settings-save`),
+(`.recipes-save`, grouped with `.settings-save`),
 44px controls throughout, teal `.recipe-back-link` breadcrumb, flat
 hairline rows (`.recipe-meta`, `.recipe-step-item`), and the amber
 `.pantry-badge` whose text color is no longer overridden (the old

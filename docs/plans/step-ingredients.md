@@ -38,9 +38,11 @@ source-shaped steps also make per-step chips more useful.
 with fresh UUIDs on every save. Any persisted link must therefore be rebuilt
 inside that same transaction — a free-standing FK join table populated outside
 `save_recipe` would dangle after the first edit. Also note: the recipe detail
-page currently selects ingredients with **no `.order()`** (physical order), so
-positional indexes stored against an unordered list would be fragile — any
-design using positions must also pin an explicit ingredient order.
+page now orders ingredients by `created_at` (`app/recipes/[id]/page.tsx:85`),
+but rows from one save all share one `created_at` (`now()` is the transaction
+time), so their order is still effectively unpinned and positional indexes
+stored against an unordered list would be fragile — any design using positions
+must also pin an explicit ingredient order.
 
 ---
 

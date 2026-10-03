@@ -151,7 +151,7 @@ Ordered instruction steps belonging to a recipe.
 | `id` | `uuid` | no | `gen_random_uuid()` | Primary key. |
 | `recipe_id` | `uuid` | no | — | FK -> `public.recipes(id)` `ON DELETE CASCADE`. |
 | `step_number` | `integer` | no | — | `CHECK (step_number > 0)`. Unique per recipe. |
-| `body` | `text` | no | — | Step instruction text. |
+| `body` | `text` | no | — | Step instruction text. Since milestone 18, imports write the amounts a step uses into this text, and existing recipes get them from a one-time backfill (plain text, not scaled by the servings stepper). |
 | `created_at` | `timestamptz` | no | `now()` | |
 
 - **Primary key:** `id`

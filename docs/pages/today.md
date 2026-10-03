@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Opens to *what today needs*: tonight's dinner one tap from Cook mode, the
+Opens to *what today needs*: tonight's dinner one tap from its recipe, the
 grocery deadline when it's near, the rest of the week at a glance, and a
 "plan next week" nudge. Read-only — it performs no writes; all editing happens
 on `/plans` and `/grocery`.
@@ -28,7 +28,7 @@ on `/plans` and `/grocery`.
    [design-flags](../design-flags.md)).
 2. **Tonight hero** (`.tonight-card`, teal) — tonight's dinner: recipe name,
    "Serves N · M steps · planned {range}", and **Start cooking →**
-   deep-linking to `/recipes/[id]?cook=1` (auto-opens the Cook takeover).
+   linking to the recipe page, `/recipes/[id]` (AS2: A, label unchanged).
    Leftover slots show "Leftovers: {name}" + View recipe; eat-out shows the
    note; an empty tonight shows "Nothing planned tonight" + a plan link.
 3. **Context strip** (`.today-strip`, links to `/grocery`) — shown while the
