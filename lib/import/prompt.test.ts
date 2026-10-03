@@ -32,6 +32,12 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("Never split a source step");
   });
 
+  it("states the step-amounts rule", () => {
+    expect(prompt).toContain("STEP AMOUNTS");
+    expect(prompt).toContain("at its first mention in that step");
+    expect(prompt).toContain('stay "to taste"');
+  });
+
   it("handles an empty tag list", () => {
     const empty = buildSystemPrompt([]);
     expect(empty).toContain("no tags");

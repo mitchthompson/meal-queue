@@ -27,6 +27,8 @@ export function buildSystemPrompt(existingTags: string[]): string {
     "",
     "STEPS. One imperative string per step. No leading numbers. Stay close to the source wording. Keep the source's own step boundaries: one output step per source step or paragraph. Never split a source step into several smaller steps.",
     "",
+    'STEP AMOUNTS. In each step, write the amount and unit of each ingredient the step uses at its first mention in that step, matching your ingredients list ("Season with pepper" -> "Season with 2 tsp black pepper"). If the source step already gives the amount, keep it as written. Write amounts as a cookbook would: digits and simple fractions (1/2, 3/4, 1 1/2); tsp, tbsp, oz, lb, g, kg, ml abbreviated. Ingredients that are "to taste" stay "to taste"; never invent an amount for them. When a step uses only part of an ingredient, write that portion only if the source says it; otherwise leave that mention without an amount.',
+    "",
     'Ignore ads, comments, navigation, and story preamble. If there is no actual recipe in the content, return {"no_recipe": true}.',
   ].join("\n");
 }

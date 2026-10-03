@@ -23,8 +23,8 @@
   --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   --font-heading: var(--font-body);
 
-  /* Token set v2 dark slate set — shared by the Cook takeover and Shop's
-     pinned order bar. */
+  /* Token set v2 dark slate set. Shop's pinned order bar uses slate, slate-text,
+     and slate-text-muted; the rest stay as the dark palette milestone 14 builds from. */
   --color-slate: #131a18;
   --color-slate-2: #1d2724;
   --color-slate-text: #f3f6f4;
@@ -822,8 +822,8 @@ textarea {
 
 /* Full-screen add-meal takeover (components/plan-add-meal.tsx). Replaces the
    former inline quick-add card so the iOS keyboard can't reflow the day list
-   (owner feedback 2026-07-07). Same fixed-overlay recipe as .cook-mode, but
-   light-themed like the rest of the app. */
+   (owner feedback 2026-07-07). A fixed full-screen overlay, light-themed like
+   the rest of the app. */
 .plan-add-meal {
   position: fixed;
   inset: 0;
@@ -985,9 +985,9 @@ textarea {
   background: var(--surface);
 }
 
-/* Flat hairline rows for ingredients and steps (owner verdict RD1: B,
-   round-4 board 2026-07-02 — with the chunky Start cooking bar, RD2, and
-   the .recipe-amount split that un-quirks the pantry badge, RD4). */
+/* Flat hairline rows for ingredients and steps (owner verdict RD1: B, round-4
+   board 2026-07-02, with the .recipe-amount split that un-quirks the pantry
+   badge, RD4). RD2's cook bar was retired with cook mode (milestone 18). */
 .recipe-ingredient-list {
   margin: 0;
   padding: 0;
@@ -1093,6 +1093,15 @@ textarea {
   justify-content: center;
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+/* Milestone 18 (AS1: A): shown at the top of the Steps card only while
+   Preview servings differs from base. Step amounts are text and do not
+   scale with the stepper; this line keeps that honest. */
+.recipe-steps-note {
+  margin: 0.15rem 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .page-col {
@@ -1564,7 +1573,6 @@ textarea {
 
 .settings-save,
 .recipes-save,
-.recipe-cook-btn,
 .import-submit {
   display: block;
   width: 100%;
@@ -1579,12 +1587,6 @@ textarea {
   background: var(--brand);
   color: var(--surface);
   cursor: pointer;
-}
-
-/* The cook bar sits under the STEPS label, above the step rows — tighter
-   than the save bars' top margin. */
-.recipe-cook-btn {
-  margin: 0.15rem 0 0.35rem;
 }
 
 /* Recipe import surface (milestone 8, Phase C). Entry (paste/link mode pills,
@@ -1669,154 +1671,6 @@ textarea {
   padding: 0.7rem 0.8rem;
   color: var(--muted);
   font-size: 0.9rem;
-}
-
-.cook-mode {
-  position: fixed;
-  inset: 0;
-  /* Above the fixed .mobile-tabbar (z-index: 20) — this is a full takeover. */
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  background: var(--color-slate);
-  color: var(--color-slate-text);
-  -webkit-font-smoothing: antialiased;
-}
-
-.cook-mode button:focus-visible {
-  outline-color: var(--brand-2);
-}
-
-.cook-head {
-  padding: calc(1.4rem + env(safe-area-inset-top)) 1.25rem 0.4rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cook-exit {
-  border: 0;
-  background: transparent;
-  color: var(--color-slate-text-muted);
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0.4rem 0;
-}
-
-.cook-count {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-slate-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.cook-recipe {
-  margin: 0;
-  padding: 0 1.25rem;
-  font-family: inherit;
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.cook-dots {
-  display: flex;
-  gap: 6px;
-  padding: 0.9rem 1.25rem;
-}
-
-.cook-dots i {
-  height: 4px;
-  flex: 1;
-  border-radius: 999px;
-  background: var(--color-slate-2);
-}
-
-.cook-dots i.done {
-  background: var(--brand-2);
-}
-
-.cook-step-label {
-  padding: 1.1rem 1.25rem 0;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--brand-2);
-}
-
-.cook-step-text {
-  margin: 0;
-  padding: 0.6rem 1.25rem;
-  font-size: 1.7rem;
-  line-height: 1.35;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  text-wrap: balance;
-}
-
-/* One quiet reference line, not pills — the chips crowded the step text
-   (owner verdict 2026-07-02, docs/design-flags.md). */
-.cook-step-ings {
-  padding: 0.15rem 1.25rem 0.4rem;
-  line-height: 1.6;
-}
-
-.cook-step-ings span {
-  color: var(--color-slate-text-muted);
-  font-size: 0.78rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
-.cook-step-ings span:not(:last-child)::after {
-  content: " · ";
-  opacity: 0.6;
-}
-
-.cook-nav {
-  margin-top: auto;
-  display: flex;
-  gap: 0.6rem;
-  padding: 1rem 1rem 0.5rem;
-}
-
-.cook-nav button {
-  flex: 1;
-  border: 0;
-  border-radius: 16px;
-  padding: 1.25rem;
-  font: inherit;
-  font-size: 1.05rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.cook-nav .cook-back {
-  background: var(--color-slate-2);
-  color: var(--color-slate-text-muted);
-  flex: 0 0 30%;
-}
-
-.cook-nav .cook-back.hidden {
-  visibility: hidden;
-}
-
-.cook-nav .cook-next {
-  background: var(--brand-2);
-  color: var(--color-slate);
-}
-
-.cook-wake-note {
-  color: var(--color-slate-text-dim);
-  text-align: center;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  min-height: 1.5rem;
 }
 
 .error-text {

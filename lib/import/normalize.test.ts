@@ -163,6 +163,12 @@ describe("normalizeDraft", () => {
     ]);
   });
 
+  it("keeps an amount that starts a step (not treated as numbering)", () => {
+    const steps = ["1.5 cups broth go in next.", "1 1/2 cups rice, rinsed.", "1/2 cup sugar, whisked in."];
+    const draft = normalizeDraft({ ...raw, steps }, [], null, "t");
+    expect(draft.steps).toEqual(steps);
+  });
+
   it("prepends the Source line when a URL is given", () => {
     const draft = normalizeDraft(raw, [], "https://x.com/r", "orig text");
     expect(draft.instructions_raw).toBe("Source: https://x.com/r\n\norig text");
