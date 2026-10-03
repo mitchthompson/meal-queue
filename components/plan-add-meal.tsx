@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { formatDisplayDate } from "@/lib/date-utils";
+import { useEffect, useId, useRef } from "react";
+import { formatDayName, formatDisplayDate } from "@/lib/date-utils";
 import type { usePlan } from "@/lib/hooks/use-plan";
 
 // Full-screen takeover for adding a meal to a plan day. Replaces the former
@@ -27,9 +27,11 @@ type PlanAddMealProps = Pick<
   | "setQuickLeftoverId"
   | "quickInputRef"
   | "quickMatches"
+  | "quickSuggestions"
   | "quickLeftoverOptions"
   | "handleQuickAddKeyDown"
   | "addMeal"
+  | "saving"
 >;
 
 export function PlanAddMeal({
@@ -45,11 +47,14 @@ export function PlanAddMeal({
   setQuickLeftoverId,
   quickInputRef,
   quickMatches,
+  quickSuggestions,
   quickLeftoverOptions,
   handleQuickAddKeyDown,
   addMeal,
+  saving,
 }: PlanAddMealProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const usualsLabelId = useId();
 
   // Lock the page scroll while the takeover is open (same as Cook mode), close
   // on Escape, and trap Tab focus inside the dialog — the overlay is opaque, so
@@ -145,6 +150,25 @@ export function PlanAddMeal({
               onChange={(event) => setQuickQuery(event.target.value)}
               onKeyDown={handleQuickAddKeyDown}
             />
+            {quickSuggestions.length > 0 ? (
+              <div aria-labelledby={usualsLabelId} className="quick-add-usuals" role="group">
+                <p className="quick-add-usuals-label" id={usualsLabelId}>
+                  Usually on {formatDayName(activeDay)}s
+                </p>
+                {quickSuggestions.map((recipe) => (
+                  <button
+                    className="quick-add-row"
+                    disabled={saving}
+                    key={recipe.id}
+                    onClick={() => addMeal(activeDay, { slotType: "cook", recipeId: recipe.id, servingMultiplier: 1 })}
+                    type="button"
+                  >
+                    <span>{recipe.name}</span>
+                    <span className="muted">Serves {recipe.base_servings}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="quick-add-results">
               {quickMatches.map((recipe) => (
                 <button
@@ -157,7 +181,7 @@ export function PlanAddMeal({
                   <span className="muted">Serves {recipe.base_servings}</span>
                 </button>
               ))}
-              {quickMatches.length === 0 ? (
+              {quickMatches.length === 0 && quickSuggestions.length === 0 ? (
                 <p className="plan-slot-sub">No recipes match. Try a different search.</p>
               ) : null}
             </div>

@@ -9,6 +9,8 @@ import {
 import { DEFAULT_USER_SETTINGS } from "@/lib/constants";
 import { toErrorMessage } from "@/lib/errors";
 import { supabase } from "@/lib/supabase/client";
+import { habitWindowStart, planUsuals, suggestionsForDay } from "@/lib/weekday-habits";
+import type { HabitHistoryRow, PlannedUsual } from "@/lib/weekday-habits";
 
 // Data layer for the plans screen (milestone 6 extraction — behavior
 // identical to the former in-page logic). Owns plan/recipe/settings loading,
@@ -87,6 +89,10 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
   const [settingsDefaults, setSettingsDefaults] = useState<SettingsDefaults>(DEFAULT_USER_SETTINGS);
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [recentRecipeIds, setRecentRecipeIds] = useState<string[]>([]);
+  // Milestone 17: weekday-habit history (the 16 weeks before today) and the plan
+  // `items` currently belongs to (guards "Add the usuals" across plan switches).
+  const [habitRows, setHabitRows] = useState<HabitHistoryRow[]>([]);
+  const [itemsPlanId, setItemsPlanId] = useState<string | null>(null);
   const [quickQuery, setQuickQuery] = useState("");
   const [quickMode, setQuickMode] = useState<MealSlotType>("cook");
   const [quickLeftoverId, setQuickLeftoverId] = useState("");
@@ -105,6 +111,11 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
 
   const selectedPlan = useMemo(() => plans.find((plan) => plan.id === selectedPlanId) ?? null, [plans, selectedPlanId]);
   const todayYmd = useMemo(() => toYmd(new Date()), []);
+  // Milestone 17: the calendar day right now, recomputed every render (the plans
+  // page does the same). todayYmd above is frozen at mount and anchors the habit
+  // window (R14); this one keeps "Add the usuals" from offering or writing a day
+  // that has already passed in a tab left open overnight (R9).
+  const liveTodayYmd = toYmd(new Date());
   const visiblePlans = useMemo(() => {
     const filtered = plans.filter((plan) => {
       if (planFilter === "all") return true;
@@ -127,22 +138,43 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
 
   const itemById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
 
+  // Milestone 17: "Usually on <Weekday>s" for the add-meal takeover. Cook mode
+  // with an empty search box only; recipes already planned that day are left out.
+  // A row still being written (temp "optimistic-" id) does not count yet, so a
+  // tapped suggestion stays put instead of jumping out of the group (and
+  // shifting the rows under the thumb) while its insert is in flight.
+  const quickSuggestions = useMemo(() => {
+    if (!activeDay || quickMode !== "cook" || quickQuery.trim()) return [] as RecipeOption[];
+    const plannedThatDay = new Set(
+      items
+        .filter((item) => item.plan_date === activeDay && item.recipe && !item.id.startsWith("optimistic-"))
+        .map((item) => item.recipe!.id),
+    );
+    return suggestionsForDay(habitRows, activeDay, todayYmd, recipes, plannedThatDay);
+  }, [activeDay, quickMode, quickQuery, items, habitRows, todayYmd, recipes]);
+
   // Most-recently-planned recipes surface first (owner request, 2026-07-02
   // review) so the household rotation is one tap away; ties fall back to name.
+  // Milestone 17: with an empty query, recipes already shown in the "Usually on
+  // <Weekday>s" group are left out so nothing appears twice.
   const quickMatches = useMemo(() => {
     const query = quickQuery.trim().toLowerCase();
     const rank = (recipe: RecipeOption) => {
       const index = recentRecipeIds.indexOf(recipe.id);
       return index === -1 ? recentRecipeIds.length : index;
     };
-    const pool = query ? recipes.filter((recipe) => recipe.name.toLowerCase().includes(query)) : recipes;
+    const suggestedIds = new Set(quickSuggestions.map((recipe) => recipe.id));
+    const pool = query
+      ? recipes.filter((recipe) => recipe.name.toLowerCase().includes(query))
+      : recipes.filter((recipe) => !suggestedIds.has(recipe.id));
     return [...pool].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name)).slice(0, 8);
-  }, [recipes, quickQuery, recentRecipeIds]);
+  }, [recipes, quickQuery, recentRecipeIds, quickSuggestions]);
 
   const quickLeftoverOptions = useMemo(() => {
     if (!activeDay) return [] as LeftoverOption[];
     return items
       .filter((item) => item.slot_type === "cook" && item.plan_date < activeDay && item.recipe?.id && item.recipe?.name)
+      .filter((item) => !item.id.startsWith("optimistic-")) // a row still being inserted has no real id to link a leftover to
       .map((item) => ({
         id: item.id,
         plan_date: item.plan_date,
@@ -151,6 +183,23 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
       }))
       .sort((a, b) => b.plan_date.localeCompare(a.plan_date));
   }, [activeDay, items]);
+
+  // Milestone 17: what "Add the usuals" would place on the selected plan. Empty
+  // until this plan's own items have loaded, so a plan switch can never read the
+  // previous plan's days as empty. The habit window stays on the mount-time
+  // todayYmd (R14); the final filter uses the live day, so a tab left open past
+  // midnight never offers a day that has passed (R9).
+  const plannedUsuals = useMemo(() => {
+    if (!selectedPlan || itemsPlanId !== selectedPlan.id) return [] as PlannedUsual<RecipeOption>[];
+    return planUsuals({
+      planStart: selectedPlan.start_date,
+      planEnd: selectedPlan.end_date,
+      todayYmd,
+      occupiedDates: new Set(items.map((item) => item.plan_date)),
+      history: habitRows,
+      recipes,
+    }).filter((usual) => usual.plan_date >= liveTodayYmd);
+  }, [selectedPlan, itemsPlanId, items, habitRows, recipes, todayYmd, liveTodayYmd]);
 
   useEffect(() => {
     loadInitialData();
@@ -203,7 +252,7 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
     setLoading(true);
     setError(null);
 
-    const [plansRes, recipesRes, settingsRes, recentRes] = await Promise.all([
+    const [plansRes, recipesRes, settingsRes, recentRes, habitRes] = await Promise.all([
       supabase
         .from("meal_plans")
         .select("id, start_date, end_date, order_date, pickup_date, version")
@@ -220,6 +269,16 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
         .not("recipe_id", "is", null)
         .order("created_at", { ascending: false })
         .limit(200),
+      // Milestone 17: weekday-habit history, a bounded plan_date window (the
+      // 16 weeks before today, today excluded). Kept separate from the recency
+      // query above so that query stays exactly as it was.
+      supabase
+        .from("meal_plan_items")
+        .select("plan_date, slot_type, recipe_id")
+        .gte("plan_date", habitWindowStart(todayYmd))
+        .lt("plan_date", todayYmd)
+        .order("plan_date", { ascending: false })
+        .limit(1000),
     ]);
 
     if (plansRes.error || recipesRes.error || settingsRes.error) {
@@ -267,6 +326,10 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
       ...new Set(recentRows.map((row) => row.recipe_id).filter((id): id is string => Boolean(id))),
     ]);
 
+    // Weekday habits feed suggestions and "Add the usuals" only; like recency,
+    // an error here degrades to no suggestions rather than failing the page.
+    setHabitRows(habitRes.error ? [] : ((habitRes.data ?? []) as HabitHistoryRow[]));
+
     setLoading(false);
   }
 
@@ -304,6 +367,7 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
         recipe: Array.isArray(row.recipe) ? row.recipe[0] ?? null : row.recipe,
       })),
     );
+    setItemsPlanId(planId);
   }
 
   async function refreshPlansAndKeepSelection(currentId?: string) {
@@ -494,8 +558,97 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
     }
   }
 
+  // Milestone 17: "Add the usuals". ONE bulk insert (a single statement, so all
+  // rows land or none do), optimistic like addMeal: temp rows first, real ids
+  // swapped in on success, only these rows removed on a write failure. The
+  // bump_plan_version trigger adds one version per cook row; the Shop banner
+  // offers the list update. No regeneration here.
+  async function addUsuals() {
+    if (!selectedPlan || plannedUsuals.length === 0) return;
+    const planId = selectedPlan.id;
+    // R9 again, against the clock right now: plannedUsuals only refreshes on a
+    // render, so a tab left open past midnight could still hold yesterday.
+    const today = toYmd(new Date());
+    const batch = plannedUsuals.filter((usual) => usual.plan_date >= today);
+    if (batch.length === 0) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+
+    const stamp = Date.now();
+    const temps = batch.map((usual, index) => ({
+      tempId: `optimistic-${stamp}-${index}-${Math.random().toString(36).slice(2, 10)}`,
+      usual,
+    }));
+    const tempIds = new Set(temps.map((temp) => temp.tempId));
+    let written = false;
+    setItems((current) => [
+      ...current,
+      ...temps.map(({ tempId, usual }) => ({
+        id: tempId,
+        plan_date: usual.plan_date,
+        slot_type: "cook" as const,
+        leftover_from_item_id: null,
+        note: null,
+        serving_multiplier: 1,
+        created_at: new Date().toISOString(),
+        recipe: usual.recipe,
+      })),
+    ]);
+
+    try {
+      const { data: inserted, error: insertError } = await supabase
+        .from("meal_plan_items")
+        .insert(
+          batch.map((usual) => ({
+            meal_plan_id: planId,
+            plan_date: usual.plan_date,
+            // Vestigial NOT NULL column: every new row writes 'dinner' (see addMeal).
+            meal_type: "dinner",
+            slot_type: "cook",
+            recipe_id: usual.recipe.id,
+            serving_multiplier: 1,
+          })),
+        )
+        .select("id, plan_date, recipe_id");
+      if (insertError) throw insertError;
+      written = true;
+
+      // Match returned rows to temp rows by date + recipe (unique in the batch),
+      // so nothing depends on RETURNING order.
+      const realIdByKey = new Map(
+        ((inserted ?? []) as Array<{ id: string; plan_date: string; recipe_id: string }>).map((row) => [
+          `${row.plan_date}|${row.recipe_id}`,
+          row.id,
+        ]),
+      );
+      const realIdByTemp = new Map(
+        temps.map(({ tempId, usual }) => [tempId, realIdByKey.get(`${usual.plan_date}|${usual.recipe.id}`)]),
+      );
+      setItems((current) =>
+        current.map((value) => {
+          const realId = realIdByTemp.get(value.id);
+          return realId ? { ...value, id: realId } : value;
+        }),
+      );
+      // Defensive: if any row went unmatched, reload this plan's items so no
+      // temp id survives into a later remove or serving write.
+      if ([...realIdByTemp.values()].some((realId) => !realId)) {
+        await loadPlanItems(planId);
+      }
+      await refreshPlansAndKeepSelection(planId);
+      setMessage(batch.length === 1 ? "Added 1 usual meal." : `Added ${batch.length} usual meals.`);
+    } catch (caughtError) {
+      if (!written) setItems((current) => current.filter((value) => !tempIds.has(value.id)));
+      setError(toErrorMessage(caughtError, "Failed adding the usuals."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function removeItem(itemId: string) {
     if (!selectedPlan) return;
+    if (itemId.startsWith("optimistic-")) return; // still being inserted (temp id): nothing to delete yet
     setSaving(true);
     setError(null);
     setMessage(null);
@@ -556,6 +709,7 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
   async function adjustServing(item: MealPlanItem, delta: number) {
     if (!selectedPlan) return;
     if (item.slot_type !== "cook") return;
+    if (item.id.startsWith("optimistic-")) return; // still being inserted (temp id): nothing to update yet
     const nextValue = Math.max(0.25, Number((item.serving_multiplier + delta).toFixed(2)));
     setSaving(true);
     setError(null);
@@ -612,8 +766,11 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
     }
     if (event.key === "Enter") {
       event.preventDefault();
+      // addMeal holds `saving` for the whole write and only moves the day after
+      // it, so this blocks a same-day double add and nothing else.
+      if (saving) return;
       if (quickMode === "cook") {
-        const top = quickMatches[0];
+        const top = quickSuggestions[0] ?? quickMatches[0];
         if (!top) return;
         await addMeal(activeDay, { slotType: "cook", recipeId: top.id, servingMultiplier: 1 }, event.shiftKey);
         return;
@@ -664,6 +821,7 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
     setQuickNote,
     quickInputRef,
     quickMatches,
+    quickSuggestions,
     quickLeftoverOptions,
     loading,
     saving,
@@ -673,6 +831,8 @@ export function usePlan(userId: string, initialPlanId?: string | null) {
     savePlanMeta,
     deleteSelectedPlan,
     addMeal,
+    plannedUsuals,
+    addUsuals,
     removeItem,
     adjustServing,
     openQuickAdd,

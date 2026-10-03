@@ -82,6 +82,7 @@ const run = async () => {
   });
 
   const page = await ctx.newPage();
+  await page.clock.setFixedTime(new Date("2026-07-08T12:00:00")); // seeds are July-dated: pin "today" inside them
   page.on("console", (m) => { if (m.type() === "error") consoleErrors.push(m.text()); });
   page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${e.message}`));
 
@@ -156,11 +157,11 @@ const run = async () => {
   }
   // An empty day shows a ".plan-slot-add" (+) button; open its quick-add.
   await page.locator(".plan-slot-add").first().click();
-  await page.waitForSelector(".quick-add-card", { timeout: 8000 });
-  if (!(await page.locator('.quick-add-card input[placeholder="Search recipe..."]').count())) {
-    await page.locator(".quick-add-card .pill", { hasText: "Cook" }).click();
+  await page.waitForSelector(".plan-add-meal", { timeout: 8000 });
+  if (!(await page.locator('.plan-add-meal input[placeholder="Search recipe..."]').count())) {
+    await page.locator(".plan-add-meal .pill", { hasText: "Cook" }).click();
   }
-  await page.locator('.quick-add-card input[placeholder="Search recipe..."]').fill("SHOPVERIFY Widget");
+  await page.locator('.plan-add-meal input[placeholder="Search recipe..."]').fill("SHOPVERIFY Widget");
   await page.waitForTimeout(500);
   await page.locator(".quick-add-row", { hasText: "SHOPVERIFY Widget" }).first().click();
   await page.waitForTimeout(900); // let the insert + plan version bump settle

@@ -59,6 +59,7 @@ function PlanScreen({ userId }: { userId: string }) {
     setQuickNote,
     quickInputRef,
     quickMatches,
+    quickSuggestions,
     quickLeftoverOptions,
     loading,
     saving,
@@ -68,6 +69,8 @@ function PlanScreen({ userId }: { userId: string }) {
     savePlanMeta,
     deleteSelectedPlan,
     addMeal,
+    plannedUsuals,
+    addUsuals,
     removeItem,
     adjustServing,
     openQuickAdd,
@@ -122,9 +125,11 @@ function PlanScreen({ userId }: { userId: string }) {
     setQuickLeftoverId,
     quickInputRef,
     quickMatches,
+    quickSuggestions,
     quickLeftoverOptions,
     handleQuickAddKeyDown,
     addMeal,
+    saving,
   };
 
   return (
@@ -292,6 +297,24 @@ function PlanScreen({ userId }: { userId: string }) {
               </div>
             </div>
           </section>
+        ) : null}
+
+        {selectedPlan && plannedUsuals.length > 0 ? (
+          <div className="plan-usuals">
+            <div className="plan-usuals-text">
+              <p className="plan-usuals-line">
+                {plannedUsuals.length === 1
+                  ? "1 empty day has a usual meal."
+                  : `${plannedUsuals.length} empty days have a usual meal.`}
+              </p>
+              <p className="plan-usuals-list">
+                {plannedUsuals.map((usual) => `${formatDayAbbrev(usual.plan_date)}: ${usual.recipe.name}`).join(", ")}
+              </p>
+            </div>
+            <button className="plan-usuals-btn" disabled={saving} onClick={addUsuals} type="button">
+              Add the usuals
+            </button>
+          </div>
         ) : null}
 
         {selectedPlan

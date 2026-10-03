@@ -12,6 +12,7 @@ import {
   nextDayInRange,
   nextWeekday,
   toYmd,
+  weekdayOf,
   weekdayOnOrBefore,
 } from "./date-utils";
 
@@ -74,6 +75,15 @@ describe("date utilities", () => {
   it("returns the next day only while it remains in range", () => {
     expect(nextDayInRange("2026-06-11", "2026-06-12")).toBe("2026-06-12");
     expect(nextDayInRange("2026-06-12", "2026-06-12")).toBeNull();
+  });
+
+  it("derives the weekday from calendar fields across DST, leap-day, and year boundaries", () => {
+    expect(weekdayOf("2026-07-02")).toBe(4);
+    expect(weekdayOf("2026-03-08")).toBe(0);
+    expect(weekdayOf("2026-11-01")).toBe(0);
+    expect(weekdayOf("2024-02-29")).toBe(4);
+    expect(weekdayOf("2025-12-31")).toBe(3);
+    expect(weekdayOf("2026-01-01")).toBe(4);
   });
 });
 
