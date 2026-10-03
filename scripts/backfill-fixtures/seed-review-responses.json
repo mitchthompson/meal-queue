@@ -1,0 +1,18 @@
+{
+  "Lemon Chicken Thighs": { "steps": [
+    { "step_number": 1, "body": "Pat the chicken thighs (1 1/2 lb) dry and season all over with 1 tsp salt." },
+    { "step_number": 2, "body": "Sear the chicken thighs skin-side down in 2 tbsp olive oil until golden, about 6 minutes." },
+    { "step_number": 3, "body": "Add the garlic (4 cloves), squeeze in the lemon (2), and scrape up the brown bits." },
+    { "step_number": 4, "body": "Roast 15 minutes, rest 5, then serve." } ] },
+  "Weeknight Chili": { "steps": [
+    { "step_number": 1, "body": "Brown the ground beef (1 lb) with the onion (1)." },
+    { "step_number": 2, "body": "Stir in 2 tbsp chili powder and 1 tsp cumin until fragrant." },
+    { "step_number": 3, "body": "Add 2 cups crushed tomatoes and 3 cups kidney beans; simmer 25 minutes." } ] },
+  "Sheet-Pan Salmon": { "steps": [
+    { "step_number": 1, "body": "Start the 1 1/2 cups jasmine rice." },
+    { "step_number": 2, "body": "Toss the broccoli (1 lb) in 2 tbsp soy sauce; roast with the salmon fillet (1 lb) 12 minutes." } ] },
+  "Caprese Pasta": { "steps": [
+    { "step_number": 1, "body": "Boil the rigatoni (12 oz)." },
+    { "step_number": 2, "body": "Warm 1 lb cherry tomatoes in 1 tbsp olive oil until they do not burst." },
+    { "step_number": 3, "body": "Toss with 8 oz mozzarella and basil off the heat." } ] }
+}
